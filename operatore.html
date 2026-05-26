@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-title" content="Bilici TMP">
 <meta name="theme-color" content="#0d1117">
 <title>Bilici TMP — Operatore</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -623,44 +622,13 @@ function goEntrata(cat) {
 
 // ═══ LOGIN ═══
 window.onload = function() {
-  // Leggi credenziali da sessionStorage (redirect da mobile.html)
-  var autoLogin = null;
-  try {
-    var raw = sessionStorage.getItem('OP_AUTO_v1');
-    if (raw) {
-      sessionStorage.removeItem('OP_AUTO_v1'); // cancella subito per sicurezza
-      autoLogin = JSON.parse(raw);
-    }
-  } catch(x) {}
-
-  if (!autoLogin) {
-    // Nessun auto-login: carica credenziali salvate normalmente
-    caricaCredenziali();
-  }
-
+  caricaCredenziali();
   try {
     if (FBC.apiKey === 'INSERISCI_API_KEY') throw new Error('no cfg');
     if (!firebase.apps.length) firebase.initializeApp(FBC);
     fdb = firebase.firestore(); UC = true;
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent = 'CLOUD';
-    // Auto-login: aspetta che Firebase sia connesso prima di fare login
-    if (autoLogin && autoLogin.u && autoLogin.p) {
-      document.getElementById('log-user').value = autoLogin.u;
-      document.getElementById('log-pass').value = autoLogin.p;
-      var autoLoginTentativo = 0;
-      var autoLoginInterval = setInterval(function() {
-        autoLoginTentativo++;
-        if (UC && fdb) {
-          clearInterval(autoLoginInterval);
-          doLogin();
-        } else if (autoLoginTentativo > 20) {
-          // Timeout 2 secondi - prova comunque
-          clearInterval(autoLoginInterval);
-          doLogin();
-        }
-      }, 100);
-    }
     fdb.collection('bilici').onSnapshot(function(s) {
       BL = {}; s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
       aggiornaUI();
@@ -715,11 +683,6 @@ function doLogin() {
   if (!u || !p) { document.getElementById('log-err').textContent = 'Inserisci username e password'; return; }
   cercaUtente(u, p, function(usr) {
     if (!usr) { document.getElementById('log-err').textContent = 'Credenziali non valide'; document.getElementById('log-pass').value = ''; return; }
-    // Admin (0) e Plus (2) vengono reindirizzati al file principale
-    if (usr.livello === 0 || usr.livello === 2) {
-      window.location.href = 'mobile.html';
-      return;
-    }
     CURR_USER = usr;
     if (ric) { try { localStorage.setItem('RICORDA_OP_v1', JSON.stringify({u:u, p:p})); } catch(x) {} }
     else { try { localStorage.removeItem('RICORDA_OP_v1'); } catch(x) {} }
@@ -1178,29 +1141,12 @@ function leggiQRdaFoto(input) {
           var val = codes[0].rawValue.trim().toUpperCase();
           if (qrTargetId) document.getElementById(qrTargetId).value = val;
           tst('Postazione: ' + val, 'ok');
-        } else { decodaConJsQR(canvas); }
-      }).catch(function() { decodaConJsQR(canvas); });
-    } else { decodaConJsQR(canvas); }
+        } else { tst('Codice non riconosciuto, riprova', 'er'); }
+      }).catch(function() { tst('Errore lettura codice', 'er'); });
+    } else { tst('Scanner non supportato su questo dispositivo', 'er'); }
   };
   img.onerror = function() { tst('Errore caricamento foto', 'er'); };
   img.src = url;
-}
-
-function decodaConJsQR(canvas) {
-  try {
-    var ctx = canvas.getContext('2d');
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var code = jsQR(imageData.data, canvas.width, canvas.height);
-    if (code && code.data) {
-      var val = code.data.trim().toUpperCase();
-      if (qrTargetId) { document.getElementById(qrTargetId).value = val; }
-      tst('Postazione: ' + val, 'ok');
-    } else {
-      tst('Codice non riconosciuto, riprova', 'er');
-    }
-  } catch(e) {
-    tst('Errore lettura QR', 'er');
-  }
 }
 </script>
 </body>

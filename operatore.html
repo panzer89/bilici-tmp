@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Bilici MGR">
+<meta name="apple-mobile-web-app-title" content="Bilici TMP">
 <meta name="theme-color" content="#0d1117">
-<title>Bilici MGR</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+<title>Bilici TMP — Operatore</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -21,60 +19,168 @@
   --rd:#da3633;--rb:#f85149;
   --og:#d29922;--ob:#e3b341;
   --bl:#1f6feb;--bb:#388bfd;
-  --pu:#6e40c9;--pb:#a371f7;
   --cy:#0d9488;--cb:#2dd4bf;
-  --r:12px;--rs:8px;
+  --pu:#6e40c9;--pb:#a371f7;
+  --r:14px;--rs:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html{height:100%;}
-body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height:100%;display:flex;flex-direction:column;overflow:hidden;}
-.hdr{background:var(--sf);border-bottom:2px solid var(--bl);padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.htl{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;}
-.htl span{color:var(--bb);}
-.cbg{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:var(--sf2);border:1px solid var(--bd);}
-.cbg .dot{width:8px;height:8px;border-radius:50%;background:var(--rb);animation:pulse 2s infinite;}
+html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);overflow:hidden;}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:28px 24px;width:100%;max-width:360px;}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;text-align:center;margin-bottom:4px;letter-spacing:1px;}
+.login-logo span{color:var(--bb);}
+.login-sub{font-size:13px;color:var(--tx2);text-align:center;margin-bottom:22px;}
+.login-lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);margin-bottom:5px;}
+.login-inp{background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;width:100%;outline:none;margin-bottom:12px;-webkit-appearance:none;}
+.login-inp:focus{border-color:var(--bb);}
+.login-err{color:var(--rb);font-size:13px;text-align:center;min-height:18px;margin-bottom:10px;}
+.ricorda-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;cursor:pointer;}
+.ricorda-row input{width:20px;height:20px;accent-color:var(--bb);}
+.ricorda-row span{font-size:14px;color:var(--tx2);}
+
+/* ── SHELL ── */
+.shell{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── HEADER ── */
+.hdr{background:var(--sf);border-bottom:2px solid var(--bl);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hdr-left{display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--bl);border:none;color:#fff;border-radius:10px;padding:10px 18px;font-size:16px;font-weight:900;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px;min-width:110px;}
+.back-btn:active{opacity:.8;transform:scale(.96);}
+.hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:.5px;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.cbg{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;background:var(--sf2);border:1px solid var(--bd);}
+.cbg .dot{width:7px;height:7px;border-radius:50%;background:var(--rb);animation:pulse 2s infinite;}
 .cbg.on .dot{background:var(--gb);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0;}
-.tb{padding:10px 4px;background:none;border:none;color:var(--tx2);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;display:flex;flex-direction:column;align-items:center;gap:3px;}
-.tb .ic{font-size:20px;}
-.tb.active{color:var(--tx);border-bottom-color:var(--bb);}
+.usr-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--tx2);}
+
+/* ── PAGES ── */
 .pages{flex:1;overflow:hidden;position:relative;}
-.page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 80px;display:none;}
+.page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding:20px 16px 40px;}
 .page.active{display:block;}
-.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
-.sc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;text-align:center;}
-.sc .v{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;line-height:1;}
-.sc .lb{font-size:11px;color:var(--tx2);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
-.sc.bl .v{color:var(--bb);}.sc.gn .v{color:var(--gb);}.sc.og .v{color:var(--ob);}.sc.rd .v{color:var(--rb);}
-.stl{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin:14px 0 10px;display:flex;align-items:center;gap:8px;}
-.stl::before,.stl::after{content:'';flex:1;height:1px;background:var(--bd);}
+
+/* ── HOME MENU ── */
+.menu-grid{display:flex;flex-direction:column;gap:14px;margin-top:8px;}
+.menu-btn{width:100%;padding:22px 20px;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:16px;text-align:left;transition:all .15s;position:relative;overflow:hidden;}
+.menu-btn:active{transform:scale(.97);}
+.menu-btn .ic{font-size:32px;flex-shrink:0;}
+.menu-btn .lbl{flex:1;}
+.menu-btn .arr{font-size:20px;color:rgba(255,255,255,.5);}
+.mb-green{background:linear-gradient(135deg,#2ea043,#26893a);color:#fff;}
+.mb-red{background:linear-gradient(135deg,#da3633,#b82d2a);color:#fff;}
+.mb-blue{background:linear-gradient(135deg,#1f6feb,#1657c9);color:#fff;}
+.mb-purple{background:linear-gradient(135deg,#6e40c9,#5a34a0);color:#fff;}
+
+/* ── CATEGORY CHOICE ── */
+.cat-grid{display:flex;flex-direction:column;gap:16px;margin-top:12px;}
+.cat-btn{width:100%;padding:28px 20px;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:14px;transition:all .15s;}
+.cat-btn:active{transform:scale(.97);}
+.cat-secco{background:var(--og);color:#111;}
+.cat-fresco{background:var(--bl);color:#fff;}
+.cat-desc{text-align:center;font-size:12px;color:var(--tx2);margin-top:-8px;margin-bottom:8px;font-style:italic;}
+
+/* ── FORM ── */
 .fc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sec-title::before,.sec-title::after{content:'';flex:1;height:1px;background:var(--bd);}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .fl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);}
 .fi{background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;outline:none;width:100%;-webkit-appearance:none;}
 .fi:focus{border-color:var(--bb);}
 .fi::placeholder{color:var(--tx2);}
 .fib{font-family:'Barlow Condensed',sans-serif!important;font-size:42px!important;font-weight:900!important;padding:14px 18px!important;text-align:center;letter-spacing:2px;border:2px solid var(--bl)!important;color:var(--bb)!important;height:78px;}
-.fib::placeholder{font-size:28px;color:var(--bd)!important;font-weight:400;}
+.fib::placeholder{font-size:20px;color:var(--bd)!important;font-weight:400;}
 .fib::-webkit-outer-spin-button,.fib::-webkit-inner-spin-button{-webkit-appearance:none;}
 .fib[type=number]{-moz-appearance:textfield;}
 .crow{display:flex;align-items:center;gap:12px;}
-.cbt{width:52px;height:52px;border-radius:50%;border:2px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.cbt{width:56px;height:56px;border-radius:50%;border:2px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .cbt:active{background:var(--bd);transform:scale(.93);}
 .cvl{flex:1;text-align:center;font-family:'Barlow Condensed',sans-serif!important;font-size:44px!important;font-weight:900!important;color:var(--ob)!important;border:2px solid var(--og)!important;padding:8px!important;height:70px;background:var(--bg);border-radius:var(--rs);width:100%;outline:none;-webkit-appearance:none;}
 .cvl[type=number]{-moz-appearance:textfield;}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;}
+.loc-wrap{display:flex;align-items:center;}
+.loc-wrap .fi{border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;flex:1;}
+.qr-btn{height:50px;width:50px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:0 var(--rs) var(--rs) 0;color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.qr-btn:active{background:var(--bl);color:#fff;}
+
+/* ── AUTO BILICO BADGE ── */
+.auto-badge{background:rgba(31,111,235,.12);border:1px solid var(--bl);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.auto-badge .ic{font-size:18px;}
+.auto-badge .tx{font-size:13px;color:var(--bb);}
+.auto-badge strong{font-family:'Barlow Condensed',sans-serif;font-size:18px;}
+
+/* ── BUTTONS ── */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:18px;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;}
 .btn:active{transform:scale(.97);opacity:.85;}
 .btn:last-child{margin-bottom:0;}
-.bi{font-size:20px;}
-.bgn{background:var(--gn);color:#fff;}.brd{background:var(--rd);color:#fff;}.bog{background:var(--og);color:#111;}.bpu{background:var(--pu);color:#fff;}.bbl{background:var(--bl);color:#fff;}.bcy{background:var(--cy);color:#fff;}
+.bgn{background:var(--gn);color:#fff;}
+.brd{background:var(--rd);color:#fff;}
+.bbl{background:var(--bl);color:#fff;}
+.bcy{background:var(--cy);color:#fff;}
+.bog{background:var(--og);color:#111;}
 .bgh{background:var(--sf2);color:var(--tx2);border:1px solid var(--bd);}
-.bsm{padding:10px 14px;font-size:13px;width:auto;border-radius:var(--rs);margin-bottom:0;}
-.brow{display:flex;gap:8px;}
-.brow .btn{margin-bottom:0;}
-.blst{display:flex;flex-direction:column;gap:10px;}
-.bcd{background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--r);padding:14px 14px 14px 18px;position:relative;overflow:hidden;}
+
+/* ── PROG BOXES ── */
+.prog-box{background:var(--sf);border:1.5px solid var(--rd);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.prog-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:rgba(218,54,51,.08);}
+.prog-hdr-l{display:flex;align-items:center;gap:8px;}
+.prog-hdr-t{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--rb);letter-spacing:.5px;}
+.prog-badge{background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px;}
+.prog-body{border-top:1px solid rgba(218,54,51,.3);display:none;}
+.prog-body.open{display:block;}
+.prog-box-d{background:var(--sf);border:1.5px solid var(--bl);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.prog-hdr-d{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:rgba(31,111,235,.08);}
+.prog-hdr-dt{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--bb);letter-spacing:.5px;}
+.prog-badge-d{background:var(--bl);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px;}
+.prog-body-d{border-top:1px solid rgba(31,111,235,.3);display:none;}
+.prog-body-d.open{display:block;}
+.prog-add{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bd);}
+.prog-add-row{display:flex;gap:8px;}
+.prog-add input{flex:1;height:42px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;padding:0 12px;outline:none;max-width:140px;}
+.prog-add input::placeholder{font-size:14px;font-weight:400;color:var(--tx2);}
+.prog-nota-inp{font-family:'Barlow',sans-serif!important;font-size:14px!important;font-weight:400!important;max-width:100%!important;height:40px!important;}
+.prog-add-btn{height:42px;padding:0 14px;color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.prog-list{display:flex;flex-direction:column;}
+.prog-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);}
+.prog-item:last-child{border-bottom:none;}
+.prog-num{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--tx);min-width:60px;}
+.prog-num span{color:var(--bb);font-size:14px;}
+.prog-info{flex:1;min-width:0;}
+.prog-loc{font-size:13px;color:var(--pb);font-weight:600;}
+.prog-ban{font-size:12px;color:var(--ob);}
+.prog-note-txt{font-size:12px;color:var(--tx2);margin-top:4px;padding-left:8px;border-left:2px solid var(--bd);}
+.prog-actions{display:flex;gap:6px;flex-shrink:0;}
+.prog-carica-btn{height:38px;padding:0 12px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
+.prog-chevron{font-size:18px;color:var(--tx2);transition:transform .2s;}
+.prog-chevron.open{transform:rotate(180deg);}
+.prog-empty{padding:16px 14px;font-size:14px;color:var(--tx2);text-align:center;}
+
+/* ── LOG TENDINA ── */
+.log-box{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+.log-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:var(--sf2);}
+.log-hdr-t{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--tx2);letter-spacing:.5px;}
+.log-hdr-chev{font-size:16px;color:var(--tx2);transition:transform .2s;}
+.log-hdr-chev.open{transform:rotate(180deg);}
+.log-body{display:none;border-top:1px solid var(--bd);}
+.log-body.open{display:block;}
+.li{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);}
+.li:last-child{border-bottom:none;}
+.ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ldot.in{background:var(--gb);}.ldot.ou{background:var(--rb);}.ldot.tr{background:var(--ob);}
+.ltx{flex:1;min-width:0;}
+.lm{font-size:14px;font-weight:600;}
+.ls{font-size:12px;color:var(--tx2);margin-top:2px;}
+.lti{font-size:11px;color:var(--tx2);white-space:nowrap;flex-shrink:0;}
+.log-empty{padding:14px;font-size:13px;color:var(--tx2);text-align:center;}
+
+/* ── CERCA ── */
+.swp{position:relative;margin-bottom:12px;}
+.swp .fi{padding-left:42px;}
+.sic{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--tx2);pointer-events:none;}
+.brow{display:flex;gap:8px;margin-bottom:10px;}
+.brow .btn{margin-bottom:0;font-size:14px;padding:10px;}
+.bcd{background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--r);padding:14px 14px 14px 18px;position:relative;overflow:hidden;margin-bottom:10px;}
 .bcd::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gb);}
 .bch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .bno{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;line-height:1;}
@@ -86,1989 +192,967 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .biv.ba{color:var(--ob);}.biv.lo{color:var(--pb);}
 .btm{font-size:11px;color:var(--tx2);margin-bottom:8px;}
 .bnt{font-size:13px;color:var(--tx2);margin-bottom:8px;}
+.add-prog-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border:none;border-radius:var(--rs);background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;float:right;margin-top:8px;}
+.add-prog-btn:active{opacity:.8;}
+
+/* ── TRASFERIMENTO ── */
 .trv{background:var(--bg);border:1.5px solid var(--gn);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;display:none;}
 .trv-t{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);margin-bottom:6px;}
 .trv-i{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;}
-.swp{position:relative;margin-bottom:12px;}
-.swp .fi{padding-left:42px;}
-.sic{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--tx2);pointer-events:none;}
-.lca{background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;}
-.lch{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.lcn{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--pb);}
-.lcs{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(46,160,67,.2);color:var(--gb);border:1px solid var(--gn);}
-.lci{font-size:14px;color:var(--tx2);}
-.lci strong{color:var(--tx);}
-.li{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd);}
-.li:last-child{border-bottom:none;}
-.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.ldot.in{background:var(--gb);}.ldot.ou{background:var(--rb);}
-.ltx{flex:1;min-width:0;}
-.lm{font-size:14px;font-weight:600;}
-.ls{font-size:12px;color:var(--tx2);margin-top:2px;}
-.lti{font-size:11px;color:var(--tx2);white-space:nowrap;text-align:right;flex-shrink:0;}
-.ldb{background:none;border:1px solid var(--rd);color:var(--rb);border-radius:6px;padding:5px 8px;font-size:15px;cursor:pointer;flex-shrink:0;}
-.ldb:active{background:var(--rd);color:#fff;}
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;justify-content:center;}
-.mo.open{display:flex;}
-.mo.top{align-items:flex-start;}
-.mdl{background:var(--sf);border-radius:20px 20px 0 0;padding:16px 16px 30px;width:100%;max-width:600px;border-top:2px solid var(--bd);animation:sup .25s ease;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.mdl.full{border-radius:0;max-height:100vh;}
-@keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.mha{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 14px;}
-.mtt{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;margin-bottom:14px;text-align:center;}
-.mtt.rd{color:var(--rb);}.mtt.og{color:var(--ob);}.mtt.cy{color:var(--cb);}
-.mbd{text-align:center;color:var(--tx2);font-size:15px;line-height:1.6;margin-bottom:16px;}
-.pds{display:flex;justify-content:center;gap:14px;margin:12px 0 16px;}
-.pd{width:18px;height:18px;border-radius:50%;border:2px solid var(--bd);background:transparent;}
-.pd.f{background:var(--bb);border-color:var(--bb);}
-.pd.e{background:var(--rb);border-color:var(--rb);animation:shk .3s;}
-@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.pgd{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto 14px;}
-.pk{background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;padding:16px 0;cursor:pointer;text-align:center;}
-.pk:active{background:var(--bl);transform:scale(.94);}
-.pk.dl{color:var(--rb);font-size:20px;}
-.pk.em{background:transparent;border-color:transparent;cursor:default;}
-.per{color:var(--rb);text-align:center;font-size:13px;font-weight:600;min-height:18px;margin-bottom:10px;}
-.sup{background:var(--sf);border:1.5px solid var(--og);border-radius:var(--r);padding:14px;margin-bottom:14px;}
-.sut{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--ob);margin-bottom:6px;}
-.sui{font-size:13px;color:var(--tx2);line-height:1.7;}
-.sui a{color:var(--bb);text-decoration:none;}
-.emp{text-align:center;padding:36px 20px;color:var(--tx2);}
-.emp .ic{font-size:44px;margin-bottom:12px;}
-.emp p{font-size:15px;}
 
-.prog-box{background:var(--sf);border:1.5px solid var(--rd);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
-.prog-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:rgba(218,54,51,.08);}
-.prog-hdr-left{display:flex;align-items:center;gap:8px;}
-.prog-hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--rb);letter-spacing:.5px;}
-.prog-badge{background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px;}
-.prog-body{border-top:1px solid rgba(218,54,51,.3);display:none;}
-.prog-body.open{display:block;}
-.prog-add{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bd);}
-.prog-add-row{display:flex;gap:8px;}
-.prog-add input{flex:1;height:42px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;padding:0 12px;outline:none;letter-spacing:1px;}
-.prog-add input:focus{border-color:var(--rb);}
-.prog-add input::placeholder{font-size:14px;font-weight:400;color:var(--tx2);}
-.prog-nota-inp{font-family:'Barlow',sans-serif!important;font-size:14px!important;font-weight:400!important;letter-spacing:0!important;color:var(--tx)!important;border-color:var(--bd)!important;height:40px!important;}
-.prog-nota-inp::placeholder{font-size:13px;color:var(--tx2);}
-.prog-nota-inp:focus{border-color:var(--rb)!important;}
-.prog-add button{height:42px;padding:0 14px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;}
-.prog-add button:active{opacity:.8;}
-.prog-list{display:flex;flex-direction:column;}
-.prog-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);}
-.prog-item:last-child{border-bottom:none;}
-.prog-num{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--tx);min-width:60px;}
-.prog-num span{color:var(--bb);font-size:14px;}
-.prog-info{flex:1;min-width:0;}
-.prog-loc{font-size:13px;color:var(--pb);font-weight:600;}
-.prog-ban{font-size:12px;color:var(--ob);}
-.prog-note-txt{font-size:11px;color:var(--tx2);}
-.prog-actions{display:flex;gap:6px;flex-shrink:0;}
-.prog-carica-btn{height:38px;padding:0 12px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;}
-.prog-carica-btn:active{opacity:.8;}
-.prog-del-btn{height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
-.prog-del-btn:active{border-color:var(--rd);color:var(--rb);}
-.prog-not-found{padding:10px 14px;font-size:13px;color:var(--ob);}
-.prog-empty{padding:16px 14px;font-size:14px;color:var(--tx2);text-align:center;}
-.prog-chevron{font-size:18px;color:var(--tx2);transition:transform .2s;}
-.prog-chevron.open{transform:rotate(180deg);}
-
-
-.login-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;}
-.login-box{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:28px 24px;width:100%;max-width:380px;}
-.login-logo{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;text-align:center;margin-bottom:6px;}
-.login-logo span{color:var(--bb);}
-.login-sub{font-size:13px;color:var(--tx2);text-align:center;margin-bottom:24px;}
-.login-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);margin-bottom:5px;}
-.login-inp{background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;width:100%;outline:none;margin-bottom:14px;-webkit-appearance:none;}
-.login-inp:focus{border-color:var(--bb);}
-
-.ricorda-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;cursor:pointer;}
-.ricorda-row input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--bb);flex-shrink:0;}
-.ricorda-row span{font-size:14px;color:var(--tx2);}
-
-.login-err{color:var(--rb);font-size:13px;text-align:center;min-height:18px;margin-bottom:10px;}
-.usr-panel{position:fixed;inset:0;background:var(--bg);z-index:500;display:none;flex-direction:column;}
-.usr-panel.open{display:flex;}
-.usr-panel-hdr{background:var(--sf);border-bottom:2px solid var(--pu);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.usr-panel-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--pb);}
-.usr-panel-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px 40px;}
-.usr-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;cursor:pointer;}
-.usr-card:active{opacity:.8;}
-.usr-card-hdr{display:flex;align-items:center;justify-content:space-between;}
-.usr-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--tx);}
-.usr-lvl{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
-.usr-lvl.l0{background:rgba(46,160,67,.2);color:var(--gb);border:1px solid var(--gn);}
-.usr-lvl.l1{background:rgba(31,111,235,.2);color:var(--bb);border:1px solid var(--bl);}
-.usr-last{font-size:12px;color:var(--tx2);margin-top:4px;}
-.usr-log-box{background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;margin-top:8px;display:none;}
-.usr-log-box.open{display:block;}
-.usr-log-item{font-size:12px;color:var(--tx2);padding:4px 0;border-bottom:1px solid var(--bd);}
-.usr-log-item:last-child{border-bottom:none;}
-.usr-log-empty{font-size:12px;color:var(--tx2);text-align:center;padding:8px;}
-.usr-del-btn{background:none;border:1px solid var(--rd);color:var(--rb);border-radius:var(--rs);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;}
-.usr-edit-btn{background:none;border:1px solid var(--bl);color:var(--bb);border-radius:var(--rs);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;margin-right:6px;}
-.pass-wrap{position:relative;display:flex;align-items:center;}
-.pass-wrap .fi{padding-right:44px;flex:1;}
-.pass-eye-btn{position:absolute;right:0;top:0;bottom:0;width:44px;background:none;border:none;color:var(--tx2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
-.pass-eye-btn:active{color:var(--bb);}
-.lvl-toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden;margin-bottom:14px;}
-.lvl-btn{height:44px;background:none;border:none;color:var(--tx2);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
-.lvl-btn.active{background:var(--pu);color:#fff;}
-
-
-.edit-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
-.edit-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);}
-.edit-inp{background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;outline:none;width:100%;-webkit-appearance:none;}
-.edit-inp:focus{border-color:var(--bb);}
-.edit-inp.big{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;text-align:center;color:var(--bb);border-color:var(--bl);}
-.pen-btn{height:34px;width:34px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.pen-btn:active{border-color:var(--bb);color:var(--bb);}
-
-
-.loc-wrap{position:relative;display:flex;align-items:center;gap:0;}
-.loc-wrap .fi{flex:1;border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;}
-.loc-wrap .fi:focus{border-color:var(--bb);z-index:1;}
-.qr-btn{height:50px;width:50px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:0 var(--rs) var(--rs) 0;color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;transition:all .15s;}
-.qr-btn:active{background:var(--bl);color:#fff;border-color:var(--bl);}
-
-
-.prog-box-domani{background:var(--sf);border:1.5px solid var(--bl);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
-.prog-hdr-domani{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(31,111,235,.08);cursor:pointer;}
-.prog-title-domani{font-size:14px;font-weight:700;color:var(--bb);letter-spacing:.5px;}
-.prog-badge-domani{background:var(--bl);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
-.prog-body-blue{border-top:1px solid rgba(31,111,235,.3);display:none;}
-.prog-body-blue.open{display:block;}
-
-.tst{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--sf);border:1px solid var(--bd);color:var(--tx);padding:12px 20px;border-radius:30px;font-weight:600;font-size:14px;z-index:400;transition:transform .3s;white-space:nowrap;pointer-events:none;max-width:90vw;overflow:hidden;}
+/* ── TOAST ── */
+.tst{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--sf);border:1px solid var(--bd);color:var(--tx);padding:12px 20px;border-radius:30px;font-weight:600;font-size:14px;z-index:400;transition:transform .3s;white-space:nowrap;pointer-events:none;max-width:90vw;}
 .tst.show{transform:translateX(-50%) translateY(0);}
 .tst.ok{border-color:var(--gn);}.tst.er{border-color:var(--rd);}
-.imp-info{background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--tx2);line-height:1.7;}
-.imp-info strong{color:var(--cb);}
-.imp-info .col-hdr{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:8px;}
-.col-tag{background:var(--sf2);border:1px solid var(--bd);border-radius:4px;padding:4px 6px;font-size:11px;font-weight:700;text-align:center;color:var(--tx);}
-.imp-note{background:rgba(13,148,136,.1);border:1px solid var(--cy);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--cb);line-height:1.6;}
+
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.mo.open{display:flex;}
+.mdl{background:var(--sf);border-radius:20px 20px 0 0;padding:16px 16px 30px;width:100%;max-width:600px;border-top:2px solid var(--bd);max-height:90vh;overflow-y:auto;}
+.mha{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 14px;}
+.mtt{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;margin-bottom:14px;text-align:center;}
+.mbd{text-align:center;color:var(--tx2);font-size:15px;line-height:1.6;margin-bottom:16px;}
+.mtt.rd{color:var(--rb);}
+
+/* ── EMPTY ── */
+.emp{text-align:center;padding:30px 20px;color:var(--tx2);}
+.emp .ic{font-size:40px;margin-bottom:10px;}
+.emp p{font-size:15px;}
+
+/* ── SUCCESS ── */
+.success-box{background:rgba(46,160,67,.1);border:2px solid var(--gn);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:14px;}
+.success-box .ic{font-size:40px;margin-bottom:8px;}
+.success-box .tx{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--gb);}
+.success-box .sub{font-size:13px;color:var(--tx2);margin-top:4px;}
 </style>
 </head>
 <body>
 
-
-<!-- SCHERMATA LOGIN -->
+<!-- LOGIN -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-logo">&#x1F69B; <span>BILICI</span> TMP</div>
-    <div class="login-sub">Accedi con le tue credenziali</div>
-    <div class="login-label">Username</div>
+    <div class="login-sub">Area Operatore</div>
+    <div class="login-lbl">Username</div>
     <input class="login-inp" id="log-user" type="text" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <div class="login-label">Password</div>
+    <div class="login-lbl">Password</div>
     <input class="login-inp" id="log-pass" type="password" placeholder="Password" onkeydown="if(event.keyCode===13)doLogin()">
     <label class="ricorda-row">
       <input type="checkbox" id="log-ricorda">
-      <span>Ricordami su questo dispositivo</span>
+      <span>Ricordami</span>
     </label>
     <div class="login-err" id="log-err"></div>
-    <button class="btn bbl" onclick="doLogin()" style="margin-bottom:0;">ACCEDI</button>
+    <button class="btn bbl" onclick="doLogin()" style="font-size:17px;padding:15px;">ACCEDI</button>
   </div>
 </div>
 
-<!-- PANNELLO GESTIONE UTENTI -->
-<div class="usr-panel" id="usr-panel">
-  <div class="usr-panel-hdr">
-    <div class="usr-panel-title">&#x1F465; Gestione Utenti</div>
-    <button class="btn bgh bsm" onclick="chiudiUtenti()" style="margin-bottom:0;">&#x2716; Chiudi</button>
+<!-- SHELL -->
+<div class="shell" id="shell" style="display:none;">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">&#x2190; INDIETRO</button>
+      <div class="hdr-title" id="hdr-title">🚛 BILICI TMP</div>
+    </div>
+    <div class="hdr-right">
+      <div class="cbg" id="cbg"><span class="dot"></span><span id="cbl">LOC</span></div>
+      <div class="usr-badge" id="usr-badge"></div>
+      <button onclick="logout()" style="background:none;border:1px solid var(--bd);color:var(--tx2);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">ESCI</button>
+    </div>
   </div>
-  <div class="usr-panel-body">
-    <div class="stl">Crea Nuovo Utente</div>
-    <div class="fc">
-      <div class="fg">
-        <div class="fl">Username</div>
-        <input class="fi" id="nu-user" type="text" placeholder="es. Marco" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+  <!-- PAGES -->
+  <div class="pages">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div style="margin-bottom:16px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Seleziona operazione</div>
       </div>
-      <div class="fg">
-        <div class="fl">Password</div>
-        <input class="fi" id="nu-pass" type="password" placeholder="Password">
+      <div class="menu-grid">
+        <button class="menu-btn mb-green" onclick="goPage('entrata','ENTRATA MERCI')">
+          <span class="ic">&#x1F7E2;</span>
+          <span class="lbl">Entrata Merci</span>
+          <span class="arr">&#x276F;</span>
+        </button>
+        <button class="menu-btn mb-red" onclick="goPage('uscita','USCITA MERCI')">
+          <span class="ic">&#x1F534;</span>
+          <span class="lbl">Uscita Merci</span>
+          <span class="arr">&#x276F;</span>
+        </button>
+        <button class="menu-btn mb-blue" onclick="goPage('trasferimento','TRASFERIMENTO')">
+          <span class="ic">&#x1F504;</span>
+          <span class="lbl">Trasferimento</span>
+          <span class="arr">&#x276F;</span>
+        </button>
+        <button class="menu-btn mb-purple" onclick="goPage('magazzino','CONSULTAZIONE')">
+          <span class="ic">&#x1F4E6;</span>
+          <span class="lbl">Consultazione Magazzino</span>
+          <span class="arr">&#x276F;</span>
+        </button>
       </div>
-      <div class="fg">
-        <div class="fl">Livello accesso</div>
-        <div class="lvl-toggle">
-          <button class="lvl-btn active" id="lvl-btn-0" onclick="selLvl(0)">&#x1F511; LIVELLO 0 — Admin</button>
-          <button class="lvl-btn" id="lvl-btn-1" onclick="selLvl(1)">&#x1F464; LIVELLO 1 — Operatore</button>
+    </div>
+
+    <!-- ENTRATA: SCELTA CATEGORIA -->
+    <div class="page" id="page-entrata">
+      <div class="cat-grid">
+        <p style="font-size:14px;color:var(--tx2);text-align:center;margin-bottom:4px;">Seleziona il tipo di merce da ricevere:</p>
+        <button class="cat-btn cat-secco" onclick="goEntrata('secco')">
+          <span style="font-size:34px;">&#x2600;&#xFE0F;</span> SECCO
+        </button>
+        <p class="cat-desc">Tutte le locazioni escluso FRESCO</p>
+        <button class="cat-btn cat-fresco" onclick="goEntrata('fresco')">
+          <span style="font-size:34px;">&#x2744;&#xFE0F;</span> FRESCO
+        </button>
+        <p class="cat-desc">Solo locazione FRESCO</p>
+      </div>
+    </div>
+
+    <!-- ENTRATA FORM (SECCO / FRESCO) -->
+    <div class="page" id="page-entrata-form">
+      <div id="entrata-success" style="display:none;" class="success-box">
+        <div class="ic">&#x2705;</div>
+        <div class="tx" id="success-msg">Bilico registrato!</div>
+        <div class="sub" id="success-sub"></div>
+      </div>
+      <div class="auto-badge" id="auto-badge">
+        <span class="ic">&#x1F916;</span>
+        <span class="tx">Prossimo bilico suggerito: <strong id="auto-num">—</strong></span>
+      </div>
+      <div class="fc">
+        <div class="sec-title" id="entrata-form-title">Entrata Secco</div>
+        <div class="fg">
+          <div class="fl">Numero Bilico</div>
+          <input class="fi fib" id="en-bilico" type="number" placeholder="906" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="fg">
+          <div class="fl">Numero Bancali</div>
+          <div class="crow">
+            <button class="cbt" onclick="stp('en-bancali',-1)">&#x2212;</button>
+            <input class="cvl" id="en-bancali" type="number" value="0" min="0" inputmode="numeric">
+            <button class="cbt" onclick="stp('en-bancali',1)">+</button>
+          </div>
+        </div>
+        <div class="fg">
+          <div class="fl">Postazione</div>
+          <div class="loc-wrap">
+            <input class="fi" id="en-postazione" type="text" placeholder="es. A1, BANCHINA..." autocomplete="off" style="text-transform:uppercase;font-size:17px;font-weight:700;" oninput="this.value=this.value.toUpperCase()">
+            <button class="qr-btn" onclick="apriQR('en-postazione')">&#x1F4F7;</button>
+          </div>
+        </div>
+        <div class="fg">
+          <div class="fl">Note (opzionale)</div>
+          <input class="fi" id="en-note" type="text" placeholder="Merce, cliente..." autocomplete="off">
         </div>
       </div>
-      <button class="btn bpu" onclick="creaUtente()" style="margin-bottom:0;"><span class="bi">&#x2795;</span>CREA UTENTE</button>
-    </div>
-    <div class="stl">Utenti Registrati</div>
-    <div id="usr-lista"></div>
-  </div>
-</div>
+      <button class="btn bgn" onclick="confEntrata()"><span style="font-size:22px;">&#x2705;</span> CONFERMA ENTRATA</button>
+      <button class="btn bgh" onclick="resetEntrata()" style="margin-top:4px;">&#x21BA; Ricomincia</button>
 
-<div class="hdr">
-  <div class="htl">&#x1F69B; <span>BILICI</span> TMP</div>
-  <div style="display:flex;align-items:center;gap:8px;">
-  <div class="cbg" id="cbg"><span class="dot"></span><span id="cbl">LOCALE</span></div>
-  <button onclick="logout()" style="height:30px;padding:0 10px;background:none;border:1px solid var(--bd);border-radius:20px;color:var(--tx2);font-size:11px;font-weight:700;cursor:pointer;">ESCI</button>
-  </div>
-</div>
-
-<div class="tabs">
-  <button class="tb active" id="tbh" onclick="goP('home')"><span class="ic">&#x1F3E0;</span>HOME</button>
-  <button class="tb" id="tbe" onclick="goP('entrata')"><span class="ic">&#x1F7E2;</span>ENTRATA</button>
-  <button class="tb" id="tbu" onclick="goP('uscita')"><span class="ic">&#x1F534;</span>USCITA</button>
-  <button class="tb" id="tbm" onclick="goP('magazzino')"><span class="ic">&#x1F4E6;</span>MAGAZZINO</button>
-  <button class="tb" id="tbc" onclick="goP('cerca')"><span class="ic">&#x1F50D;</span>CERCA</button>
-</div>
-
-<div class="pages">
-
-<!-- HOME -->
-<div class="page active" id="page-home">
-  <div class="sg">
-    <div class="sc bl"><div class="v" id="s1">0</div><div class="lb">&#x1F69B; Bilici</div></div>
-    <div class="sc og"><div class="v" id="s2">0</div><div class="lb">&#x1F4E6; Bancali</div></div>
-    <div class="sc rd"><div class="v" id="s4">0</div><div class="lb">&#x1F4CB; Oggi</div></div>
-  </div>
-
-  <!-- USCITE IN PROGRAMMA OGGI -->
-  <div class="prog-box">
-    <div class="prog-hdr" onclick="toggleProg()">
-      <div class="prog-hdr-left">
-        <span style="font-size:20px;">&#x1F6A8;</span>
-        <div class="prog-hdr-title">USCITE IN PROGRAMMA OGGI</div>
-        <div class="prog-badge" id="prog-count">0</div>
-      </div>
-      <div class="prog-chevron" id="prog-chev">&#x2304;</div>
-    </div>
-    <div class="prog-body open" id="prog-body">
-      <div class="prog-add">
-        <div class="prog-add-row">
-          <input type="number" id="prog-inp" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProg()" style="max-width:140px;">
-          <button onclick="aggProg()">+ AGGIUNGI</button>
+      <!-- STORICO ENTRATE TENDINA -->
+      <div class="log-box" style="margin-top:16px;">
+        <div class="log-hdr" onclick="toggleLog('log-ent')">
+          <span class="log-hdr-t">&#x1F4CB; ULTIME ENTRATE</span>
+          <span class="log-hdr-chev" id="log-ent-chev">&#x2304;</span>
         </div>
-        <input class="prog-nota-inp" type="text" id="prog-nota-inp" placeholder="Nota opzionale (es. caricare 30 plt trattenere 2 SSCC...)" autocomplete="off">
-      </div>
-      <div class="prog-list" id="prog-list">
-        <div class="prog-empty">Nessuna uscita programmata per oggi</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- USCITE PROGRAMMATE DOMANI -->
-  <div class="prog-box-domani">
-    <div class="prog-hdr-domani" onclick="toggleProgDomani()">
-      <div class="prog-hdr-left">
-        <span style="font-size:20px;">&#x1F4C5;</span>
-        <div class="prog-title-domani">USCITE PROGRAMMATE DOMANI</div>
-        <div class="prog-badge-domani" id="prog-domani-count">0</div>
-      </div>
-      <div class="prog-chevron" id="prog-domani-chev">&#x2304;</div>
-    </div>
-    <div class="prog-body-blue" id="prog-domani-body">
-      <div class="prog-add" style="border-color:rgba(31,111,235,.3);">
-        <div class="prog-add-row">
-          <input type="number" id="prog-domani-inp" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomani()" style="max-width:140px;">
-          <button onclick="aggProgDomani()" style="height:42px;padding:0 14px;background:var(--bl);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button>
+        <div class="log-body" id="log-ent-body">
+          <div id="log-ent-list" class="log-empty">Nessuna entrata recente</div>
         </div>
-        <input class="prog-nota-inp" type="text" id="prog-domani-nota-inp" placeholder="Nota opzionale..." autocomplete="off" style="border-color:var(--bd);">
-      </div>
-      <div class="prog-list" id="prog-domani-list">
-        <div class="prog-empty">Nessuna uscita programmata per domani</div>
       </div>
     </div>
-  </div>
 
-  <div id="supbox" style="display:none">
-    <div class="sup">
-      <div class="sut">&#x2699;&#xFE0F; MODALITA LOCALE</div>
-      <div class="sui">
-        Dati salvati solo su questo dispositivo.<br>
-        Per sincronizzare piu dispositivi:<br><br>
-        1. <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a><br>
-        2. Nuovo progetto &rarr; Firestore Database &rarr; Crea &rarr; modalita Test<br>
-        3. Impostazioni &rarr; Le tue app &rarr; Web &rarr; copia firebaseConfig<br>
-        4. Incolla nel file HTML (cerca INSERISCI_API_KEY)<br>
-        5. Carica su <a href="https://app.netlify.com/drop" target="_blank">Netlify Drop</a> e condividi il link
+    <!-- USCITA MERCI -->
+    <div class="page" id="page-uscita">
+      <!-- Prog oggi -->
+      <div class="prog-box">
+        <div class="prog-hdr" onclick="toggleSection('prog-oggi-body','prog-oggi-chev')">
+          <div class="prog-hdr-l">
+            <span style="font-size:20px;">&#x1F6A8;</span>
+            <div class="prog-hdr-t">USCITE OGGI</div>
+            <div class="prog-badge" id="prog-count">0</div>
+          </div>
+          <div class="prog-chevron open" id="prog-oggi-chev">&#x2304;</div>
+        </div>
+        <div class="prog-body open" id="prog-oggi-body">
+          <div class="prog-add">
+            <div class="prog-add-row">
+              <input type="number" id="prog-inp" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProg()" style="max-width:140px;">
+              <button class="prog-add-btn" onclick="aggProg()" style="background:var(--rd);">+ AGGIUNGI</button>
+            </div>
+            <input class="prog-nota-inp fi" type="text" id="prog-nota-inp" placeholder="Nota opzionale..." autocomplete="off">
+          </div>
+          <div class="prog-list" id="prog-list">
+            <div class="prog-empty">Nessuna uscita programmata per oggi</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prog domani -->
+      <div class="prog-box-d">
+        <div class="prog-hdr-d" onclick="toggleSection('prog-dom-body','prog-dom-chev')">
+          <div class="prog-hdr-l">
+            <span style="font-size:20px;">&#x1F4C5;</span>
+            <div class="prog-hdr-dt">USCITE DOMANI</div>
+            <div class="prog-badge-d" id="prog-domani-count">0</div>
+          </div>
+          <div class="prog-chevron" id="prog-dom-chev">&#x2304;</div>
+        </div>
+        <div class="prog-body-d" id="prog-dom-body">
+          <div class="prog-add" style="border-color:rgba(31,111,235,.3);">
+            <div class="prog-add-row">
+              <input type="number" id="prog-domani-inp" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomani()" style="max-width:140px;">
+              <button class="prog-add-btn" onclick="aggProgDomani()" style="background:var(--bl);">+ AGGIUNGI</button>
+            </div>
+            <input class="prog-nota-inp fi" type="text" id="prog-domani-nota-inp" placeholder="Nota opzionale..." autocomplete="off">
+          </div>
+          <div class="prog-list" id="prog-domani-list">
+            <div class="prog-empty">Nessuna uscita programmata per domani</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storico uscite tendina -->
+      <div class="log-box">
+        <div class="log-hdr" onclick="toggleLog('log-usc')">
+          <span class="log-hdr-t">&#x1F4CB; ULTIMI CARICHI EFFETTUATI</span>
+          <span class="log-hdr-chev" id="log-usc-chev">&#x2304;</span>
+        </div>
+        <div class="log-body" id="log-usc-body">
+          <div id="log-usc-list" class="log-empty">Nessun carico recente</div>
+        </div>
       </div>
     </div>
+
+    <!-- TRASFERIMENTO -->
+    <div class="page" id="page-trasferimento">
+      <div class="fc">
+        <div class="sec-title">Cerca Bilico da Spostare</div>
+        <div class="fg">
+          <div class="fl">Numero Bilico</div>
+          <input class="fi fib" id="tr-bilico" type="number" placeholder="905" inputmode="numeric" autocomplete="off" oninput="trovaBilicoTransfer()">
+        </div>
+        <div class="trv" id="tr-trovato">
+          <div class="trv-t">&#x2705; Bilico trovato</div>
+          <div class="trv-i">&#x1F4CD; Posizione attuale: <span id="tr-pos-attuale" style="color:var(--pb)">-</span></div>
+        </div>
+      </div>
+      <div class="fc" id="tr-dest-box" style="display:none;">
+        <div class="sec-title">Nuova Destinazione</div>
+        <div class="fg">
+          <div class="fl">Nuova Postazione</div>
+          <div class="loc-wrap">
+            <input class="fi" id="tr-dest" type="text" placeholder="es. FRESCO, A2..." autocomplete="off" style="text-transform:uppercase;font-size:17px;font-weight:700;" oninput="this.value=this.value.toUpperCase()">
+            <button class="qr-btn" onclick="apriQR('tr-dest')">&#x1F4F7;</button>
+          </div>
+        </div>
+        <button class="btn bcy" onclick="confTransfer()">&#x1F504; CONFERMA TRASFERIMENTO</button>
+      </div>
+
+      <!-- Storico trasferimenti tendina -->
+      <div class="log-box" style="margin-top:4px;">
+        <div class="log-hdr" onclick="toggleLog('log-tr')">
+          <span class="log-hdr-t">&#x1F4CB; ULTIMI TRASFERIMENTI</span>
+          <span class="log-hdr-chev" id="log-tr-chev">&#x2304;</span>
+        </div>
+        <div class="log-body" id="log-tr-body">
+          <div id="log-tr-list" class="log-empty">Nessun trasferimento recente</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSULTAZIONE MAGAZZINO -->
+    <div class="page" id="page-magazzino">
+      <div class="fc">
+        <div class="swp">
+          <span class="sic">&#x1F50D;</span>
+          <input class="fi" id="mag-search" type="text" placeholder="Numero bilico o postazione..." autocomplete="off" oninput="cercaMag()">
+        </div>
+        <div class="brow">
+          <button class="btn bbl" onclick="setMagMode('b')" id="mag-btn-b">&#x1F69B; Per Bilico</button>
+          <button class="btn bgh" onclick="setMagMode('p')" id="mag-btn-p">&#x1F4CD; Per Postazione</button>
+        </div>
+        <div id="mag-mode-lbl" style="font-size:12px;color:var(--tx2);text-align:center;margin-top:6px;">Modalita: <strong style="color:var(--bb)">Bilico</strong></div>
+      </div>
+      <div id="mag-results"></div>
+      <div class="sec-title" style="margin-top:8px;">Tutto il Magazzino</div>
+      <div id="mag-all"></div>
+    </div>
+
   </div>
-  <div class="stl">In Magazzino</div>
-  <button class="btn bbl" onclick="goP('magazzino')"><span class="bi">&#x1F69B;</span>VEDI MAGAZZINO (<span id="cnt-mag">0</span> bilici)</button>
-  <div class="stl">Gestione</div>
-  <button class="btn bpu" id="btn-utenti" onclick="apriUtenti()" style="display:none;"><span class="bi">&#x1F465;</span>GESTIONE UTENTI</button>
-  <button class="btn bog" onclick="apriStor()"><span class="bi">&#x1F4CB;</span>STORICO MOVIMENTI</button>
-  <button class="btn bpu" id="btn-export" onclick="expExcel()"><span class="bi">&#x1F4CA;</span>ESPORTA EXCEL</button>
-  <button class="btn bcy" id="btn-import" onclick="apriImport()"><span class="bi">&#x1F4E5;</span>IMPORTA DA EXCEL</button>
 </div>
 
-<!-- ENTRATA -->
-<div class="page" id="page-entrata">
-  <div class="fc">
-    <div class="stl">Registra Entrata</div>
-    <div class="fg">
-      <div class="fl">Numero Bilico</div>
-      <input class="fi fib" id="in-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off">
-    </div>
-    <div class="fg">
-      <div class="fl">Locazione</div>
-      <div class="loc-wrap">
-        <input class="fi" id="in-l" type="text" placeholder="es. A1, BANCHINA, FRESCO..." autocomplete="off" style="text-transform:uppercase;font-size:18px;font-weight:700;padding:14px;">
-        <button class="qr-btn" onclick="apriQR('in-l')" title="Scansiona QR">&#x1F4F7;</button>
-      </div>
-    </div>
-    <div class="fg">
-      <div class="fl">Numero Bancali</div>
-      <div class="crow">
-        <button class="cbt" onclick="stp('in-b',-1)">&#x2212;</button>
-        <input class="cvl" id="in-b" type="number" value="0" min="0" inputmode="numeric">
-        <button class="cbt" onclick="stp('in-b',1)">+</button>
-      </div>
-    </div>
-    <div class="fg">
-      <div class="fl">Note (opzionale)</div>
-      <input class="fi" id="in-nt" type="text" placeholder="Merce, cliente..." autocomplete="off">
-    </div>
-    <button class="btn bgn" onclick="regE()"><span class="bi">&#x1F7E2;</span>REGISTRA ENTRATA</button>
-  </div>
-  <div class="stl">Ultimi Ingressi</div>
-  <div id="log-in"><div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessuna entrata</p></div></div>
-</div>
-
-<!-- USCITA -->
-<div class="page" id="page-uscita">
-  <div class="fc">
-    <div class="stl">Registra Uscita</div>
-    <div class="fg">
-      <div class="fl">Numero Bilico</div>
-      <input class="fi fib" id="out-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" oninput="trovB()">
-    </div>
-    <div class="trv" id="trvbox">
-      <div class="trv-t">&#x2705; Bilico trovato</div>
-      <div class="trv-i">
-        &#x1F4CD; <span id="out-lo" style="color:var(--pb)">-</span>
-        &nbsp;|&nbsp;
-        &#x1F4E6; <span id="out-ba" style="color:var(--ob)">-</span> bancali
-      </div>
-    </div>
-    <div class="fg">
-      <div class="fl">Bancali in Uscita</div>
-      <div class="crow">
-        <button class="cbt" onclick="stp('out-b',-1)">&#x2212;</button>
-        <input class="cvl" id="out-b" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;">
-        <button class="cbt" onclick="stp('out-b',1)">+</button>
-      </div>
-    </div>
-    <div class="fg">
-      <div class="fl">Note (opzionale)</div>
-      <input class="fi" id="out-nt" type="text" placeholder="Destinazione, cliente..." autocomplete="off">
-    </div>
-    <button class="btn brd" onclick="regU()"><span class="bi">&#x1F534;</span>REGISTRA USCITA</button>
-  </div>
-  <div class="stl">Ultimi Usciti</div>
-  <div id="log-ou"><div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessuna uscita</p></div></div>
-</div>
-
-<!-- CERCA -->
-<div class="page" id="page-cerca">
-  <div class="fc">
-    <div class="stl">Cerca</div>
-    <div class="swp">
-      <span class="sic">&#x1F50D;</span>
-      <input class="fi" id="s-in" type="text" placeholder="Numero bilico o locazione..." autocomplete="off" oninput="cerca()">
-    </div>
-    <div class="brow">
-      <button class="btn bbl bsm" style="flex:1" onclick="setSM('b')">&#x1F69B; Per Bilico</button>
-      <button class="btn bpu bsm" style="flex:1" onclick="setSM('l')">&#x1F4CD; Per Locazione</button>
-    </div>
-    <div id="smlbl" style="margin-top:8px;font-size:12px;color:var(--tx2);text-align:center;">
-      Modalita: <strong style="color:var(--bb)">Bilico</strong>
-    </div>
-  </div>
-  <div id="s-res"></div>
-  <div class="stl">Tutte le Locazioni</div>
-  <div id="loc-lst"><div class="emp"><div class="ic">&#x1F4CD;</div><p>Nessuna locazione occupata</p></div></div>
-</div>
-
-<!-- MAGAZZINO -->
-<div class="page" id="page-magazzino">
-  <div class="sec-hdr" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);">Bilici presenti (<span id="mag-count">0</span>)</div>
-  </div>
-  <div class="blst" id="lst-magazzino"><div class="emp"><div class="ic">&#x1F69B;</div><p>Nessun bilico presente</p></div></div>
-</div>
-
-
-</div>
-
-<!-- MODAL CONFERMA USCITA -->
-<div class="mo" id="mo-u">
+<!-- MODAL CONFERMA -->
+<div class="mo" id="mo-conf">
   <div class="mdl">
     <div class="mha"></div>
-    <div class="mtt rd">&#x26A0;&#xFE0F; Conferma Uscita</div>
-    <div class="mbd" id="mo-u-tx"></div>
-    <div class="brow">
-      <button class="btn brd" onclick="confU()">&#x2705; CONFERMA</button>
-      <button class="btn bgh" onclick="chiM('mo-u')">&#x274C; ANNULLA</button>
+    <div class="mtt rd">&#x26A0;&#xFE0F; Conferma</div>
+    <div class="mbd" id="mo-conf-tx"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn bgn" onclick="eseguiConf()" style="margin-bottom:0;">&#x2705; CONFERMA</button>
+      <button class="btn bgh" onclick="chiM('mo-conf')" style="margin-bottom:0;">&#x274C; ANNULLA</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL PIN -->
-<div class="mo" id="mo-p">
-  <div class="mdl">
-    <div class="mha"></div>
-    <div class="mtt og">&#x1F510; Inserisci PIN</div>
-    <div class="pds">
-      <div class="pd" id="pd0"></div>
-      <div class="pd" id="pd1"></div>
-      <div class="pd" id="pd2"></div>
-      <div class="pd" id="pd3"></div>
-    </div>
-    <div class="per" id="perr"></div>
-    <div class="pgd">
-      <button class="pk" onclick="pki('1')">1</button>
-      <button class="pk" onclick="pki('2')">2</button>
-      <button class="pk" onclick="pki('3')">3</button>
-      <button class="pk" onclick="pki('4')">4</button>
-      <button class="pk" onclick="pki('5')">5</button>
-      <button class="pk" onclick="pki('6')">6</button>
-      <button class="pk" onclick="pki('7')">7</button>
-      <button class="pk" onclick="pki('8')">8</button>
-      <button class="pk" onclick="pki('9')">9</button>
-      <button class="pk em"></button>
-      <button class="pk" onclick="pki('0')">0</button>
-      <button class="pk dl" onclick="pkd()">&#x232B;</button>
-    </div>
-    <button class="btn bgh" onclick="chiM('mo-p')">Annulla</button>
-  </div>
-</div>
-
-<!-- MODAL STORICO -->
-<div class="mo top" id="mo-s">
-  <div class="mdl full">
-    <div style="height:10px"></div>
-    <div class="mha"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div class="mtt" style="margin-bottom:0;color:var(--tx)">&#x1F4CB; Storico</div>
-      <button class="btn brd bsm" onclick="chiPin('svuota',null)">&#x1F5D1; Svuota</button>
-    </div>
-    <div id="stor-l"></div>
-    <div style="height:14px"></div>
-    <button class="btn bgh" onclick="chiM('mo-s')">&#x2716; Chiudi</button>
-  </div>
-</div>
-
-<!-- MODAL IMPORTA -->
-<div class="mo top" id="mo-imp">
-  <div class="mdl full">
-    <div style="height:10px"></div>
-    <div class="mha"></div>
-    <div class="mtt cy">&#x1F4E5; Importa da Excel</div>
-
-    <div class="imp-info">
-      <strong>Struttura del file Excel richiesta:</strong><br>
-      La prima riga deve essere l'intestazione con queste colonne nell'ordine esatto:
-      <div class="col-hdr">
-        <div class="col-tag">NUMERO</div>
-        <div class="col-tag">LOCAZIONE</div>
-        <div class="col-tag">BANCALI</div>
-        <div class="col-tag">NOTE</div>
-        <div class="col-tag">DATA</div>
-      </div>
-    </div>
-
-    <div class="imp-note">
-      &#x2139;&#xFE0F; La colonna DATA e opzionale. Se vuota viene usata la data odierna.<br>
-      Formato data accettato: GG/MM/AAAA oppure GG/MM/AAAA HH:MM<br>
-      Le locazioni BANCHINA e SMEZZI accettano piu bilici nella stessa posizione.
-    </div>
-
-    <div class="fg">
-      <button class="btn bgh" onclick="scaricaTemplate()"><span class="bi">&#x1F4CB;</span>SCARICA TEMPLATE EXCEL</button>
-    </div>
-
-    <div class="fg">
-      <div class="fl">Seleziona file Excel (.xlsx)</div>
-      <input type="file" id="imp-file" accept=".xlsx,.xls" style="background:var(--bg);border:1.5px solid var(--cy);border-radius:var(--rs);color:var(--tx);padding:12px;width:100%;font-size:14px;">
-    </div>
-
-    <div id="imp-preview" style="display:none;margin-bottom:14px;">
-      <div class="fl" style="margin-bottom:8px;">Anteprima importazione:</div>
-      <div id="imp-preview-content" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:12px;font-size:13px;max-height:200px;overflow-y:auto;"></div>
-    </div>
-
-    <div id="imp-err" style="display:none;background:rgba(218,54,51,.1);border:1px solid var(--rd);border-radius:var(--rs);padding:10px 12px;color:var(--rb);font-size:13px;margin-bottom:14px;"></div>
-
-    <div class="brow">
-      <button class="btn bcy" id="imp-btn" onclick="eseguiImport()" style="display:none;"><span class="bi">&#x1F4E5;</span>IMPORTA</button>
-      <button class="btn bgh" onclick="chiM('mo-imp')">&#x2716; Chiudi</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL MODIFICA BILICO -->
-<div class="mo top" id="mo-edit">
-  <div class="mdl">
-    <div style="height:10px"></div>
-    <div class="mha"></div>
-    <div class="mtt" style="color:var(--bb)">&#x270F;&#xFE0F; Modifica Bilico</div>
-    <div class="edit-field">
-      <div class="edit-label">Numero Bilico</div>
-      <input class="edit-inp big" id="edit-n" type="number" inputmode="numeric" autocomplete="off">
-    </div>
-    <div class="edit-field">
-      <div class="edit-label">Locazione</div>
-      <div class="loc-wrap">
-        <input class="edit-inp" id="edit-l" type="text" autocomplete="off" style="text-transform:uppercase;font-size:20px;font-weight:700;border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;flex:1;">
-        <button class="qr-btn" onclick="apriQR('edit-l')" title="Scansiona QR">&#x1F4F7;</button>
-      </div>
-    </div>
-    <div class="edit-field">
-      <div class="edit-label">Bancali</div>
-      <div class="crow">
-        <button class="cbt" onclick="stp('edit-b',-1)">&#x2212;</button>
-        <input class="cvl" id="edit-b" type="number" min="0" inputmode="numeric">
-        <button class="cbt" onclick="stp('edit-b',1)">+</button>
-      </div>
-    </div>
-    <div class="edit-field">
-      <div class="edit-label">Data entrata</div>
-      <input class="edit-inp" id="edit-d" type="datetime-local">
-    </div>
-    <div class="edit-field">
-      <div class="edit-label">Note</div>
-      <input class="edit-inp" id="edit-nt" type="text" placeholder="Note..." autocomplete="off">
-    </div>
-    <div class="brow" style="margin-top:6px;">
-      <button class="btn bgn" onclick="salvaModifica()" style="margin-bottom:0;">&#x2713; SALVA MODIFICHE</button>
-      <button class="btn bgh" onclick="chiM('mo-edit')" style="margin-bottom:0;">&#x2716; Annulla</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- QR SCANNER INPUT NATIVO -->
+<!-- QR INPUT -->
 <input type="file" id="qr-input-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
-
-
 <div class="tst" id="tst"></div>
 
 <script>
-// ═══════════════════════════════════════════
-// REGOLE FIRESTORE da impostare nella console:
-// Firestore -> Regole -> incolla questo:
-//
-// rules_version = '2';
-// service cloud.firestore {
-//   match /databases/{database}/documents {
-//     match /{document=**} {
-//       allow read, write: if true;
-//     }
-//   }
-// }
-//
-// INDICE RICHIESTO: login_log -> username_lc ASC, ts DESC
-// Firestore -> Indici -> Aggiungi indice composito
-// Raccolta: login_log  Campo1: username_lc ASC  Campo2: ts DESC
-// ═══════════════════════════════════════════
+// ═══ CONFIG ═══
 var FBC = {
- apiKey: "AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",
+  apiKey: "AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",
   authDomain: "firestore-database-93749.firebaseapp.com",
   projectId: "firestore-database-93749",
   storageBucket: "firestore-database-93749.firebasestorage.app",
   messagingSenderId: "13697167946",
-  appId: "1:13697167946:web:e955abfe6d0ed11a3cecb3",
-  measurementId: "G-FYN87Z94FZ"
+  appId: "1:13697167946:web:e955abfe6d0ed11a3cecb3"
 };
-
-// Locazioni illimitate (piu bilici nella stessa posizione)
+var ADMIN_DEFAULT = {username: 'Leo', password: 'ing', livello: 0};
 var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO'];
 
-var BL = {}, ST = [], fdb = null, UC = false;
-var SMM = 'b', pend = null, pbuf = '', paz = null;
-var PIN = '1234';
-var impDati = [];
+// ═══ STATO ═══
+var BL = {}, ST = [], PROG = [], PROG_DOMANI = [];
+var fdb = null, UC = false;
+var CURR_USER = null;
+var pageStack = ['home'];
+var currentCat = 'secco'; // 'secco' o 'fresco'
+var pendConf = null;
+var qrTargetId = null;
+var magMode = 'b';
+var audioCtx = null;
 
+// ═══ AUDIO ═══
+function getAudioCtx() {
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
+  return audioCtx;
+}
+function playTone(freq, type, dur, vol, t, ctx) {
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol || 0.3, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.start(t); o.stop(t + dur);
+}
+function suonoOk() {
+  var ctx = getAudioCtx(); if (!ctx) return;
+  var t = ctx.currentTime;
+  playTone(440,'sine',.15,.25,t,ctx); playTone(554,'sine',.15,.28,t+.15,ctx); playTone(659,'sine',.3,.32,t+.30,ctx);
+}
+function suonoErr() {
+  var ctx = getAudioCtx(); if (!ctx) return;
+  var t = ctx.currentTime;
+  playTone(180,'square',.25,.2,t,ctx); playTone(140,'square',.2,.15,t+.18,ctx);
+}
+function suonoSirena() {
+  var ctx = getAudioCtx(); if (!ctx) return;
+  var t = ctx.currentTime;
+  for (var i = 0; i < 3; i++) {
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination); o.type = 'sawtooth';
+    var s = t + i * 0.28;
+    o.frequency.setValueAtTime(880, s); o.frequency.linearRampToValueAtTime(660, s+.14); o.frequency.linearRampToValueAtTime(880, s+.28);
+    g.gain.setValueAtTime(.18, s); g.gain.exponentialRampToValueAtTime(0.001, s+.28);
+    o.start(s); o.stop(s+.28);
+  }
+}
+
+// ═══ UTILS ═══
+function tst(msg, tp) {
+  var t = document.getElementById('tst');
+  t.textContent = msg; t.className = 'tst ' + (tp || '');
+  void t.offsetWidth; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(function() { t.classList.remove('show'); }, 3200);
+  if (tp === 'er') suonoErr();
+}
+function stp(id, d) {
+  var el = document.getElementById(id);
+  el.value = Math.max(0, (parseInt(el.value) || 0) + d);
+}
+function chiM(id) { document.getElementById(id).classList.remove('open'); }
+function fmtH(ts) {
+  if (!ts) return '-';
+  var d = new Date(ts);
+  return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ═══ NAV ═══
+function goPage(pageId, title) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-' + pageId).classList.add('active');
+  document.getElementById('hdr-title').textContent = title;
+  document.getElementById('back-btn').style.display = 'flex';
+  pageStack.push(pageId);
+  // aggiorna log tendine
+  if (pageId === 'uscita') { aggiornaProg(); aggiornaLogUscite(); }
+  if (pageId === 'trasferimento') { aggiornaLogTransfer(); }
+  if (pageId === 'magazzino') { renderMagAll(); }
+}
+function goBack() {
+  pageStack.pop();
+  var prev = pageStack[pageStack.length - 1] || 'home';
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-' + prev).classList.add('active');
+  if (prev === 'home') {
+    document.getElementById('hdr-title').textContent = '&#x1F69B; BILICI TMP';
+    document.getElementById('back-btn').style.display = 'none';
+  } else if (prev === 'entrata') {
+    document.getElementById('hdr-title').textContent = 'ENTRATA MERCI';
+  }
+}
+function goEntrata(cat) {
+  currentCat = cat;
+  var label = cat === 'secco' ? 'ENTRATA SECCO' : 'ENTRATA FRESCO';
+  document.getElementById('entrata-form-title').textContent = label;
+  document.getElementById('hdr-title').textContent = label;
+  // Calcola prossimo numero
+  calcolaProssimoBilico(cat);
+  // Reset form
+  document.getElementById('en-bancali').value = '0';
+  document.getElementById('en-postazione').value = '';
+  document.getElementById('en-note').value = '';
+  document.getElementById('entrata-success').style.display = 'none';
+  // Aggiorna log entrate
+  aggiornaLogEntrate(cat);
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-entrata-form').classList.add('active');
+  pageStack.push('entrata-form');
+}
+
+// ═══ LOGIN ═══
 window.onload = function() {
-  ldLoc();
   caricaCredenziali();
-  ui();
   try {
-    if (FBC.apiKey === 'INSERISCI_API_KEY') { throw new Error('no cfg'); }
-    if (!firebase.apps.length) { firebase.initializeApp(FBC); }
-    fdb = firebase.firestore();
-    UC = true;
+    if (FBC.apiKey === 'INSERISCI_API_KEY') throw new Error('no cfg');
+    if (!firebase.apps.length) firebase.initializeApp(FBC);
+    fdb = firebase.firestore(); UC = true;
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent = 'CLOUD';
     fdb.collection('bilici').onSnapshot(function(s) {
-      BL = {};
-      s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
-      ui();
+      BL = {}; s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
+      aggiornaUI();
     });
-    fdb.collection('storico').orderBy('ts', 'desc').onSnapshot(function(s) {
-      ST = [];
-      s.forEach(function(d) { ST.push(Object.assign({id: d.id}, d.data())); });
-      ui();
+    fdb.collection('storico').orderBy('ts','desc').limit(50).onSnapshot(function(s) {
+      ST = []; s.forEach(function(d) { ST.push(Object.assign({id: d.id}, d.data())); });
+      aggiornaUI();
     });
-    // ascolta uscite programmate in realtime
-    caricaProg();
-    caricaProgDomani();
-    // controlla cambio giorno dopo 2 secondi (tempo per caricare i dati)
-    setTimeout(controllaGiorno, 2000);
+    fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(s) {
+      PROG = []; s.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
+      renderProg();
+    });
+    fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s) {
+      PROG_DOMANI = []; s.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
+      renderProgDomani();
+    });
   } catch(e) {
-    document.getElementById('supbox').style.display = 'block';
-    caricaProg();
-    caricaProgDomani();
-    setTimeout(controllaGiorno, 500);
-    ui();
+    ldLoc();
+    caricaProgLocale();
   }
-
-  document.getElementById('imp-file').addEventListener('change', leggiFileImport);
 };
-
-function isIllimitata(loc) {
-  var l = (loc || '').toUpperCase().trim();
-  for (var i = 0; i < LOC_ILLIMITATE.length; i++) {
-    if (l === LOC_ILLIMITATE[i]) { return true; }
-  }
-  return false;
+function ldLoc() {
+  try { BL = JSON.parse(localStorage.getItem('BLv3') || '{}'); ST = JSON.parse(localStorage.getItem('STv3') || '[]'); } catch(x) {}
+  try { PROG = JSON.parse(localStorage.getItem('PROG_v1') || '[]'); } catch(x) {}
+  try { PROG_DOMANI = JSON.parse(localStorage.getItem('PROG_DOMANI_v1') || '[]'); } catch(x) {}
 }
-
-
-
-// ═══════════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════════
-var CURR_USER = null; // {username, livello}
-var NEW_LVL = 0;
-
-var ADMIN_DEFAULT = {username: 'Leo', password: 'ing', livello: 0};
-
-function doLogin() {
-  var u = (document.getElementById('log-user').value || '').trim();
-  var p = (document.getElementById('log-pass').value || '').trim();
-  var ricorda = document.getElementById('log-ricorda').checked;
-  if (!u || !p) { document.getElementById('log-err').textContent = 'Inserisci username e password'; return; }
-
-  cercaUtente(u, p, function(usr) {
-    if (!usr) {
-      document.getElementById('log-err').textContent = 'Credenziali non valide';
-      document.getElementById('log-pass').value = '';
-      return;
-    }
-    CURR_USER = usr;
-    // salva o cancella credenziali ricordate
-    if (ricorda) {
-      try { localStorage.setItem('RICORDA_v1', JSON.stringify({u: u, p: p})); } catch(x) {}
-    } else {
-      try { localStorage.removeItem('RICORDA_v1'); } catch(x) {}
-    }
-    salvaTentativo(u);
-    document.getElementById('login-screen').style.display = 'none';
-    applicaLivello(usr.livello);
-    tst('Benvenuto ' + usr.username + '!', 'ok');
-  });
+function caricaProgLocale() { ldLoc(); renderProg(); renderProgDomani(); }
+function svLoc() {
+  try { localStorage.setItem('BLv3', JSON.stringify(BL)); localStorage.setItem('STv3', JSON.stringify(ST)); } catch(x) {}
 }
-
+function aggiornaUI() {
+  var cur = pageStack[pageStack.length - 1];
+  if (cur === 'uscita') { aggiornaLogUscite(); }
+  if (cur === 'trasferimento') { aggiornaLogTransfer(); }
+  if (cur === 'entrata-form') { aggiornaLogEntrate(currentCat); }
+  if (cur === 'magazzino') { renderMagAll(); cercaMag(); }
+}
 function caricaCredenziali() {
   try {
-    var salvate = JSON.parse(localStorage.getItem('RICORDA_v1') || 'null');
-    if (salvate && salvate.u && salvate.p) {
-      document.getElementById('log-user').value = salvate.u;
-      document.getElementById('log-pass').value = salvate.p;
+    var s = JSON.parse(localStorage.getItem('RICORDA_OP_v1') || 'null');
+    if (s && s.u && s.p) {
+      document.getElementById('log-user').value = s.u;
+      document.getElementById('log-pass').value = s.p;
       document.getElementById('log-ricorda').checked = true;
     }
   } catch(x) {}
 }
-
+function doLogin() {
+  var u = (document.getElementById('log-user').value || '').trim();
+  var p = (document.getElementById('log-pass').value || '').trim();
+  var ric = document.getElementById('log-ricorda').checked;
+  if (!u || !p) { document.getElementById('log-err').textContent = 'Inserisci username e password'; return; }
+  cercaUtente(u, p, function(usr) {
+    if (!usr) { document.getElementById('log-err').textContent = 'Credenziali non valide'; document.getElementById('log-pass').value = ''; return; }
+    // Admin viene reindirizzato al file principale
+    if (usr.livello === 0) {
+      window.location.href = 'mobile.html';
+      return;
+    }
+    CURR_USER = usr;
+    if (ric) { try { localStorage.setItem('RICORDA_OP_v1', JSON.stringify({u:u, p:p})); } catch(x) {} }
+    else { try { localStorage.removeItem('RICORDA_OP_v1'); } catch(x) {} }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('shell').style.display = 'flex';
+    document.getElementById('usr-badge').textContent = usr.username.toUpperCase();
+  });
+}
 function cercaUtente(u, p, cb) {
-  // controlla admin di default
   if (u.toLowerCase() === ADMIN_DEFAULT.username.toLowerCase() && p === ADMIN_DEFAULT.password) {
     return cb({username: ADMIN_DEFAULT.username, livello: ADMIN_DEFAULT.livello});
   }
-  // cerca in Firebase o localStorage
   if (UC && fdb) {
-    fdb.collection('utenti').where('username_lc', '==', u.toLowerCase()).get().then(function(snap) {
-      var trovato = null;
-      snap.forEach(function(d) {
-        var usr = d.data();
-        if (usr.password === p) { trovato = {username: usr.username, livello: usr.livello, id: d.id}; }
-      });
-      cb(trovato);
+    fdb.collection('utenti').where('username_lc','==',u.toLowerCase()).get().then(function(snap) {
+      var found = null;
+      snap.forEach(function(d) { var x = d.data(); if (x.password === p) found = {username: x.username, livello: x.livello, id: d.id}; });
+      cb(found);
     }).catch(function() { cb(null); });
   } else {
     var utenti = JSON.parse(localStorage.getItem('UTENTI_v1') || '[]');
-    var trovato = null;
+    var found = null;
     for (var i = 0; i < utenti.length; i++) {
-      if (utenti[i].username.toLowerCase() === u.toLowerCase() && utenti[i].password === p) {
-        trovato = utenti[i]; break;
-      }
+      if (utenti[i].username.toLowerCase() === u.toLowerCase() && utenti[i].password === p) { found = utenti[i]; break; }
     }
-    cb(trovato);
+    cb(found);
   }
 }
-
-function salvaTentativo(username) {
-  var ts = new Date().toISOString();
-  var ua = navigator.userAgent;
-  var dev = 'Desktop';
-  if (/iPhone/.test(ua)) { dev = 'iPhone'; }
-  else if (/iPad/.test(ua)) { dev = 'iPad'; }
-  else if (/Android/.test(ua)) { dev = 'Android'; }
-  var log = {username_lc: username.toLowerCase(), ts: ts, device: dev};
-  if (UC && fdb) {
-    fdb.collection('login_log').add(log).catch(function(){});
-  } else {
-    var logs = JSON.parse(localStorage.getItem('LOGIN_LOG_v1') || '[]');
-    logs.unshift(log);
-    if (logs.length > 200) { logs = logs.slice(0, 200); }
-    try { localStorage.setItem('LOGIN_LOG_v1', JSON.stringify(logs)); } catch(x) {}
-  }
-}
-
-function applicaLivello(lvl) {
-  var isAdmin = lvl === 0;
-  document.getElementById('btn-utenti').style.display = isAdmin ? 'flex' : 'none';
-  document.getElementById('btn-export').style.display = isAdmin ? 'flex' : 'none';
-  document.getElementById('btn-import').style.display = isAdmin ? 'flex' : 'none';
-  // campo locazione: solo QR per livello 1
-  var locInp = document.getElementById('in-l');
-  var locEdit = document.getElementById('edit-l');
-  if (locInp) {
-    if (isAdmin) {
-      locInp.removeAttribute('readonly');
-      locInp.placeholder = 'es. A1, BANCHINA, FRESCO...';
-      locInp.style.opacity = '1';
-    } else {
-      locInp.setAttribute('readonly', 'readonly');
-      locInp.placeholder = 'Scansiona QR con il tasto 📷';
-      locInp.style.opacity = '.7';
-    }
-  }
-  if (locEdit) {
-    if (isAdmin) {
-      locEdit.removeAttribute('readonly');
-      locEdit.style.opacity = '1';
-    } else {
-      locEdit.setAttribute('readonly', 'readonly');
-      locEdit.style.opacity = '.7';
-    }
-  }
-  renderProg();
-  renderProgDomani();
-}
-
 function logout() {
   CURR_USER = null;
-  // cancella credenziali salvate al logout manuale
-  try { localStorage.removeItem('RICORDA_v1'); } catch(x) {}
+  try { localStorage.removeItem('RICORDA_OP_v1'); } catch(x) {}
   document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('shell').style.display = 'none';
   document.getElementById('log-user').value = '';
   document.getElementById('log-pass').value = '';
   document.getElementById('log-ricorda').checked = false;
   document.getElementById('log-err').textContent = '';
+  pageStack = ['home'];
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-home').classList.add('active');
+  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('hdr-title').textContent = '🚛 BILICI TMP';
 }
 
-// ═══ GESTIONE UTENTI ═══
-function selLvl(n) {
-  NEW_LVL = n;
-  document.getElementById('lvl-btn-0').className = 'lvl-btn' + (n===0?' active':'');
-  document.getElementById('lvl-btn-1').className = 'lvl-btn' + (n===1?' active':'');
-}
-
-function apriUtenti() {
-  if (!CURR_USER || CURR_USER.livello !== 0) { return; }
-  caricaListaUtenti();
-  document.getElementById('usr-panel').classList.add('open');
-}
-
-function chiudiUtenti() {
-  document.getElementById('usr-panel').classList.remove('open');
-}
-
-function creaUtente() {
-  var u = (document.getElementById('nu-user').value || '').trim();
-  var p = (document.getElementById('nu-pass').value || '').trim();
-  if (!u || !p) { return tst('Compila username e password', 'er'); }
-  var dati = {username: u, username_lc: u.toLowerCase(), password: p, livello: NEW_LVL, creato: new Date().toISOString()};
-  if (UC && fdb) {
-    fdb.collection('utenti').where('username_lc','==',u.toLowerCase()).get().then(function(snap) {
-      if (!snap.empty) { return tst('Username gia esistente', 'er'); }
-      fdb.collection('utenti').add(dati).then(function() {
-        tst('Utente ' + u + ' creato!', 'ok');
-        document.getElementById('nu-user').value = '';
-        document.getElementById('nu-pass').value = '';
-        caricaListaUtenti();
-      });
-    });
-  } else {
-    var utenti = JSON.parse(localStorage.getItem('UTENTI_v1') || '[]');
-    var gia = utenti.find(function(x) { return x.username.toLowerCase() === u.toLowerCase(); });
-    if (gia) { return tst('Username gia esistente', 'er'); }
-    utenti.push(dati);
-    try { localStorage.setItem('UTENTI_v1', JSON.stringify(utenti)); } catch(x) {}
-    tst('Utente ' + u + ' creato!', 'ok');
-    document.getElementById('nu-user').value = '';
-    document.getElementById('nu-pass').value = '';
-    caricaListaUtenti();
-  }
-}
-
-function caricaListaUtenti() {
-  var el = document.getElementById('usr-lista');
-  el.innerHTML = '<div class="emp"><div class="ic" style="font-size:24px;">&#x23F3;</div><p>Caricamento...</p></div>';
-  if (UC && fdb) {
-    fdb.collection('utenti').get().then(function(snap) {
-      var lista = [];
-      snap.forEach(function(d) { lista.push(Object.assign({id:d.id}, d.data())); });
-      renderListaUtenti(lista);
-    });
-  } else {
-    var lista = JSON.parse(localStorage.getItem('UTENTI_v1') || '[]');
-    renderListaUtenti(lista);
-  }
-}
-
-function renderListaUtenti(lista) {
-  var el = document.getElementById('usr-lista');
-  if (!lista.length) {
-    el.innerHTML = '<div class="emp"><p>Nessun utente aggiuntivo</p></div>';
-    return;
-  }
-  var html = '';
-  lista.forEach(function(u) {
-    var lvlLabel = u.livello === 0 ? 'Admin' : 'Operatore';
-    var lvlClass = u.livello === 0 ? 'l0' : 'l1';
-    html += '<div class="usr-card" onclick="toggleLogUtente(this,' + "'" + (u.username||'') + "'" + ')">';
-    html += '<div class="usr-card-hdr"><div class="usr-name">&#x1F464; ' + u.username + '</div>';
-    html += '<div class="usr-lvl ' + lvlClass + '">Livello ' + u.livello + ' — ' + lvlLabel + '</div></div>';
-    if (u.creato) {
-      html += '<div class="usr-last">Creato: ' + new Date(u.creato).toLocaleDateString('it-IT') + '</div>';
-    }
-    html += '<div class="usr-log-box" id="log-' + u.username + '">';
-    html += '<div class="usr-log-empty">&#x23F3; Caricamento log...</div>';
-    html += '</div>';
-    if (u.id) {
-      html += '<button class="usr-edit-btn" onclick="event.stopPropagation();apriModificaUtente(' + "'" + u.id + "'" + ',' + "'" + (u.username||'') + "'" + ',' + u.livello + ')">&#x270F;&#xFE0F; Modifica</button>';
-      html += '<button class="usr-del-btn" onclick="event.stopPropagation();eliminaUtente(' + "'" + u.id + "'" + ',' + "'" + u.username + "'" + ')">&#x1F5D1; Elimina utente</button>';
-    }
-    html += '</div>';
+// ═══ ENTRATA MERCI ═══
+function calcolaProssimoBilico(cat) {
+  // Cerca il numero piu alto dallo STORICO ENTRATE per la categoria
+  // cosi anche se il bilico e gia uscito dal magazzino, il contatore continua correttamente
+  var maxNum = 0;
+  ST.forEach(function(m) {
+    if (m.tipo !== 'ENTRATA') return;
+    var loc = (m.locazione || '').toUpperCase();
+    var isFresco = loc === 'FRESCO';
+    if (cat === 'fresco' && !isFresco) return;
+    if (cat === 'secco' && isFresco) return;
+    var n = parseInt(m.numero) || 0;
+    if (n > maxNum) maxNum = n;
   });
-  el.innerHTML = html;
-}
-
-function toggleLogUtente(card, username) {
-  var box = document.getElementById('log-' + username);
-  if (!box) { return; }
-  var isOpen = box.classList.contains('open');
-  // chiudi tutti
-  document.querySelectorAll('.usr-log-box').forEach(function(b) { b.classList.remove('open'); });
-  if (isOpen) { return; }
-  box.classList.add('open');
-  caricaLogUtente(username, box);
-}
-
-function caricaLogUtente(username, el) {
-  el.innerHTML = '<div class="usr-log-empty">&#x23F3; Caricamento...</div>';
-  var uLc = username.toLowerCase();
-  if (UC && fdb) {
-    fdb.collection('login_log').where('username_lc','==',uLc).orderBy('ts','desc').limit(10).get().then(function(snap) {
-      if (snap.empty) { el.innerHTML = '<div class="usr-log-empty">Nessun accesso registrato</div>'; return; }
-      var html = '';
-      snap.forEach(function(d) {
-        var lg = d.data();
-        var dt = new Date(lg.ts).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
-        html += '<div class="usr-log-item">&#x1F4C5; ' + dt + ' &mdash; ' + (lg.device||'—') + '</div>';
-      });
-      el.innerHTML = html;
-    }).catch(function() { el.innerHTML = '<div class="usr-log-empty">Errore caricamento</div>'; });
-  } else {
-    var logs = JSON.parse(localStorage.getItem('LOGIN_LOG_v1') || '[]');
-    var filtrati = logs.filter(function(l) { return l.username_lc === uLc; }).slice(0,10);
-    if (!filtrati.length) { el.innerHTML = '<div class="usr-log-empty">Nessun accesso registrato</div>'; return; }
-    var html = '';
-    filtrati.forEach(function(lg) {
-      var dt = new Date(lg.ts).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
-      html += '<div class="usr-log-item">&#x1F4C5; ' + dt + ' &mdash; ' + (lg.device||'—') + '</div>';
+  // Fallback: se lo storico e vuoto o non ci sono entrate, usa lo stock
+  if (maxNum === 0) {
+    Object.values(BL).forEach(function(b) {
+      var loc = (b.locazione || '').toUpperCase();
+      var isFresco = loc === 'FRESCO';
+      if (cat === 'fresco' && !isFresco) return;
+      if (cat === 'secco' && isFresco) return;
+      var n = parseInt(b.numero) || 0;
+      if (n > maxNum) maxNum = n;
     });
-    el.innerHTML = html;
+  }
+  var prossimo = maxNum + 1;
+  document.getElementById('auto-num').textContent = prossimo;
+  document.getElementById('en-bilico').value = prossimo;
+  document.getElementById('en-bilico').placeholder = String(prossimo);
+  // Postazione default per fresco
+  if (cat === 'fresco') {
+    document.getElementById('en-postazione').value = 'FRESCO';
+  } else {
+    document.getElementById('en-postazione').value = '';
   }
 }
-
-function eliminaUtente(id, username) {
-  if (!confirm('Eliminare utente ' + username + '?')) { return; }
+function confEntrata() {
+  var num = String(document.getElementById('en-bilico').value || '').trim().toUpperCase();
+  var ban = parseInt(document.getElementById('en-bancali').value) || 0;
+  var post = document.getElementById('en-postazione').value.trim().toUpperCase();
+  var note = document.getElementById('en-note').value.trim();
+  if (!num) { return tst('Inserisci il numero bilico', 'er'); }
+  if (ban <= 0) { return tst('Inserisci almeno 1 bancale', 'er'); }
+  if (!post) { return tst('Inserisci la postazione', 'er'); }
+  if (BL[num]) { return tst('Bilico ' + num + ' gia presente in magazzino', 'er'); }
+  // Controlla locazione se non illimitata
+  if (!isIllimitata(post)) {
+    var occ = null;
+    Object.values(BL).forEach(function(x) { if ((x.locazione || '').toUpperCase() === post) occ = x; });
+    if (occ) { return tst('Postazione ' + post + ' occupata dal bilico ' + occ.numero, 'er'); }
+  }
+  var ts = new Date().toISOString();
+  var dati = {numero: num, locazione: post, bancali: ban, note: note, ts: ts};
   if (UC && fdb) {
-    fdb.collection('utenti').doc(id).delete().then(function() {
-      tst('Utente ' + username + ' eliminato', 'ok');
-      caricaListaUtenti();
+    fdb.collection('bilici').doc(num).set(dati).then(function() {
+      fdb.collection('storico').add({tipo:'ENTRATA', numero:num, locazione:post, bancali:ban, note:note, ts:ts});
     });
   } else {
-    var utenti = JSON.parse(localStorage.getItem('UTENTI_v1') || '[]');
-    utenti = utenti.filter(function(u) { return u.username !== username; });
-    try { localStorage.setItem('UTENTI_v1', JSON.stringify(utenti)); } catch(x) {}
-    tst('Utente ' + username + ' eliminato', 'ok');
-    caricaListaUtenti();
+    BL[num] = dati;
+    ST.unshift({tipo:'ENTRATA', numero:num, locazione:post, bancali:ban, note:note, ts:ts, id:'L'+Date.now()});
+    svLoc();
   }
+  suonoOk();
+  // Mostra success e prepara prossimo
+  var successBox = document.getElementById('entrata-success');
+  successBox.style.display = 'block';
+  document.getElementById('success-msg').textContent = 'Bilico #' + num + ' registrato!';
+  document.getElementById('success-sub').textContent = post + ' — ' + ban + ' bancali';
+  // Calcola prossimo
+  setTimeout(function() {
+    calcolaProssimoBilico(currentCat);
+    document.getElementById('en-bancali').value = '0';
+    document.getElementById('en-note').value = '';
+    if (currentCat === 'fresco') document.getElementById('en-postazione').value = 'FRESCO';
+    else document.getElementById('en-postazione').value = '';
+    aggiornaLogEntrate(currentCat);
+    setTimeout(function() { successBox.style.display = 'none'; }, 3000);
+  }, 800);
+  tst('Bilico ' + num + ' entrato in ' + post, 'ok');
+}
+function resetEntrata() {
+  calcolaProssimoBilico(currentCat);
+  document.getElementById('en-bancali').value = '0';
+  document.getElementById('en-postazione').value = currentCat === 'fresco' ? 'FRESCO' : '';
+  document.getElementById('en-note').value = '';
+  document.getElementById('entrata-success').style.display = 'none';
+}
+function isIllimitata(loc) {
+  var l = (loc || '').toUpperCase().trim();
+  return LOC_ILLIMITATE.indexOf(l) !== -1;
+}
+function aggiornaLogEntrate(cat) {
+  var lista = ST.filter(function(m) {
+    if (m.tipo !== 'ENTRATA') return false;
+    if (cat === 'fresco') return (m.locazione || '').toUpperCase() === 'FRESCO';
+    return (m.locazione || '').toUpperCase() !== 'FRESCO';
+  }).slice(0, 8);
+  var el = document.getElementById('log-ent-list');
+  if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessuna entrata recente</div>'; return; }
+  el.innerHTML = lista.map(function(m) {
+    return '<div class="li"><div class="ldot in"></div><div class="ltx"><div class="lm">#' + m.numero + ' &rarr; ' + m.locazione + '</div><div class="ls">&#x1F4E6; ' + m.bancali + ' bancali' + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+  }).join('');
 }
 
-// ═══ USCITE PROGRAMMATE ═══
-var PROG = [];
-
-function caricaProg() {
-  // in modalita locale usa localStorage
-  if (!UC) {
-    try { PROG = JSON.parse(localStorage.getItem('PROG_v1') || '[]'); } catch(x) { PROG = []; }
-    renderProg();
-    return;
-  }
-  // in modalita cloud ascolta Firebase in realtime
-  fdb.collection('prog').orderBy('ts', 'asc').onSnapshot(function(snap) {
-    PROG = [];
-    snap.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
-    renderProg();
-  });
+// ═══ DB HELPERS ═══
+function dbUB(id, dati) {
+  if (UC && fdb) return fdb.collection('bilici').doc(id).update(dati);
+  Object.assign(BL[id], dati); svLoc(); return Promise.resolve();
+}
+function dbDB(id) {
+  if (UC && fdb) return fdb.collection('bilici').doc(id).delete();
+  delete BL[id]; svLoc(); return Promise.resolve();
+}
+function dbAS(d) {
+  if (UC && fdb) return fdb.collection('storico').add(d);
+  ST.unshift(Object.assign({id:'L'+Date.now()}, d)); svLoc(); return Promise.resolve();
 }
 
-function salvaProg() {
-  if (!UC) {
-    try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); } catch(x) {}
-  }
+// ═══ USCITA / PROG ═══
+function aggiornaProg() { renderProg(); renderProgDomani(); }
+function aggiornaLogUscite() {
+  var lista = ST.filter(function(m) { return m.tipo === 'USCITA'; }).slice(0, 8);
+  var el = document.getElementById('log-usc-list');
+  if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessun carico effettuato</div>'; return; }
+  el.innerHTML = lista.map(function(m) {
+    return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+  }).join('');
 }
-
-function toggleProg() {
-  var body = document.getElementById('prog-body');
-  var chev = document.getElementById('prog-chev');
-  var isOpen = body.classList.contains('open');
-  if (isOpen) { body.classList.remove('open'); chev.classList.remove('open'); }
-  else { body.classList.add('open'); chev.classList.add('open'); }
-}
+function salvaProg() { if (!UC) { try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); } catch(x) {} } }
+function salvaProgDomani() { if (!UC) { try { localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI)); } catch(x) {} } }
 
 function aggProg() {
   var val = String(document.getElementById('prog-inp').value || '').trim().toUpperCase();
   var nota = document.getElementById('prog-nota-inp').value.trim();
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
-  var gia = PROG.find(function(p) { return p.numero === val; });
-  if (gia) { return tst('Bilico ' + val + ' gia in programma', 'er'); }
+  if (PROG.find(function(p) { return p.numero === val; })) { return tst('Bilico ' + val + ' gia in lista', 'er'); }
   var dati = {numero: val, nota: nota, ts: Date.now()};
-  if (UC && fdb) {
-    fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-  } else {
-    PROG.push(dati);
-    salvaProg();
-    renderProg();
-  }
+  if (UC && fdb) { fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
+  else { PROG.push(dati); salvaProg(); renderProg(); }
   document.getElementById('prog-inp').value = '';
   document.getElementById('prog-nota-inp').value = '';
   suonoSirena();
   tst('Bilico ' + val + ' aggiunto alle uscite di oggi', 'ok');
 }
-
+function aggProgDomani() {
+  var val = String(document.getElementById('prog-domani-inp').value || '').trim().toUpperCase();
+  var nota = document.getElementById('prog-domani-nota-inp').value.trim();
+  if (!val) { return tst('Inserisci il numero bilico', 'er'); }
+  if (PROG_DOMANI.find(function(p) { return p.numero === val; })) { return tst('Bilico ' + val + ' gia in lista', 'er'); }
+  var dati = {numero: val, nota: nota, ts: Date.now()};
+  if (UC && fdb) { fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
+  else { PROG_DOMANI.push(dati); salvaProgDomani(); renderProgDomani(); }
+  document.getElementById('prog-domani-inp').value = '';
+  document.getElementById('prog-domani-nota-inp').value = '';
+  suonoSirena();
+  tst('Bilico ' + val + ' aggiunto alle uscite di domani', 'ok');
+}
 function modificaNotaProg(num) {
   var item = PROG.find(function(p) { return p.numero === num; });
-  if (!item) { return; }
-  var nuovaNota = prompt('Modifica nota per bilico #' + num + ':', item.nota || '');
-  if (nuovaNota === null) { return; }
-  nuovaNota = nuovaNota.trim();
-  if (UC && fdb && item.id) {
-    fdb.collection('prog').doc(item.id).update({nota: nuovaNota}).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-  } else {
-    item.nota = nuovaNota;
-    salvaProg();
-    renderProg();
-  }
+  if (!item) return;
+  var n = prompt('Modifica nota per bilico #' + num + ':', item.nota || '');
+  if (n === null) return;
+  n = n.trim();
+  if (UC && fdb && item.id) { fdb.collection('prog').doc(item.id).update({nota: n}).catch(function(e) { tst('Errore', 'er'); }); }
+  else { item.nota = n; salvaProg(); renderProg(); }
   tst('Nota aggiornata', 'ok');
 }
-
-function rimuoviProg(num) {
-  if (UC && fdb) {
-    var item = PROG.find(function(p) { return p.numero === num; });
-    if (item && item.id) {
-      fdb.collection('prog').doc(item.id).delete().catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-    }
-  } else {
-    PROG = PROG.filter(function(p) { return p.numero !== num; });
-    salvaProg();
-    renderProg();
-  }
-}
-
-function caricaVeloce(num) {
-  goP('uscita');
-  document.getElementById('out-n').value = num;
-  trovB();
+function modificaNotaProgDomani(num) {
+  var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
+  if (!item) return;
+  var n = prompt('Modifica nota per bilico #' + num + ':', item.nota || '');
+  if (n === null) return;
+  n = n.trim();
+  if (UC && fdb && item.id) { fdb.collection('prog_domani').doc(item.id).update({nota: n}).catch(function(e) { tst('Errore', 'er'); }); }
+  else { item.nota = n; salvaProgDomani(); renderProgDomani(); }
+  tst('Nota aggiornata', 'ok');
 }
 
 function renderProg() {
   var el = document.getElementById('prog-list');
   var badge = document.getElementById('prog-count');
+  if (!el || !badge) return;
   badge.textContent = PROG.length;
-  if (!PROG.length) {
-    el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per oggi</div>';
-    return;
-  }
-  var html = '';
-  for (var i = 0; i < PROG.length; i++) {
-    var p = PROG[i];
+  if (!PROG.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per oggi</div>'; return; }
+  el.innerHTML = PROG.map(function(p) {
     var b = BL[p.numero];
     var inMag = !!b;
-    html += '<div class="prog-item">';
-    html += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
-    html += '<div class="prog-info">';
+    var s = '<div class="prog-item">';
+    s += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
+    s += '<div class="prog-info">';
     if (inMag) {
-      html += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
-      html += '<div class="prog-ban">&#x1F4E6; ' + b.bancali + ' bancali</div>';
+      s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
+      s += '<div class="prog-ban">&#x1F4E6; ' + b.bancali + ' bancali</div>';
     } else {
-      html += '<div style="font-size:12px;color:var(--tx2);">Non presente in magazzino</div>';
+      s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>';
     }
-    if (p.nota) {
-      html += '<div class="prog-note-txt" style="margin-top:5px;padding-left:8px;border-left:2px solid var(--bd);line-height:1.4;">' + p.nota + '</div>';
-    } else {
-      html += '<div style="font-size:11px;color:var(--tx2);margin-top:4px;font-style:italic;">tocca &#x270F; per aggiungere nota</div>';
-    }
-    html += '</div>';
-    html += '<div class="prog-actions">';
+    if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
+    s += '</div>';
+    s += '<div class="prog-actions">';
+    if (inMag) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + p.numero + '&quot;)">&#x1F534; CARICA</button>'; }
+    s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProg(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
+    s += '</div></div>';
+    return s;
+  }).join('');
+}
+function renderProgDomani() {
+  var el = document.getElementById('prog-domani-list');
+  var badge = document.getElementById('prog-domani-count');
+  if (!el || !badge) return;
+  badge.textContent = PROG_DOMANI.length;
+  if (!PROG_DOMANI.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per domani</div>'; return; }
+  el.innerHTML = PROG_DOMANI.map(function(p) {
+    var b = BL[p.numero];
+    var inMag = !!b;
+    var s = '<div class="prog-item">';
+    s += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
+    s += '<div class="prog-info">';
     if (inMag) {
-      html += '<button class="prog-carica-btn" onclick="caricaVeloce(' + "'" + p.numero + "'" + ')">&#x1F534; CARICA</button>';
+      s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
+      s += '<div class="prog-ban">&#x1F4E6; ' + b.bancali + ' bancali</div>';
+    } else {
+      s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>';
     }
-    html += '<button class="prog-del-btn" style="font-size:14px;" onclick="modificaNotaProg(' + "'" + p.numero + "'" + ')">&#x270F;&#xFE0F;</button>';
-    if (CURR_USER && CURR_USER.livello === 0) {
-      html += '<button class="prog-del-btn" onclick="rimuoviProg(' + "'" + p.numero + "'" + ')">&#x2716;</button>';
-    }
-    html += '</div>';
-    html += '</div>';
-  }
-  el.innerHTML = html;
+    if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
+    s += '</div>';
+    s += '<div class="prog-actions">';
+    s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProgDomani(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
+    s += '</div></div>';
+    return s;
+  }).join('');
 }
 
+// Carica veloce dalla lista uscite (apre modal conferma uscita semplificata)
+var pendCarica = null;
+function caricaVeloce(num) {
+  var b = BL[num];
+  if (!b) { return tst('Bilico non trovato in magazzino', 'er'); }
+  pendCarica = {num: num, b: b};
+  document.getElementById('mo-conf-tx').innerHTML = 'Confermi il carico del bilico <strong>#' + num + '</strong>?<br><br>&#x1F4CD; ' + b.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + b.bancali + ' bancali';
+  pendConf = 'carica';
+  document.getElementById('mo-conf').classList.add('open');
+}
+function eseguiConf() {
+  chiM('mo-conf');
+  if (pendConf === 'carica' && pendCarica) {
+    var num = pendCarica.num, b = pendCarica.b;
+    var ts = new Date().toISOString();
+    dbDB(num);
+    dbAS({tipo:'USCITA', numero:num, locazione:b.locazione, bancaliUsciti:b.bancali, bancaliRimasti:0, note:'', ts:ts});
+    // Rimuovi da prog
+    rimuoviDaProg(num);
+    suonoOk();
+    tst('Bilico #' + num + ' caricato — uscito', 'ok');
+    pendCarica = null;
+  } else if (pendConf === 'transfer' && pendTransfer) {
+    eseguiTransfer();
+  }
+  pendConf = null;
+}
+function rimuoviDaProg(num) {
+  var item = PROG.find(function(p) { return p.numero === num; });
+  if (item) {
+    if (UC && fdb && item.id) { fdb.collection('prog').doc(item.id).delete(); }
+    else { PROG = PROG.filter(function(p) { return p.numero !== num; }); salvaProg(); renderProg(); }
+  }
+}
 
+// ═══ TRASFERIMENTO ═══
+var pendTransfer = null;
+function trovaBilicoTransfer() {
+  var num = String(document.getElementById('tr-bilico').value || '').trim().toUpperCase();
+  var trv = document.getElementById('tr-trovato');
+  var destBox = document.getElementById('tr-dest-box');
+  if (!num) { trv.style.display = 'none'; destBox.style.display = 'none'; return; }
+  var b = BL[num];
+  if (b) {
+    document.getElementById('tr-pos-attuale').textContent = b.locazione + ' (' + b.bancali + ' bancali)';
+    trv.style.display = 'block';
+    destBox.style.display = 'block';
+    document.getElementById('tr-dest').value = '';
+    document.getElementById('tr-dest').focus();
+  } else {
+    trv.style.display = 'none';
+    destBox.style.display = 'none';
+    if (num.length >= 2) tst('Bilico ' + num + ' non trovato', 'er');
+  }
+}
+function confTransfer() {
+  var num = String(document.getElementById('tr-bilico').value || '').trim().toUpperCase();
+  var dest = document.getElementById('tr-dest').value.trim().toUpperCase();
+  var b = BL[num];
+  if (!num || !b) { return tst('Bilico non trovato', 'er'); }
+  if (!dest) { return tst('Inserisci la nuova postazione', 'er'); }
+  if (dest === (b.locazione || '').toUpperCase()) { return tst('La postazione e gia quella attuale', 'er'); }
+  // Controlla se dest e occupata
+  if (!isIllimitata(dest)) {
+    var occ = null;
+    Object.values(BL).forEach(function(x) { if ((x.locazione || '').toUpperCase() === dest && x.numero !== num) occ = x; });
+    if (occ) { return tst('Postazione ' + dest + ' occupata dal bilico ' + occ.numero, 'er'); }
+  }
+  pendTransfer = {num: num, b: b, dest: dest};
+  document.getElementById('mo-conf-tx').innerHTML = 'Trasferisci bilico <strong>#' + num + '</strong><br><br>Da: <strong>' + b.locazione + '</strong><br>A: <strong>' + dest + '</strong>';
+  pendConf = 'transfer';
+  document.getElementById('mo-conf').classList.add('open');
+}
+function eseguiTransfer() {
+  if (!pendTransfer) return;
+  var num = pendTransfer.num, b = pendTransfer.b, dest = pendTransfer.dest;
+  var ts = new Date().toISOString();
+  var oldLoc = b.locazione;
+  dbUB(num, {locazione: dest});
+  dbAS({tipo:'TRASFERIMENTO', numero:num, locazioneDa:oldLoc, locazioneA:dest, bancali:b.bancali, ts:ts});
+  suonoOk();
+  tst('Bilico #' + num + ' spostato in ' + dest, 'ok');
+  // Reset form
+  document.getElementById('tr-bilico').value = '';
+  document.getElementById('tr-trovato').style.display = 'none';
+  document.getElementById('tr-dest-box').style.display = 'none';
+  document.getElementById('tr-dest').value = '';
+  pendTransfer = null;
+  aggiornaLogTransfer();
+}
+function aggiornaLogTransfer() {
+  var lista = ST.filter(function(m) { return m.tipo === 'TRASFERIMENTO'; }).slice(0, 8);
+  var el = document.getElementById('log-tr-list');
+  if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessun trasferimento recente</div>'; return; }
+  el.innerHTML = lista.map(function(m) {
+    return '<div class="li"><div class="ldot tr"></div><div class="ltx"><div class="lm">#' + m.numero + ' &nbsp; ' + (m.locazioneDa || '?') + ' &#x2192; ' + (m.locazioneA || '?') + '</div><div class="ls">&#x1F4E6; ' + (m.bancali || '?') + ' bancali</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+  }).join('');
+}
 
-// ═══ QR SCANNER NATIVO ═══
-var qrTargetId = null;
+// ═══ CONSULTAZIONE MAGAZZINO ═══
+function setMagMode(m) {
+  magMode = m;
+  document.getElementById('mag-btn-b').className = 'btn ' + (m === 'b' ? 'bbl' : 'bgh');
+  document.getElementById('mag-btn-p').className = 'btn ' + (m === 'p' ? 'bbl' : 'bgh');
+  document.getElementById('mag-mode-lbl').innerHTML = 'Modalita: <strong style="color:var(--bb)">' + (m === 'b' ? 'Bilico' : 'Postazione') + '</strong>';
+  cercaMag();
+}
+function cercaMag() {
+  var q = (document.getElementById('mag-search').value || '').trim().toUpperCase();
+  var res = document.getElementById('mag-results');
+  if (!q) { res.innerHTML = ''; return; }
+  var lst = Object.values(BL).filter(function(b) {
+    return magMode === 'b' ? (b.numero || '').includes(q) : (b.locazione || '').toUpperCase().includes(q);
+  });
+  res.innerHTML = lst.length ? lst.map(function(b) { return crdMag(b); }).join('') : '<div class="emp"><p>Nessun risultato</p></div>';
+}
+function renderMagAll() {
+  var lst = Object.values(BL).sort(function(a,b) { return (a.numero || '').localeCompare(b.numero || ''); });
+  var el = document.getElementById('mag-all');
+  if (!lst.length) { el.innerHTML = '<div class="emp"><div class="ic">&#x1F4E6;</div><p>Magazzino vuoto</p></div>'; return; }
+  el.innerHTML = lst.map(function(b) { return crdMag(b); }).join('');
+}
+function crdMag(b) {
+  var s = '<div class="bcd">';
+  s += '<div class="bch"><div class="bno"><span>#</span>' + b.numero + '</div><div class="bbg">IN STOCK</div></div>';
+  s += '<div class="bin"><div><div class="bil">Bancali</div><div class="biv ba">' + b.bancali + '</div></div>';
+  s += '<div><div class="bil">Locazione</div><div class="biv lo">' + b.locazione + '</div></div></div>';
+  if (b.note) { s += '<div class="bnt">' + b.note + '</div>'; }
+  s += '<button class="add-prog-btn" onclick="addToProg(&quot;' + b.numero + '&quot;)">&#x2B; Aggiungi a uscite oggi</button>';
+  s += '</div>';
+  return s;
+}
+function addToProg(num) {
+  if (PROG.find(function(p) { return p.numero === num; })) { return tst('Bilico ' + num + ' gia in lista uscite', 'er'); }
+  var dati = {numero: num, nota: '', ts: Date.now()};
+  if (UC && fdb) { fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
+  else { PROG.push(dati); salvaProg(); renderProg(); }
+  suonoSirena();
+  tst('Bilico #' + num + ' aggiunto alle uscite di oggi', 'ok');
+}
 
+// ═══ TOGGLE LOG / SECTION ═══
+function toggleLog(id) {
+  var body = document.getElementById(id + '-body');
+  var chev = document.getElementById(id + '-chev');
+  if (!body) return;
+  var open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  if (chev) chev.classList.toggle('open', !open);
+}
+function toggleSection(bodyId, chevId) {
+  var body = document.getElementById(bodyId);
+  var chev = document.getElementById(chevId);
+  if (!body) return;
+  var open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  if (chev) chev.classList.toggle('open', !open);
+}
+
+// ═══ QR ═══
 function apriQR(inputId) {
   qrTargetId = inputId;
   var inp = document.getElementById('qr-input-file');
-  inp.value = '';
-  inp.click();
+  inp.value = ''; inp.click();
 }
-
 function leggiQRdaFoto(input) {
-  if (!input.files || !input.files[0]) { return; }
+  if (!input.files || !input.files[0]) return;
   var file = input.files[0];
   var img = new Image();
   var url = URL.createObjectURL(file);
   img.onload = function() {
     var canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = img.width; canvas.height = img.height;
     var ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
     URL.revokeObjectURL(url);
-
-    // Usa BarcodeDetector nativo se disponibile (Android Chrome)
     if (window.BarcodeDetector) {
-      var detector = new BarcodeDetector({formats: ['qr_code','code_128','code_39','ean_13','ean_8','data_matrix']});
-      detector.detect(canvas).then(function(codes) {
+      var det = new BarcodeDetector({formats:['qr_code','code_128','code_39','ean_13','ean_8','data_matrix']});
+      det.detect(canvas).then(function(codes) {
         if (codes && codes.length > 0) {
           var val = codes[0].rawValue.trim().toUpperCase();
-          if (qrTargetId) { document.getElementById(qrTargetId).value = val; }
-          tst('Locazione: ' + val, 'ok');
-        } else {
-          tst('Codice non riconosciuto, riprova', 'er');
-        }
-      }).catch(function() {
-        tst('Errore lettura codice', 'er');
-      });
-    } else {
-      // Fallback: usa la Shape Detection API o avvisa
-      tst('Scanner non supportato su questo dispositivo', 'er');
-    }
+          if (qrTargetId) document.getElementById(qrTargetId).value = val;
+          tst('Postazione: ' + val, 'ok');
+        } else { tst('Codice non riconosciuto, riprova', 'er'); }
+      }).catch(function() { tst('Errore lettura codice', 'er'); });
+    } else { tst('Scanner non supportato su questo dispositivo', 'er'); }
   };
   img.onerror = function() { tst('Errore caricamento foto', 'er'); };
   img.src = url;
 }
-
-// ═══ MODIFICA BILICO ═══
-var editKey = null;
-
-function apriModifica(num) {
-  var b = BL[num];
-  if (!b) { return; }
-  editKey = num;
-  document.getElementById('edit-n').value = b.numero;
-  document.getElementById('edit-l').value = b.locazione;
-  document.getElementById('edit-b').value = b.bancali;
-  document.getElementById('edit-nt').value = b.note || '';
-  // converti ISO in formato datetime-local
-  try {
-    var d = new Date(b.ts);
-    var pad = function(x) { return String(x).padStart(2,'0'); };
-    var dtl = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-    document.getElementById('edit-d').value = dtl;
-  } catch(x) {}
-  document.getElementById('mo-edit').classList.add('open');
-}
-
-function salvaModifica() {
-  if (!editKey) { return; }
-  var nuovoN = String(document.getElementById('edit-n').value || '').trim().toUpperCase();
-  var nuovaL = document.getElementById('edit-l').value.trim().toUpperCase();
-  var nuovoB = parseInt(document.getElementById('edit-b').value) || 0;
-  var nuovoNt = document.getElementById('edit-nt').value.trim();
-  var nuovaD = document.getElementById('edit-d').value;
-  if (!nuovoN) { return tst('Inserisci numero bilico', 'er'); }
-  if (!nuovaL) { return tst('Inserisci locazione', 'er'); }
-  if (nuovoB <= 0) { return tst('Inserisci almeno 1 bancale', 'er'); }
-  var nuovoTs = nuovaD ? new Date(nuovaD).toISOString() : BL[editKey].ts;
-  var datiAggiornati = {numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: nuovoTs};
-  // se il numero e cambiato dobbiamo cancellare il vecchio e creare il nuovo
-  if (nuovoN !== editKey) {
-    var vecchiaKey = editKey;
-    dbSB(nuovoN, datiAggiornati).then(function() {
-      dbDB(vecchiaKey);
-    });
-  } else {
-    dbUB(editKey, datiAggiornati);
-  }
-  dbAS({tipo: 'MODIFICA', numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: new Date().toISOString()});
-  chiM('mo-edit');
-  editKey = null;
-  tst('Bilico ' + nuovoN + ' modificato', 'ok');
-}
-
-
-// ═══ USCITE PROGRAMMATE DOMANI ═══
-var PROG_DOMANI = [];
-
-function caricaProgDomani() {
-  if (!UC) {
-    try { PROG_DOMANI = JSON.parse(localStorage.getItem('PROG_DOMANI_v1') || '[]'); } catch(x) { PROG_DOMANI = []; }
-    renderProgDomani();
-    return;
-  }
-  fdb.collection('prog_domani').orderBy('ts', 'asc').onSnapshot(function(snap) {
-    PROG_DOMANI = [];
-    snap.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
-    renderProgDomani();
-  });
-}
-
-function salvaProgDomani() {
-  if (!UC) {
-    try { localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI)); } catch(x) {}
-  }
-}
-
-function toggleProgDomani() {
-  var body = document.getElementById('prog-domani-body');
-  var chev = document.getElementById('prog-domani-chev');
-  var isOpen = body.classList.contains('open');
-  if (isOpen) { body.classList.remove('open'); chev.classList.remove('open'); }
-  else { body.classList.add('open'); chev.classList.add('open'); }
-}
-
-function aggProgDomani() {
-  var val = String(document.getElementById('prog-domani-inp').value || '').trim().toUpperCase();
-  var nota = document.getElementById('prog-domani-nota-inp').value.trim();
-  if (!val) { return tst('Inserisci il numero bilico', 'er'); }
-  var gia = PROG_DOMANI.find(function(p) { return p.numero === val; });
-  if (gia) { return tst('Bilico ' + val + ' gia programmato per domani', 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
-  if (UC && fdb) {
-    fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-  } else {
-    PROG_DOMANI.push(dati);
-    salvaProgDomani();
-    renderProgDomani();
-  }
-  document.getElementById('prog-domani-inp').value = '';
-  document.getElementById('prog-domani-nota-inp').value = '';
-  suonoSirena();
-  tst('Bilico ' + val + ' aggiunto per domani', 'ok');
-}
-
-function rimuoviProgDomani(num) {
-  if (UC && fdb) {
-    var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
-    if (item && item.id) {
-      fdb.collection('prog_domani').doc(item.id).delete().catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-    }
-  } else {
-    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return p.numero !== num; });
-    salvaProgDomani();
-    renderProgDomani();
-  }
-}
-
-function modificaNotaProgDomani(num) {
-  var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
-  if (!item) { return; }
-  var nuovaNota = prompt('Modifica nota bilico #' + num + ':', item.nota || '');
-  if (nuovaNota === null) { return; }
-  nuovaNota = nuovaNota.trim();
-  if (UC && fdb && item.id) {
-    fdb.collection('prog_domani').doc(item.id).update({nota: nuovaNota}).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-  } else {
-    item.nota = nuovaNota;
-    salvaProgDomani();
-    renderProgDomani();
-  }
-  tst('Nota aggiornata', 'ok');
-}
-
-function renderProgDomani() {
-  var el = document.getElementById('prog-domani-list');
-  var badge = document.getElementById('prog-domani-count');
-  if (!el || !badge) { return; }
-  badge.textContent = PROG_DOMANI.length;
-  if (!PROG_DOMANI.length) {
-    el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per domani</div>';
-    return;
-  }
-  var html = '';
-  for (var i = 0; i < PROG_DOMANI.length; i++) {
-    var p = PROG_DOMANI[i];
-    var b = BL[p.numero];
-    var inMag = !!b;
-    html += '<div class="prog-item">';
-    html += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
-    html += '<div class="prog-info">';
-    if (inMag) {
-      html += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
-      html += '<div class="prog-ban">&#x1F4E6; ' + b.bancali + ' bancali</div>';
-    } else {
-      html += '<div style="font-size:12px;color:var(--tx2);">Non ancora in magazzino</div>';
-    }
-    if (p.nota) {
-      html += '<div class="prog-note-txt" style="margin-top:5px;padding-left:8px;border-left:2px solid var(--bd);line-height:1.4;">' + p.nota + '</div>';
-    } else {
-      html += '<div style="font-size:11px;color:var(--tx2);margin-top:4px;font-style:italic;">tocca matita per aggiungere nota</div>';
-    }
-    html += '</div>';
-    html += '<div class="prog-actions">';
-    html += '<button class="prog-del-btn" style="font-size:14px;" onclick="modificaNotaProgDomani(' + "'" + p.numero + "'" + ')">&#x270F;&#xFE0F;</button>';
-    if (CURR_USER && CURR_USER.livello === 0) {
-      html += '<button class="prog-del-btn" onclick="rimuoviProgDomani(' + "'" + p.numero + "'" + ')">&#x2716;</button>';
-    }
-    html += '</div>';
-    html += '</div>';
-  }
-  el.innerHTML = html;
-}
-
-
-// ═══ SPOSTAMENTO AUTOMATICO DOMANI -> OGGI ═══
-function controllaGiorno() {
-  var oggi = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-  if (UC && fdb) {
-    // Legge la data dell'ultimo spostamento da Firestore
-    fdb.collection('config').doc('giorno').get().then(function(doc) {
-      var ultimoGiorno = doc.exists ? doc.data().data : null;
-      if (ultimoGiorno === oggi) { return; } // stesso giorno, niente da fare
-      if (!PROG_DOMANI || PROG_DOMANI.length === 0) {
-        // niente da spostare ma aggiorna comunque la data
-        fdb.collection('config').doc('giorno').set({data: oggi});
-        return;
-      }
-      // Aggiorna subito la data per evitare doppi spostamenti
-      fdb.collection('config').doc('giorno').set({data: oggi});
-      var daAggiungere = PROG_DOMANI.slice();
-      var aggiunti = 0;
-      daAggiungere.forEach(function(p) {
-        var giaInOggi = PROG.find(function(x) { return x.numero === p.numero; });
-        if (!giaInOggi) {
-          fdb.collection('prog').add({numero: p.numero, nota: p.nota || '', ts: Date.now()});
-          aggiunti++;
-        }
-        if (p.id) { fdb.collection('prog_domani').doc(p.id).delete(); }
-      });
-      if (aggiunti > 0) {
-        setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 1000);
-      }
-    }).catch(function(e) { console.error('Errore controllaGiorno:', e); });
-
-  } else {
-    // Modalita locale: usa localStorage
-    var ultimoGiorno = null;
-    try { ultimoGiorno = localStorage.getItem('ULTIMO_GIORNO_v1'); } catch(x) {}
-    if (ultimoGiorno === oggi) { return; }
-    try { localStorage.setItem('ULTIMO_GIORNO_v1', oggi); } catch(x) {}
-    if (!PROG_DOMANI || PROG_DOMANI.length === 0) { return; }
-    var daAggiungere = PROG_DOMANI.slice();
-    var aggiunti = 0;
-    daAggiungere.forEach(function(p) {
-      var giaInOggi = PROG.find(function(x) { return x.numero === p.numero; });
-      if (!giaInOggi) { PROG.push({numero: p.numero, nota: p.nota || '', ts: Date.now()}); aggiunti++; }
-    });
-    PROG_DOMANI = [];
-    try {
-      localStorage.setItem('PROG_v1', JSON.stringify(PROG));
-      localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI));
-    } catch(x) {}
-    renderProg();
-    renderProgDomani();
-    if (aggiunti > 0) { setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 500); }
-  }
-}
-
-
-// ═══ AUDIO ═══
-var audioCtx = null;
-
-function getAudioCtx() {
-  if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-  }
-  return audioCtx;
-}
-
-function playTone(freq, type, duration, volume, startTime, ctx) {
-  var osc = ctx.createOscillator();
-  var gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.type = type || 'sine';
-  osc.frequency.setValueAtTime(freq, startTime);
-  gain.gain.setValueAtTime(volume || 0.3, startTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-  osc.start(startTime);
-  osc.stop(startTime + duration);
-}
-
-function suonoEntrata() {
-  var ctx = getAudioCtx();
-  if (!ctx) { return; }
-  var t = ctx.currentTime;
-  // salita: tre note in crescendo
-  playTone(440, 'sine', 0.15, 0.25, t, ctx);
-  playTone(554, 'sine', 0.15, 0.28, t + 0.15, ctx);
-  playTone(659, 'sine', 0.3,  0.32, t + 0.30, ctx);
-}
-
-function suonoUscita() {
-  var ctx = getAudioCtx();
-  if (!ctx) { return; }
-  var t = ctx.currentTime;
-  // discesa: tre note in diminuendo
-  playTone(659, 'sine', 0.15, 0.28, t, ctx);
-  playTone(554, 'sine', 0.15, 0.25, t + 0.15, ctx);
-  playTone(440, 'sine', 0.3,  0.22, t + 0.30, ctx);
-}
-
-function suonoSirena() {
-  var ctx = getAudioCtx();
-  if (!ctx) { return; }
-  var t = ctx.currentTime;
-  // mini sirena: alternanza alta/bassa x3
-  for (var i = 0; i < 3; i++) {
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sawtooth';
-    var start = t + i * 0.28;
-    osc.frequency.setValueAtTime(880, start);
-    osc.frequency.linearRampToValueAtTime(660, start + 0.14);
-    osc.frequency.linearRampToValueAtTime(880, start + 0.28);
-    gain.gain.setValueAtTime(0.18, start);
-    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.28);
-    osc.start(start);
-    osc.stop(start + 0.28);
-  }
-}
-
-function suonoErrore() {
-  var ctx = getAudioCtx();
-  if (!ctx) { return; }
-  var t = ctx.currentTime;
-  playTone(180, 'square', 0.25, 0.2, t, ctx);
-  playTone(140, 'square', 0.2,  0.15, t + 0.18, ctx);
-}
-
-function ldLoc() {
-  try {
-    BL = JSON.parse(localStorage.getItem('BLv3') || '{}');
-    ST = JSON.parse(localStorage.getItem('STv3') || '[]');
-  } catch(x) { BL = {}; ST = []; }
-}
-function svLoc() {
-  try {
-    localStorage.setItem('BLv3', JSON.stringify(BL));
-    localStorage.setItem('STv3', JSON.stringify(ST));
-  } catch(x) {}
-}
-
-function dbSB(id, d) {
-  if (UC) { return fdb.collection('bilici').doc(id).set(d); }
-  BL[id] = d; svLoc(); ui(); return Promise.resolve();
-}
-function dbUB(id, d) {
-  if (UC) { return fdb.collection('bilici').doc(id).update(d); }
-  Object.assign(BL[id], d); svLoc(); ui(); return Promise.resolve();
-}
-function dbDB(id) {
-  if (UC) { return fdb.collection('bilici').doc(id).delete(); }
-  delete BL[id]; svLoc(); ui(); return Promise.resolve();
-}
-function dbAS(d) {
-  if (UC) { return fdb.collection('storico').add(d); }
-  ST.unshift(Object.assign({id: 'L' + Date.now()}, d)); svLoc(); ui(); return Promise.resolve();
-}
-function dbDS(id) {
-  if (UC) { return fdb.collection('storico').doc(id).delete(); }
-  ST = ST.filter(function(m) { return m.id !== id; }); svLoc(); ui(); return Promise.resolve();
-}
-function dbCS() {
-  if (UC) { return Promise.all(ST.map(function(m) { return fdb.collection('storico').doc(m.id).delete(); })); }
-  ST = []; svLoc(); ui(); return Promise.resolve();
-}
-
-function goP(n) {
-  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  document.querySelectorAll('.tb').forEach(function(t) { t.classList.remove('active'); });
-  document.getElementById('page-' + n).classList.add('active');
-  var mp = {home:'tbh', entrata:'tbe', uscita:'tbu', magazzino:'tbm', cerca:'tbc'};
-  document.getElementById(mp[n]).classList.add('active');
-  ui();
-}
-function chiM(id) { document.getElementById(id).classList.remove('open'); }
-function stp(id, d) {
-  var el = document.getElementById(id);
-  el.value = Math.max(0, (parseInt(el.value) || 0) + d);
-}
-function tst(msg, tp) {
-  var t = document.getElementById('tst');
-  t.textContent = msg;
-  t.className = 'tst ' + (tp || '');
-  void t.offsetWidth;
-  t.classList.add('show');
-  clearTimeout(t._t);
-  t._t = setTimeout(function() { t.classList.remove('show'); }, 3200);
-  if (tp === 'er') { suonoErrore(); }
-}
-
-function regE() {
-  var n = String(document.getElementById('in-n').value || '').trim().toUpperCase();
-  var l = document.getElementById('in-l').value.trim().toUpperCase();
-  var b = parseInt(document.getElementById('in-b').value) || 0;
-  var nt = document.getElementById('in-nt').value.trim();
-  if (!n) { return tst('Inserisci il numero bilico', 'er'); }
-  if (!l) { return tst('Inserisci la locazione', 'er'); }
-  if (b <= 0) { return tst('Inserisci almeno 1 bancale', 'er'); }
-  if (BL[n]) { return tst('Bilico ' + n + ' gia presente', 'er'); }
-  if (!isIllimitata(l)) {
-    var occ = null;
-    Object.values(BL).forEach(function(x) { if (x.locazione === l) { occ = x; } });
-    if (occ) { return tst('Locazione ' + l + ' occupata dal bilico ' + occ.numero, 'er'); }
-  }
-  var ts = new Date().toISOString();
-  dbSB(n, {numero: n, locazione: l, bancali: b, note: nt, ts: ts});
-  dbAS({tipo: 'ENTRATA', numero: n, locazione: l, bancali: b, note: nt, ts: ts});
-  document.getElementById('in-n').value = '';
-  document.getElementById('in-l').value = '';
-  document.getElementById('in-b').value = '0';
-  document.getElementById('in-nt').value = '';
-  suonoEntrata();
-  tst('Bilico ' + n + ' entrato in ' + l, 'ok');
-}
-
-function trovB() {
-  var n = String(document.getElementById('out-n').value || '').trim().toUpperCase();
-  var b = BL[n];
-  var box = document.getElementById('trvbox');
-  if (b) {
-    box.style.display = 'block';
-    document.getElementById('out-lo').textContent = b.locazione;
-    document.getElementById('out-ba').textContent = b.bancali;
-    document.getElementById('out-b').value = b.bancali;
-  } else {
-    box.style.display = 'none';
-  }
-}
-
-function regU() {
-  var n = String(document.getElementById('out-n').value || '').trim().toUpperCase();
-  var bu = parseInt(document.getElementById('out-b').value) || 0;
-  var nt = document.getElementById('out-nt').value.trim();
-  if (!n) { return tst('Inserisci il numero bilico', 'er'); }
-  var b = BL[n];
-  if (!b) { return tst('Bilico ' + n + ' non trovato', 'er'); }
-  if (bu <= 0) { return tst('Inserisci bancali in uscita', 'er'); }
-  if (bu > b.bancali) { return tst('Bancali uscita superiori ai presenti (' + b.bancali + ')', 'er'); }
-  pend = {n: n, bu: bu, nt: nt, b: b};
-  var rim = b.bancali - bu;
-  var txt;
-  if (rim === 0) {
-    txt = 'Il bilico <strong>' + n + '</strong> uscira dalla locazione <strong>' + b.locazione + '</strong>.<br><br>Bancali usciti: <strong>' + bu + '</strong><br>Locazione verra <strong style="color:var(--rb)">liberata</strong>.';
-  } else {
-    var locOrig2 = b.locazione.toUpperCase();
-    var destLoc = (locOrig2 === 'SMEZZI' || locOrig2 === 'FRESCO') ? locOrig2 : 'SMEZZI';
-    var spostaMsg = (locOrig2 !== 'SMEZZI' && locOrig2 !== 'FRESCO')
-      ? '<br><span style="color:var(--cb)">&#x1F4CD; La rimanenza verra spostata in <strong>SMEZZI</strong></span>'
-      : '<br><span style="color:var(--cb)">&#x1F4CD; La rimanenza rimane in <strong>' + destLoc + '</strong></span>';
-    txt = 'Dal bilico <strong>' + n + '</strong> escono <strong>' + bu + '</strong> bancali.<br><br>Rimangono <strong style="color:var(--ob)">' + rim + '</strong> bancali in <strong>' + destLoc + '</strong>.' + spostaMsg;
-  }
-  document.getElementById('mo-u-tx').innerHTML = txt;
-  document.getElementById('mo-u').classList.add('open');
-}
-
-function confU() {
-  if (!pend) { return; }
-  chiM('mo-u');
-  var n = pend.n, bu = pend.bu, nt = pend.nt, b = pend.b;
-  var rim = b.bancali - bu;
-  var ts = new Date().toISOString();
-  if (rim === 0) {
-    dbDB(n);
-    dbAS({tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: 0, note: nt, ts: ts});
-    tst('Bilico ' + n + ' uscito - locazione ' + b.locazione + ' liberata', 'ok');
-  } else {
-    // uscita parziale: sposta in SMEZZI se non e gia li
-    var locOrig = b.locazione.toUpperCase();
-    var nuovaLoc = (locOrig === 'SMEZZI' || locOrig === 'FRESCO') ? locOrig : 'SMEZZI';
-    dbUB(n, {bancali: rim, locazione: nuovaLoc});
-    dbAS({tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: rim, note: nt, ts: ts});
-    if (nuovaLoc !== locOrig) {
-      tst('Usciti ' + bu + ' bancali - rimasti ' + rim + ' spostati in SMEZZI', 'ok');
-    } else {
-      tst('Usciti ' + bu + ' bancali - rimasti ' + rim + ' in ' + nuovaLoc, 'ok');
-    }
-  }
-  // rimuovi automaticamente dalle uscite programmate
-  suonoUscita();
-  rimuoviProg(n);
-  document.getElementById('out-n').value = '';
-  document.getElementById('out-b').value = '0';
-  document.getElementById('out-nt').value = '';
-  document.getElementById('trvbox').style.display = 'none';
-  pend = null;
-}
-
-function uscV(n) {
-  goP('uscita');
-  document.getElementById('out-n').value = n;
-  trovB();
-}
-
-function setSM(m) {
-  SMM = m;
-  var lbl = m === 'b' ? 'Bilico' : 'Locazione';
-  var col = m === 'b' ? 'var(--bb)' : 'var(--pb)';
-  document.getElementById('smlbl').innerHTML = 'Modalita: <strong style="color:' + col + '">' + lbl + '</strong>';
-  cerca();
-  renderProg();
-  renderProgDomani();
-}
-function cerca() {
-  var q = document.getElementById('s-in').value.trim().toUpperCase();
-  var res = document.getElementById('s-res');
-  if (!q) { res.innerHTML = ''; return; }
-  var tr = Object.values(BL).filter(function(b) {
-    return SMM === 'b' ? b.numero.includes(q) : b.locazione.includes(q);
-  });
-  res.innerHTML = tr.length ? tr.map(function(b) { return crdB(b, true); }).join('') : '<div class="emp"><div class="ic">&#x1F50D;</div><p>Nessun risultato</p></div>';
-}
-
-function apriStor() {
-  var el = document.getElementById('stor-l');
-  el.innerHTML = ST.length ? ST.map(function(m) { return lgDel(m); }).join('') : '<div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessun movimento</p></div>';
-  document.getElementById('mo-s').classList.add('open');
-}
-
-function chiPin(az, id) {
-  paz = {az: az, id: id};
-  pbuf = '';
-  updD();
-  document.getElementById('perr').textContent = '';
-  document.getElementById('mo-p').classList.add('open');
-}
-function pki(d) {
-  if (pbuf.length >= 4) { return; }
-  pbuf += d;
-  updD();
-  if (pbuf.length === 4) { setTimeout(chkP, 120); }
-}
-function pkd() { pbuf = pbuf.slice(0, -1); updD(); }
-function updD(st) {
-  for (var i = 0; i < 4; i++) {
-    var el = document.getElementById('pd' + i);
-    el.className = 'pd';
-    if (st === 'e') { el.classList.add('e'); }
-    else if (i < pbuf.length) { el.classList.add('f'); }
-  }
-}
-function chkP() {
-  if (pbuf === PIN) {
-    chiM('mo-p');
-    doPin();
-  } else {
-    updD('e');
-    document.getElementById('perr').textContent = 'PIN errato, riprova';
-    pbuf = '';
-    setTimeout(function() { updD(); }, 600);
-  }
-}
-function doPin() {
-  if (!paz) { return; }
-  var az = paz.az, id = paz.id;
-  paz = null;
-  if (az === 'del' && id) {
-    dbDS(id);
-    setTimeout(apriStor, 300);
-    tst('Movimento eliminato', 'ok');
-  } else if (az === 'svuota') {
-    dbCS().then(function() { chiM('mo-s'); tst('Storico svuotato', 'ok'); });
-  }
-}
-
-// ═══ IMPORTA DA EXCEL ═══
-function apriImport() {
-  document.getElementById('imp-file').value = '';
-  document.getElementById('imp-preview').style.display = 'none';
-  document.getElementById('imp-err').style.display = 'none';
-  document.getElementById('imp-btn').style.display = 'none';
-  impDati = [];
-  document.getElementById('mo-imp').classList.add('open');
-}
-
-function scaricaTemplate() {
-  var wb = XLSX.utils.book_new();
-  var dati = [
-    ['NUMERO', 'LOCAZIONE', 'BANCALI', 'NOTE', 'DATA'],
-    ['905', 'A1', '24', 'Merce cliente Rossi', '15/01/2025'],
-    ['906', 'BANCHINA', '18', '', '16/01/2025'],
-    ['907', 'SMEZZI', '30', 'Prodotti freschi', '17/01/2025']
-  ];
-  var ws = XLSX.utils.aoa_to_sheet(dati);
-  ws['!cols'] = [{wch:12},{wch:14},{wch:10},{wch:30},{wch:18}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Bilici');
-  XLSX.writeFile(wb, 'template_importazione.xlsx');
-  tst('Template scaricato!', 'ok');
-}
-
-function parsaData(val) {
-  if (!val) { return new Date().toISOString(); }
-  var s = String(val).trim();
-  // formato GG/MM/AAAA o GG/MM/AAAA HH:MM
-  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
-  if (m) {
-    var d = new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]),
-      m[4] ? parseInt(m[4]) : 8, m[5] ? parseInt(m[5]) : 0, 0);
-    if (!isNaN(d.getTime())) { return d.toISOString(); }
-  }
-  // prova come numero seriale Excel
-  if (!isNaN(val)) {
-    var n = parseFloat(val);
-    var d2 = new Date((n - 25569) * 86400 * 1000);
-    if (!isNaN(d2.getTime())) { return d2.toISOString(); }
-  }
-  return new Date().toISOString();
-}
-
-function leggiFileImport(evt) {
-  var file = evt.target.files[0];
-  if (!file) { return; }
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var wb = XLSX.read(e.target.result, {type: 'array'});
-      var ws = wb.Sheets[wb.SheetNames[0]];
-      var rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ''});
-      if (rows.length < 2) { mostraErrImp('File vuoto o senza dati'); return; }
-
-      // trova intestazione
-      var hdr = rows[0].map(function(h) { return String(h).toUpperCase().trim(); });
-      var iN = hdr.indexOf('NUMERO');
-      var iL = hdr.indexOf('LOCAZIONE');
-      var iB = hdr.indexOf('BANCALI');
-      var iNt = hdr.indexOf('NOTE');
-      var iD = hdr.indexOf('DATA');
-
-      if (iN < 0 || iL < 0 || iB < 0) {
-        mostraErrImp('Colonne obbligatorie mancanti. Servono: NUMERO, LOCAZIONE, BANCALI');
-        return;
-      }
-
-      impDati = [];
-      var errori = [];
-      for (var i = 1; i < rows.length; i++) {
-        var r = rows[i];
-        var num = String(r[iN] || '').trim().toUpperCase();
-        var loc = String(r[iL] || '').trim().toUpperCase();
-        var ban = parseInt(r[iB]) || 0;
-        var nt = iNt >= 0 ? String(r[iNt] || '').trim() : '';
-        var dt = iD >= 0 ? parsaData(r[iD]) : new Date().toISOString();
-        if (!num || !loc) { continue; }
-        if (ban <= 0) { errori.push('Riga ' + (i+1) + ': bancali non validi per bilico ' + num); continue; }
-        if (BL[num]) { errori.push('Riga ' + (i+1) + ': bilico ' + num + ' gia presente in magazzino'); continue; }
-        impDati.push({numero: num, locazione: loc, bancali: ban, note: nt, ts: dt});
-      }
-
-      if (impDati.length === 0) {
-        mostraErrImp('Nessun record valido trovato.' + (errori.length ? ' Errori: ' + errori.join('; ') : ''));
-        return;
-      }
-
-      document.getElementById('imp-err').style.display = 'none';
-      var prev = document.getElementById('imp-preview-content');
-      var html = '<strong style="color:var(--gb)">' + impDati.length + ' bilici pronti per importazione</strong>';
-      if (errori.length) {
-        html += '<br><span style="color:var(--ob)">&#x26A0; ' + errori.length + ' righe ignorate: ' + errori.join('; ') + '</span>';
-      }
-      html += '<br><br>';
-      for (var j = 0; j < Math.min(impDati.length, 10); j++) {
-        var r2 = impDati[j];
-        var dStr = new Date(r2.ts).toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit'});
-        html += '<div style="padding:4px 0;border-bottom:1px solid var(--bd);">';
-        html += '<strong>#' + r2.numero + '</strong> &rarr; ' + r2.locazione + ' &mdash; ' + r2.bancali + ' bancali &mdash; ' + dStr;
-        if (r2.note) { html += ' &mdash; ' + r2.note; }
-        html += '</div>';
-      }
-      if (impDati.length > 10) { html += '<div style="padding:4px 0;color:var(--tx2);">... e altri ' + (impDati.length - 10) + ' bilici</div>'; }
-      prev.innerHTML = html;
-      document.getElementById('imp-preview').style.display = 'block';
-      document.getElementById('imp-btn').style.display = 'flex';
-    } catch(ex) {
-      mostraErrImp('Errore lettura file: ' + ex.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function mostraErrImp(msg) {
-  var el = document.getElementById('imp-err');
-  el.textContent = '❌ ' + msg;
-  el.style.display = 'block';
-  document.getElementById('imp-preview').style.display = 'none';
-  document.getElementById('imp-btn').style.display = 'none';
-  impDati = [];
-}
-
-function eseguiImport() {
-  if (!impDati.length) { return; }
-  var btn = document.getElementById('imp-btn');
-  btn.textContent = 'Importazione in corso...';
-  btn.disabled = true;
-
-  var promesse = [];
-  for (var i = 0; i < impDati.length; i++) {
-    var r = impDati[i];
-    var locOcc = null;
-    if (!isIllimitata(r.locazione)) {
-      Object.values(BL).forEach(function(x) { if (x.locazione === r.locazione) { locOcc = x; } });
-      // controlla anche quelli gia importati in questa sessione
-      for (var k = 0; k < i; k++) {
-        if (!isIllimitata(impDati[k].locazione) && impDati[k].locazione === r.locazione) { locOcc = impDati[k]; }
-      }
-    }
-    if (!locOcc || isIllimitata(r.locazione)) {
-      promesse.push(dbSB(r.numero, {numero: r.numero, locazione: r.locazione, bancali: r.bancali, note: r.note, ts: r.ts}));
-      promesse.push(dbAS({tipo: 'ENTRATA', numero: r.numero, locazione: r.locazione, bancali: r.bancali, note: r.note, ts: r.ts}));
-    }
-  }
-
-  Promise.all(promesse).then(function() {
-    chiM('mo-imp');
-    tst('Importati ' + impDati.length + ' bilici!', 'ok');
-    impDati = [];
-    btn.disabled = false;
-  }).catch(function(e) {
-    tst('Errore importazione: ' + e.message, 'er');
-    btn.disabled = false;
-    btn.innerHTML = '<span class="bi">&#x1F4E5;</span>IMPORTA';
-  });
-}
-
-function expExcel() {
-  var wb = XLSX.utils.book_new();
-  var r1 = [['NUMERO','LOCAZIONE','BANCALI','NOTE','DATA']];
-  Object.values(BL).forEach(function(b) {
-    r1.push([b.numero, b.locazione, b.bancali, b.note || '', new Date(b.ts).toLocaleString('it-IT')]);
-  });
-  var ws1 = XLSX.utils.aoa_to_sheet(r1);
-  ws1['!cols'] = [{wch:12},{wch:14},{wch:10},{wch:25},{wch:20}];
-  XLSX.utils.book_append_sheet(wb, ws1, 'Bilici Presenti');
-  var r2 = [['TIPO','NUMERO','LOCAZIONE','BANCALI','USCITI','RIMASTI','NOTE','DATA']];
-  ST.forEach(function(m) {
-    r2.push([m.tipo, m.numero, m.locazione,
-      m.tipo === 'ENTRATA' ? m.bancali : '',
-      m.tipo === 'USCITA' ? m.bancaliUsciti : '',
-      m.tipo === 'USCITA' ? m.bancaliRimasti : '',
-      m.note || '', new Date(m.ts).toLocaleString('it-IT')]);
-  });
-  var ws2 = XLSX.utils.aoa_to_sheet(r2);
-  ws2['!cols'] = [{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:22},{wch:20}];
-  XLSX.utils.book_append_sheet(wb, ws2, 'Storico Movimenti');
-  var dt = new Date().toLocaleDateString('it-IT').split('/').join('-');
-  XLSX.writeFile(wb, 'Bilici_' + dt + '.xlsx');
-  tst('Excel esportato!', 'ok');
-}
-
-function fmtT(ts) {
-  if (!ts) { return '-'; }
-  var d = new Date(ts);
-  return d.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit'}) + ' ' + d.toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
-}
-function fmtH(ts) {
-  if (!ts) { return '-'; }
-  var d = new Date(ts);
-  return d.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
-}
-
-function crdB(b, act) {
-  var s = '<div class="bcd">';
-  var penBtn = (CURR_USER && CURR_USER.livello === 0) ? '<button class="pen-btn" onclick="event.stopPropagation();apriModifica(' + "'" + b.numero + "'" + ')" title="Modifica">&#x270F;&#xFE0F;</button>' : '';
-  s += '<div class="bch"><div class="bno"><span>#</span>' + b.numero + '</div><div style="display:flex;align-items:center;gap:8px;"><div class="bbg">IN MAGAZZINO</div>' + penBtn + '</div></div>';
-  s += '<div class="bin"><div><div class="bil">Bancali</div><div class="biv ba">' + b.bancali + '</div></div>';
-  s += '<div><div class="bil">Locazione</div><div class="biv lo">' + b.locazione + '</div></div></div>';
-  if (b.note) { s += '<div class="bnt">' + b.note + '</div>'; }
-  s += '<div class="btm">Entrato: ' + fmtT(b.ts) + '</div>';
-  if (act) { s += '<div style="margin-top:10px;"><button class="btn brd bsm" onclick="uscV(' + "'" + b.numero + "'" + ')">&#x1F534; Registra Uscita</button></div>'; }
-  s += '</div>';
-  return s;
-}
-
-function lgRow(m) {
-  var isIn = m.tipo === 'ENTRATA';
-  var s = '<div class="li"><div class="ldot ' + (isIn ? 'in' : 'ou') + '"></div><div class="ltx">';
-  s += '<div class="lm">' + (isIn ? '&#x1F7E2;' : '&#x1F534;') + ' Bilico <strong>#' + m.numero + '</strong> - ' + (isIn ? 'Entrato' : 'Uscito') + '</div>';
-  s += '<div class="ls">Loc: ' + m.locazione + ' - ' + (isIn ? m.bancali + ' bancali' : 'Usciti: ' + m.bancaliUsciti + ', Rimasti: ' + m.bancaliRimasti) + (m.note ? ' - ' + m.note : '') + '</div>';
-  s += '</div><div class="lti">' + fmtH(m.ts) + '</div></div>';
-  return s;
-}
-
-function lgDel(m) {
-  var isIn = m.tipo === 'ENTRATA';
-  var mid = m.id;
-  var s = '<div class="li"><div class="ldot ' + (isIn ? 'in' : 'ou') + '"></div><div class="ltx">';
-  s += '<div class="lm">' + (isIn ? '&#x1F7E2;' : '&#x1F534;') + ' <strong>#' + m.numero + '</strong> - ' + (isIn ? 'Entrato' : 'Uscito') + '</div>';
-  s += '<div class="ls">Loc: ' + m.locazione + ' - ' + (isIn ? m.bancali + ' bancali' : 'Usciti: ' + m.bancaliUsciti + ', Rimasti: ' + m.bancaliRimasti) + (m.note ? '<br>' + m.note : '') + '</div>';
-  s += '<div class="lti" style="white-space:normal;text-align:left;">' + fmtT(m.ts) + '</div>';
-  s += '</div><button class="ldb" onclick="chiPin(' + "'del'" + ',' + "'" + mid + "'" + ')">&#x1F5D1;</button></div>';
-  return s;
-}
-
-function ui() {
-  var lst = Object.values(BL);
-  var tot = lst.reduce(function(s, b) { return s + (b.bancali || 0); }, 0);
-  var oggi = new Date().toDateString();
-  document.getElementById('s1').textContent = lst.length;
-  document.getElementById('s2').textContent = tot;
-  document.getElementById('s4').textContent = ST.filter(function(m) { return new Date(m.ts).toDateString() === oggi; }).length;
-
-  // aggiorna contatore nel bottone home
-  var cntEl = document.getElementById('cnt-mag');
-  if (cntEl) { cntEl.textContent = lst.length; }
-
-  // aggiorna pagina magazzino
-  var ml = document.getElementById('lst-magazzino');
-  var mc = document.getElementById('mag-count');
-  if (mc) { mc.textContent = lst.length; }
-  if (ml) {
-    ml.innerHTML = lst.length ? lst.sort(function(a,b) { return a.numero.localeCompare(b.numero); }).map(function(b) { return crdB(b, true); }).join('') : '<div class="emp"><div class="ic">&#x1F69B;</div><p>Nessun bilico presente</p></div>';
-  }
-
-  var ent = ST.filter(function(m) { return m.tipo === 'ENTRATA'; }).slice(0,8);
-  document.getElementById('log-in').innerHTML = ent.length ? ent.map(lgRow).join('') : '<div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessuna entrata</p></div>';
-
-  var usc = ST.filter(function(m) { return m.tipo === 'USCITA'; }).slice(0,8);
-  document.getElementById('log-ou').innerHTML = usc.length ? usc.map(lgRow).join('') : '<div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessuna uscita</p></div>';
-
-  document.getElementById('loc-lst').innerHTML = lst.length ? lst.sort(function(a,b) { return a.locazione.localeCompare(b.locazione); }).map(function(b) {
-    var illim = isIllimitata(b.locazione);
-    return '<div class="lca"><div class="lch"><div class="lcn">&#x1F4CD; ' + b.locazione + (illim ? ' <span style="font-size:11px;color:var(--cb)">[ILLIMITATA]</span>' : '') + '</div><div class="lcs">OCCUPATA</div></div><div class="lci">&#x1F69B; Bilico: <strong>#' + b.numero + '</strong> &nbsp;|&nbsp; &#x1F4E6; Bancali: <strong>' + b.bancali + '</strong>' + (b.note ? '<br>' + b.note : '') + '</div></div>';
-  }).join('') : '<div class="emp"><div class="ic">&#x1F4CD;</div><p>Nessuna locazione occupata</p></div>';
-
-  cerca();
-}
-
-// ── MODIFICA UTENTE ──
-var editUtenteId = null;
-var editUtenteLvl = 1;
-
-function apriModificaUtente(id, username, livello) {
-  editUtenteId = id;
-  editUtenteLvl = livello;
-  document.getElementById('edit-usr-name').value = username;
-  document.getElementById('edit-usr-pass').value = '';
-  document.getElementById('edit-usr-pass').type = 'password';
-  document.getElementById('edit-pass-eye').innerHTML = '&#x1F441;';
-  selEditLvl(livello);
-  document.getElementById('mo-edit-utente').classList.add('open');
-}
-
-function selEditLvl(n) {
-  editUtenteLvl = n;
-  document.getElementById('edit-lvl-btn-0').classList.toggle('active', n === 0);
-  document.getElementById('edit-lvl-btn-1').classList.toggle('active', n === 1);
-}
-
-function toggleEditPass() {
-  var inp = document.getElementById('edit-usr-pass');
-  var btn = document.getElementById('edit-pass-eye');
-  var show = inp.type === 'password';
-  inp.type = show ? 'text' : 'password';
-  btn.innerHTML = show ? '&#x1F648;' : '&#x1F441;';
-}
-
-function salvaModificaUtente() {
-  if (!editUtenteId) return;
-  var newUser = document.getElementById('edit-usr-name').value.trim();
-  var newPass = document.getElementById('edit-usr-pass').value.trim();
-  if (!newUser) { return tst('Inserisci uno username', 'er'); }
-  var aggiornamenti = { username: newUser, username_lc: newUser.toLowerCase(), livello: editUtenteLvl };
-  if (newPass) { aggiornamenti.password = newPass; }
-  if (UC && fdb) {
-    fdb.collection('utenti').doc(editUtenteId).update(aggiornamenti).then(function() {
-      tst('Utente aggiornato', 'ok');
-      chiM('mo-edit-utente');
-      caricaListaUtenti();
-    }).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-  } else {
-    var utenti = JSON.parse(localStorage.getItem('UTENTI_v1') || '[]');
-    var idx = utenti.findIndex(function(u) { return u.id === editUtenteId; });
-    if (idx !== -1) {
-      utenti[idx].username = newUser;
-      utenti[idx].username_lc = newUser.toLowerCase();
-      utenti[idx].livello = editUtenteLvl;
-      if (newPass) utenti[idx].password = newPass;
-      try { localStorage.setItem('UTENTI_v1', JSON.stringify(utenti)); } catch(x) {}
-    }
-    tst('Utente aggiornato', 'ok');
-    chiM('mo-edit-utente');
-    caricaListaUtenti();
-  }
-}
 </script>
-
-<!-- MODAL MODIFICA UTENTE -->
-<div class="mo" id="mo-edit-utente">
-  <div class="mdl">
-    <div class="mha"></div>
-    <div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Utente</div>
-    <div class="fg">
-      <div class="fl">Username</div>
-      <input class="fi" id="edit-usr-name" type="text" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    </div>
-    <div class="fg">
-      <div class="fl">Password</div>
-      <div class="pass-wrap">
-        <input class="fi" id="edit-usr-pass" type="password" placeholder="Nuova password">
-        <button class="pass-eye-btn" onclick="toggleEditPass()" id="edit-pass-eye">&#x1F441;</button>
-      </div>
-    </div>
-    <div class="fg">
-      <div class="fl">Livello accesso</div>
-      <div class="lvl-toggle">
-        <button class="lvl-btn" id="edit-lvl-btn-0" onclick="selEditLvl(0)">&#x1F511; LIVELLO 0 — Admin</button>
-        <button class="lvl-btn active" id="edit-lvl-btn-1" onclick="selEditLvl(1)">&#x1F464; LIVELLO 1 — Operatore</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button class="btn bgn" onclick="salvaModificaUtente()" style="flex:1;margin-bottom:0;">&#x2713; SALVA</button>
-      <button class="btn bgh" onclick="chiM('mo-edit-utente')" style="flex:1;margin-bottom:0;">&#x2716; Annulla</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>

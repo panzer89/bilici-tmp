@@ -139,7 +139,7 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 .prog-add-row{display:flex;gap:8px;}
 .prog-add input{flex:1;height:42px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;padding:0 12px;outline:none;max-width:140px;}
 .prog-add input::placeholder{font-size:14px;font-weight:400;color:var(--tx2);}
-.prog-nota-inp{font-family:'Barlow',sans-serif!important;font-size:15px!important;font-weight:400!important;max-width:100%!important;height:46px!important;padding:12px 14px!important;border-color:var(--bl)!important;}
+.prog-nota-inp{font-family:'Barlow',sans-serif!important;font-size:14px!important;font-weight:400!important;max-width:100%!important;height:40px!important;}
 .prog-add-btn{height:42px;padding:0 14px;color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;}
 .prog-list{display:flex;flex-direction:column;}
 .prog-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);}
@@ -149,7 +149,7 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 .prog-info{flex:1;min-width:0;}
 .prog-loc{font-size:13px;color:var(--pb);font-weight:600;}
 .prog-ban{font-size:12px;color:var(--ob);}
-.prog-note-txt{font-size:14px;color:var(--tx);padding:6px 10px 6px 12px;border-left:3px solid var(--bl);background:rgba(56,139,253,.06);border-radius:0 6px 6px 0;margin-top:5px;}
+.prog-note-txt{font-size:12px;color:var(--tx2);margin-top:4px;padding-left:8px;border-left:2px solid var(--bd);}
 .prog-actions{display:flex;gap:6px;flex-shrink:0;}
 .prog-carica-btn{height:38px;padding:0 12px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
 .prog-chevron{font-size:18px;color:var(--tx2);transition:transform .2s;}
@@ -622,13 +622,33 @@ function goEntrata(cat) {
 
 // ═══ LOGIN ═══
 window.onload = function() {
-  caricaCredenziali();
+  // Leggi credenziali da sessionStorage (redirect da mobile.html)
+  var autoLogin = null;
+  try {
+    var raw = sessionStorage.getItem('OP_AUTO_v1');
+    if (raw) {
+      sessionStorage.removeItem('OP_AUTO_v1'); // cancella subito per sicurezza
+      autoLogin = JSON.parse(raw);
+    }
+  } catch(x) {}
+
+  if (!autoLogin) {
+    // Nessun auto-login: carica credenziali salvate normalmente
+    caricaCredenziali();
+  }
+
   try {
     if (FBC.apiKey === 'INSERISCI_API_KEY') throw new Error('no cfg');
     if (!firebase.apps.length) firebase.initializeApp(FBC);
     fdb = firebase.firestore(); UC = true;
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent = 'CLOUD';
+    // Dopo che Firebase è pronto, fai login automatico se arrivato da mobile
+    if (autoLogin && autoLogin.u && autoLogin.p) {
+      document.getElementById('log-user').value = autoLogin.u;
+      document.getElementById('log-pass').value = autoLogin.p;
+      setTimeout(function() { doLogin(); }, 300);
+    }
     fdb.collection('bilici').onSnapshot(function(s) {
       BL = {}; s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
       aggiornaUI();

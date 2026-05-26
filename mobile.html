@@ -149,9 +149,9 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .prog-add input{flex:1;height:42px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;padding:0 12px;outline:none;letter-spacing:1px;}
 .prog-add input:focus{border-color:var(--rb);}
 .prog-add input::placeholder{font-size:14px;font-weight:400;color:var(--tx2);}
-.prog-nota-inp{font-family:'Barlow',sans-serif!important;font-size:15px!important;font-weight:400!important;letter-spacing:0!important;color:var(--tx)!important;border-color:var(--bl)!important;height:46px!important;padding:12px 14px!important;}
+.prog-nota-inp{font-family:'Barlow',sans-serif!important;font-size:14px!important;font-weight:400!important;letter-spacing:0!important;color:var(--tx)!important;border-color:var(--bd)!important;height:40px!important;}
 .prog-nota-inp::placeholder{font-size:13px;color:var(--tx2);}
-.prog-nota-inp:focus{border-color:var(--bb)!important;}
+.prog-nota-inp:focus{border-color:var(--rb)!important;}
 .prog-add button{height:42px;padding:0 14px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;}
 .prog-add button:active{opacity:.8;}
 .prog-list{display:flex;flex-direction:column;}
@@ -162,7 +162,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .prog-info{flex:1;min-width:0;}
 .prog-loc{font-size:13px;color:var(--pb);font-weight:600;}
 .prog-ban{font-size:12px;color:var(--ob);}
-.prog-note-txt{font-size:14px;color:var(--tx);padding:6px 10px 6px 12px;border-left:3px solid var(--bl);background:rgba(56,139,253,.06);border-radius:0 6px 6px 0;margin-top:5px;}
+.prog-note-txt{font-size:11px;color:var(--tx2);}
 .prog-actions{display:flex;gap:6px;flex-shrink:0;}
 .prog-carica-btn{height:38px;padding:0 12px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;}
 .prog-carica-btn:active{opacity:.8;}
@@ -763,8 +763,9 @@ function doLogin() {
       document.getElementById('log-pass').value = '';
       return;
     }
-    // livello 1 = operatore -> redirect a operatore.html
+    // livello 1 = operatore -> salva in sessionStorage e redirect
     if (usr.livello === 1) {
+      try { sessionStorage.setItem('OP_AUTO_v1', JSON.stringify({u:u, p:p})); } catch(x) {}
       window.location.href = 'operatore.html';
       return;
     }

@@ -10,6 +10,7 @@
 <title>Bilici MGR</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -769,6 +770,12 @@ function doLogin() {
       window.location.href = 'operatore.html';
       return;
     }
+    // livello 1 = operatore -> sessionStorage e redirect
+    if (usr.livello === 1) {
+      try { sessionStorage.setItem('OP_AUTO_v1', JSON.stringify({u:u, p:p})); } catch(x) {}
+      window.location.href = 'operatore.html';
+      return;
+    }
     CURR_USER = usr;
     // salva o cancella credenziali ricordate
     if (ricorda) {
@@ -1186,12 +1193,10 @@ function leggiQRdaFoto(input) {
         } else {
           tst('Codice non riconosciuto, riprova', 'er');
         }
-      }).catch(function() {
-        tst('Errore lettura codice', 'er');
-      });
+      }).catch(function() { decodaConJsQR(canvas); });
     } else {
-      // Fallback: usa la Shape Detection API o avvisa
-      tst('Scanner non supportato su questo dispositivo', 'er');
+      // Fallback con jsQR (iOS Safari e altri browser)
+      decodaConJsQR(canvas);
     }
   };
   img.onerror = function() { tst('Errore caricamento foto', 'er'); };
@@ -2033,6 +2038,23 @@ function selEditLvl(n){
   var map={0:'edit-lvl-btn-0',2:'edit-lvl-btn-p',1:'edit-lvl-btn-1'};
   var b=document.getElementById(map[n]);if(b)b.classList.add('active');
   var x=document.getElementById('edit-pin-plus-box');if(x)x.style.display=n===2?'flex':'none';
+}
+
+function decodaConJsQR(canvas) {
+  try {
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var code = jsQR(imageData.data, canvas.width, canvas.height);
+    if (code && code.data) {
+      var val = code.data.trim().toUpperCase();
+      if (qrTargetId) { document.getElementById(qrTargetId).value = val; }
+      tst('Locazione: ' + val, 'ok');
+    } else {
+      tst('Codice non riconosciuto, riprova', 'er');
+    }
+  } catch(e) {
+    tst('Errore lettura QR', 'er');
+  }
 }
 </script>
 

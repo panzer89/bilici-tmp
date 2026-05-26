@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0d1117">
 <title>Bilici TMP — Desktop</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
@@ -1154,13 +1155,8 @@ function leggiQRdaFoto(input) {
         } else {
           tst('Codice non riconosciuto, riprova', 'er');
         }
-      }).catch(function() {
-        tst('Errore lettura codice', 'er');
-      });
-    } else {
-      // Fallback: usa la Shape Detection API o avvisa
-      tst('Scanner non supportato su questo dispositivo', 'er');
-    }
+      }).catch(function() { decodaConJsQR(canvas); });
+    } else { decodaConJsQR(canvas); }
   };
   img.onerror = function() { tst('Errore caricamento foto', 'er'); };
   img.src = url;
@@ -1909,6 +1905,23 @@ function aggiornaUltimiEntrati() {
   var fr = document.getElementById('last-fresco');
   if (se) se.textContent = maxSecco > 0 ? '#' + maxSecco : '—';
   if (fr) fr.textContent = maxFresc > 0 ? '#' + maxFresc : '—';
+}
+
+function decodaConJsQR(canvas) {
+  try {
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var code = jsQR(imageData.data, canvas.width, canvas.height);
+    if (code && code.data) {
+      var val = code.data.trim().toUpperCase();
+      if (qrTargetId) { document.getElementById(qrTargetId).value = val; }
+      tst('Locazione: ' + val, 'ok');
+    } else {
+      tst('Codice non riconosciuto, riprova', 'er');
+    }
+  } catch(e) {
+    tst('Errore lettura QR', 'er');
+  }
 }
 </script>
 

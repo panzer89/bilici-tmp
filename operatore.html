@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Bilici TMP">
 <meta name="theme-color" content="#0d1117">
 <title>Bilici TMP — Operatore</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -643,11 +644,22 @@ window.onload = function() {
     fdb = firebase.firestore(); UC = true;
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent = 'CLOUD';
-    // Dopo che Firebase è pronto, fai login automatico se arrivato da mobile
+    // Auto-login: aspetta che Firebase sia connesso prima di fare login
     if (autoLogin && autoLogin.u && autoLogin.p) {
       document.getElementById('log-user').value = autoLogin.u;
       document.getElementById('log-pass').value = autoLogin.p;
-      setTimeout(function() { doLogin(); }, 300);
+      var autoLoginTentativo = 0;
+      var autoLoginInterval = setInterval(function() {
+        autoLoginTentativo++;
+        if (UC && fdb) {
+          clearInterval(autoLoginInterval);
+          doLogin();
+        } else if (autoLoginTentativo > 20) {
+          // Timeout 2 secondi - prova comunque
+          clearInterval(autoLoginInterval);
+          doLogin();
+        }
+      }, 100);
     }
     fdb.collection('bilici').onSnapshot(function(s) {
       BL = {}; s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
@@ -703,8 +715,8 @@ function doLogin() {
   if (!u || !p) { document.getElementById('log-err').textContent = 'Inserisci username e password'; return; }
   cercaUtente(u, p, function(usr) {
     if (!usr) { document.getElementById('log-err').textContent = 'Credenziali non valide'; document.getElementById('log-pass').value = ''; return; }
-    // Admin viene reindirizzato al file principale
-    if (usr.livello === 0) {
+    // Admin (0) e Plus (2) vengono reindirizzati al file principale
+    if (usr.livello === 0 || usr.livello === 2) {
       window.location.href = 'mobile.html';
       return;
     }
@@ -1166,12 +1178,29 @@ function leggiQRdaFoto(input) {
           var val = codes[0].rawValue.trim().toUpperCase();
           if (qrTargetId) document.getElementById(qrTargetId).value = val;
           tst('Postazione: ' + val, 'ok');
-        } else { tst('Codice non riconosciuto, riprova', 'er'); }
-      }).catch(function() { tst('Errore lettura codice', 'er'); });
-    } else { tst('Scanner non supportato su questo dispositivo', 'er'); }
+        } else { decodaConJsQR(canvas); }
+      }).catch(function() { decodaConJsQR(canvas); });
+    } else { decodaConJsQR(canvas); }
   };
   img.onerror = function() { tst('Errore caricamento foto', 'er'); };
   img.src = url;
+}
+
+function decodaConJsQR(canvas) {
+  try {
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var code = jsQR(imageData.data, canvas.width, canvas.height);
+    if (code && code.data) {
+      var val = code.data.trim().toUpperCase();
+      if (qrTargetId) { document.getElementById(qrTargetId).value = val; }
+      tst('Postazione: ' + val, 'ok');
+    } else {
+      tst('Codice non riconosciuto, riprova', 'er');
+    }
+  } catch(e) {
+    tst('Errore lettura QR', 'er');
+  }
 }
 </script>
 </body>

@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Bilici TMP">
 <meta name="theme-color" content="#0d1117">
 <title>Bilici TMP — Operatore</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -495,10 +496,12 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 </div>
 
 <!-- QR INPUT -->
-<input type="file" id="qr-input-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
+<!-- qr-input-file non usato con scanner live -->
 <div class="tst" id="tst"></div>
 
-<script>
+<script>var qrStream = null;
+var qrAnimFrame = null;
+
 // ═══ CONFIG ═══
 var FBC = {
   apiKey: "AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",
@@ -1120,34 +1123,74 @@ function toggleSection(bodyId, chevId) {
 // ═══ QR ═══
 function apriQR(inputId) {
   qrTargetId = inputId;
-  var inp = document.getElementById('qr-input-file');
-  inp.value = ''; inp.click();
+  startQRScanner();
 }
-function leggiQRdaFoto(input) {
-  if (!input.files || !input.files[0]) return;
-  var file = input.files[0];
-  var img = new Image();
-  var url = URL.createObjectURL(file);
-  img.onload = function() {
-    var canvas = document.createElement('canvas');
-    canvas.width = img.width; canvas.height = img.height;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    URL.revokeObjectURL(url);
-    if (window.BarcodeDetector) {
-      var det = new BarcodeDetector({formats:['qr_code','code_128','code_39','ean_13','ean_8','data_matrix']});
-      det.detect(canvas).then(function(codes) {
-        if (codes && codes.length > 0) {
-          var val = codes[0].rawValue.trim().toUpperCase();
-          if (qrTargetId) document.getElementById(qrTargetId).value = val;
-          tst('Postazione: ' + val, 'ok');
-        } else { tst('Codice non riconosciuto, riprova', 'er'); }
-      }).catch(function() { tst('Errore lettura codice', 'er'); });
-    } else { tst('Scanner non supportato su questo dispositivo', 'er'); }
-  };
-  img.onerror = function() { tst('Errore caricamento foto', 'er'); };
-  img.src = url;
+function startQRScanner() {
+  document.getElementById('mo-qr').classList.add('open');
+  qrStream = null; qrAnimFrame = null;
+  navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}, audio: false})
+    .then(function(stream) {
+      qrStream = stream;
+      var video = document.getElementById('qr-video');
+      video.srcObject = stream;
+      video.play();
+      video.addEventListener('loadedmetadata', function() { scanQRFrame(); });
+    })
+    .catch(function() {
+      tst('Fotocamera non disponibile', 'er');
+      stopQRScanner();
+    });
+}
+
+function scanQRFrame() {
+  var video = document.getElementById('qr-video');
+  var canvas = document.getElementById('qr-canvas');
+  if (!qrStream || video.readyState !== video.HAVE_ENOUGH_DATA) {
+    qrAnimFrame = requestAnimationFrame(scanQRFrame); return;
+  }
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var code = jsQR(imageData.data, imageData.width, imageData.height, {inversionAttempts: 'dontInvert'});
+  if (code && code.data) {
+    stopQRScanner();
+    var val = code.data.trim().toUpperCase();
+    if (qrTargetId) {
+      var el = document.getElementById(qrTargetId);
+      if (el) { el.value = val; el.dispatchEvent(new Event('input')); }
+    }
+    tst('Postazione: ' + val, 'ok');
+  } else {
+    qrAnimFrame = requestAnimationFrame(scanQRFrame);
+  }
+}
+
+function stopQRScanner() {
+  if (qrStream) { qrStream.getTracks().forEach(function(t) { t.stop(); }); qrStream = null; }
+  if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
+  document.getElementById('mo-qr').classList.remove('open');
 }
 </script>
+
+<!-- MODAL SCANNER QR -->
+<div class="mo" id="mo-qr" style="align-items:flex-end;">
+  <div class="mdl" style="border-radius:20px 20px 0 0;padding:0;overflow:hidden;max-height:90vh;">
+    <div style="background:var(--bg);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--tx);">📷 Scanner QR</div>
+      <button onclick="stopQRScanner()" style="background:none;border:1px solid var(--bd);color:var(--tx2);width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="position:relative;width:100%;background:#000;">
+      <video id="qr-video" playsinline autoplay muted style="width:100%;display:block;max-height:60vh;object-fit:cover;"></video>
+      <canvas id="qr-canvas" style="display:none;"></canvas>
+      <!-- Mirino -->
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <div style="width:200px;height:200px;border:3px solid #388bfd;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);"></div>
+      </div>
+    </div>
+    <div style="padding:14px 16px;text-align:center;font-size:13px;color:var(--tx2);">Inquadra il codice QR della postazione</div>
+  </div>
+</div>
+
 </body>
 </html>

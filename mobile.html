@@ -251,6 +251,9 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .pass-wrap .fi{padding-right:46px;flex:1;}
 .pass-eye-btn{position:absolute;right:0;top:0;bottom:0;width:46px;background:none;border:none;color:var(--tx2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
 .pass-eye-btn:active{color:var(--bb);}
+
+.bcd-badge-pren{background:var(--og);color:#111;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.bbg-pren{background:var(--og)!important;color:#111!important;}
 </style>
 </head>
 <body>
@@ -1033,6 +1036,7 @@ function caricaProg() {
     PROG = [];
     snap.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
     renderProg();
+    aggiornaBadgeMag();
   });
 }
 
@@ -1054,8 +1058,7 @@ function aggProg() {
   var val = String(document.getElementById('prog-inp').value || '').trim().toUpperCase();
   var nota = document.getElementById('prog-nota-inp').value.trim();
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
-  var gia = PROG.find(function(p) { return p.numero === val; });
-  if (gia) { return tst('Bilico ' + val + ' gia in programma', 'er'); }
+  if (isPrenotato(val)) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
   var dati = {numero: val, nota: nota, ts: Date.now()};
   if (UC && fdb) {
     fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
@@ -1138,7 +1141,7 @@ function renderProg() {
       html += '<button class="prog-carica-btn" onclick="caricaVeloce(' + "'" + p.numero + "'" + ')">&#x1F534; CARICA</button>';
     }
     html += '<button class="prog-del-btn" style="font-size:14px;" onclick="modificaNotaProg(' + "'" + p.numero + "'" + ')">&#x270F;&#xFE0F;</button>';
-    if (CURR_USER && CURR_USER.livello === 0) {
+    if (CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2)) {
       html += '<button class="prog-del-btn" onclick="rimuoviProg(' + "'" + p.numero + "'" + ')">&#x2716;</button>';
     }
     html += '</div>';
@@ -1260,6 +1263,7 @@ function caricaProgDomani() {
   if (!UC) {
     try { PROG_DOMANI = JSON.parse(localStorage.getItem('PROG_DOMANI_v1') || '[]'); } catch(x) { PROG_DOMANI = []; }
     renderProgDomani();
+    aggiornaBadgeMag();
     return;
   }
   fdb.collection('prog_domani').orderBy('ts', 'asc').onSnapshot(function(snap) {
@@ -1287,8 +1291,7 @@ function aggProgDomani() {
   var val = String(document.getElementById('prog-domani-inp').value || '').trim().toUpperCase();
   var nota = document.getElementById('prog-domani-nota-inp').value.trim();
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
-  var gia = PROG_DOMANI.find(function(p) { return p.numero === val; });
-  if (gia) { return tst('Bilico ' + val + ' gia programmato per domani', 'er'); }
+  if (isPrenotato(val)) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
   var dati = {numero: val, nota: nota, ts: Date.now()};
   if (UC && fdb) {
     fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
@@ -1363,7 +1366,7 @@ function renderProgDomani() {
     html += '</div>';
     html += '<div class="prog-actions">';
     html += '<button class="prog-del-btn" style="font-size:14px;" onclick="modificaNotaProgDomani(' + "'" + p.numero + "'" + ')">&#x270F;&#xFE0F;</button>';
-    if (CURR_USER && CURR_USER.livello === 0) {
+    if (CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2)) {
       html += '<button class="prog-del-btn" onclick="rimuoviProgDomani(' + "'" + p.numero + "'" + ')">&#x2716;</button>';
     }
     html += '</div>';
@@ -1612,6 +1615,11 @@ function regU() {
   if (!b) { return tst('Bilico ' + n + ' non trovato', 'er'); }
   if (bu <= 0) { return tst('Inserisci bancali in uscita', 'er'); }
   if (bu > b.bancali) { return tst('Bancali uscita superiori ai presenti (' + b.bancali + ')', 'er'); }
+  if (isPrenotato(n)) {
+    var dove = infoPrenotazione(n);
+    if (!confirm('Bilico #' + n + ' e prenotato ' + dove + '. Caricarlo lo stesso?\nLa prenotazione verra eliminata automaticamente.')) { return; }
+    rimuoviPrenotazioneNum(n);
+  }
   pend = {n: n, bu: bu, nt: nt, b: b};
   var rim = b.bancali - bu;
   var txt;
@@ -1654,6 +1662,7 @@ function confU() {
   // rimuovi automaticamente dalle uscite programmate
   suonoUscita();
   rimuoviProg(n);
+  rimuoviPrenotazioneNum(n);
   document.getElementById('out-n').value = '';
   document.getElementById('out-b').value = '0';
   document.getElementById('out-nt').value = '';
@@ -1929,8 +1938,12 @@ function fmtH(ts) {
 
 function crdB(b, act) {
   var s = '<div class="bcd">';
-  var penBtn = (CURR_USER && CURR_USER.livello === 0) ? '<button class="pen-btn" onclick="event.stopPropagation();apriModifica(' + "'" + b.numero + "'" + ')" title="Modifica">&#x270F;&#xFE0F;</button>' : '';
-  s += '<div class="bch"><div class="bno"><span>#</span>' + b.numero + '</div><div style="display:flex;align-items:center;gap:8px;"><div class="bbg">IN MAGAZZINO</div>' + penBtn + '</div></div>';
+  var isAdm = CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2);
+  var penBtn = isAdm ? '<button class="pen-btn" onclick="event.stopPropagation();apriModifica(' + "'" + b.numero + "'" + ')" title="Modifica">&#x270F;&#xFE0F;</button>' : '';
+  var pren = isPrenotato(b.numero);
+  var bbgCls = pren ? 'bbg bbg-pren' : 'bbg';
+  var bbgTxt = pren ? '&#x1F4CC; PRENOTATO' : 'IN MAGAZZINO';
+  s += '<div class="bch"><div class="bno"><span>#</span>' + b.numero + '</div><div style="display:flex;align-items:center;gap:8px;"><div class="' + bbgCls + '">' + bbgTxt + '</div>' + penBtn + '</div></div>';
   s += '<div class="bin"><div><div class="bil">Bancali</div><div class="biv ba">' + b.bancali + '</div></div>';
   s += '<div><div class="bil">Locazione</div><div class="biv lo">' + b.locazione + '</div></div></div>';
   if (b.note) { s += '<div class="bnt">' + b.note + '</div>'; }
@@ -2039,6 +2052,47 @@ function selEditLvl(n){
   var map={0:'edit-lvl-btn-0',2:'edit-lvl-btn-p',1:'edit-lvl-btn-1'};
   var b=document.getElementById(map[n]);if(b)b.classList.add('active');
   var x=document.getElementById('edit-pin-plus-box');if(x)x.style.display=n===2?'flex':'none';
+}
+
+var CAL_DATA = {};
+function isPrenotato(num) {
+  if (typeof PROG!=='undefined'&&PROG.find(function(p){return p.numero===num;})) return true;
+  if (typeof PROG_DOMANI!=='undefined'&&PROG_DOMANI.find(function(p){return p.numero===num;})) return true;
+  var ks=Object.keys(CAL_DATA);
+  for(var i=0;i<ks.length;i++){if(CAL_DATA[ks[i]].find(function(x){return x.numero===num;}))return true;}
+  return false;
+}
+function infoPrenotazione(num) {
+  if (typeof PROG!=='undefined'&&PROG.find(function(p){return p.numero===num;})) return 'nelle uscite di oggi';
+  if (typeof PROG_DOMANI!=='undefined'&&PROG_DOMANI.find(function(p){return p.numero===num;})) return 'nelle uscite di domani';
+  var ks=Object.keys(CAL_DATA);
+  for(var i=0;i<ks.length;i++){
+    if(CAL_DATA[ks[i]].find(function(x){return x.numero===num;})){
+      var d=ks[i].split('-');return 'nel calendario del '+d[2]+'/'+d[1];
+    }
+  }
+  return 'in programma';
+}
+function rimuoviPrenotazioneNum(num) {
+  if(typeof PROG!=='undefined'){var ip=PROG.find(function(p){return p.numero===num;});
+    if(ip){if(UC&&fdb&&ip.id)fdb.collection('prog').doc(ip.id).delete();
+    else{PROG=PROG.filter(function(p){return p.numero!==num;});if(typeof salvaProg==='function')salvaProg();if(typeof renderProg==='function')renderProg();}}}
+  if(typeof PROG_DOMANI!=='undefined'){var id2=PROG_DOMANI.find(function(p){return p.numero===num;});
+    if(id2){if(UC&&fdb&&id2.id)fdb.collection('prog_domani').doc(id2.id).delete();
+    else{PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.numero!==num;});if(typeof salvaProgDomani==='function')salvaProgDomani();if(typeof renderProgDomani==='function')renderProgDomani();}}}
+  var ks=Object.keys(CAL_DATA);
+  for(var i=0;i<ks.length;i++){var item=CAL_DATA[ks[i]].find(function(x){return x.numero===num;});
+    if(item&&item.id&&UC&&fdb)fdb.collection('prog_calendario').doc(item.id).delete();}
+}
+
+function aggiornaBadgeMag() {
+  var ml = document.getElementById('lst-magazzino');
+  if (!ml) return;
+  var lst = Object.values(BL);
+  if (lst.length) {
+    ml.innerHTML = lst.sort(function(a,b){return a.numero.localeCompare(b.numero);})
+      .map(function(b){return crdB(b, false);}).join('');
+  }
 }
 </script>
 

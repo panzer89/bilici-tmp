@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-title" content="Bilici TMP">
 <meta name="theme-color" content="#0d1117">
 <title>Bilici TMP — Operatore</title>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -225,6 +224,16 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 .success-box .ic{font-size:40px;margin-bottom:8px;}
 .success-box .tx{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--gb);}
 .success-box .sub{font-size:13px;color:var(--tx2);margin-top:4px;}
+
+.menu-btn-wrap{position:relative;display:block;width:100%;}
+.prog-badge-home{position:absolute;top:-8px;right:-8px;background:#F85149;color:#fff;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;
+  min-width:24px;height:24px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;padding:0 6px;border:2px solid #0d1117;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;
+  display:none;}
+.prog-badge-home.visible{display:flex;}
+
 </style>
 </head>
 <body>
@@ -277,11 +286,14 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
           <span class="lbl">Entrata Merci</span>
           <span class="arr">&#x276F;</span>
         </button>
-        <button class="menu-btn mb-red" onclick="goPage('uscita','USCITA MERCI')">
-          <span class="ic">&#x1F534;</span>
-          <span class="lbl">Uscita Merci</span>
-          <span class="arr">&#x276F;</span>
-        </button>
+        <div class="menu-btn-wrap">
+          <button class="menu-btn mb-red" style="width:100%;" onclick="goPage('uscita','USCITA MERCI')">
+            <span class="ic">&#x1F534;</span>
+            <span class="lbl">Uscita Merci</span>
+            <span class="arr">&#x276F;</span>
+          </button>
+          <div class="prog-badge-home" id="badge-uscita-oggi">0</div>
+        </div>
         <button class="menu-btn mb-blue" onclick="goPage('trasferimento','TRASFERIMENTO')">
           <span class="ic">&#x1F504;</span>
           <span class="lbl">Trasferimento</span>
@@ -496,12 +508,10 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 </div>
 
 <!-- QR INPUT -->
-<!-- qr-input-file non usato con scanner live -->
+<input type="file" id="qr-input-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
 <div class="tst" id="tst"></div>
 
-<script>var qrStream = null;
-var qrAnimFrame = null;
-
+<script>
 // ═══ CONFIG ═══
 var FBC = {
   apiKey: "AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",
@@ -643,6 +653,7 @@ window.onload = function() {
     fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(s) {
       PROG = []; s.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
       renderProg();
+      aggiornaBadgeUscita();
     });
     fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s) {
       PROG_DOMANI = []; s.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
@@ -1123,74 +1134,46 @@ function toggleSection(bodyId, chevId) {
 // ═══ QR ═══
 function apriQR(inputId) {
   qrTargetId = inputId;
-  startQRScanner();
+  var inp = document.getElementById('qr-input-file');
+  inp.value = ''; inp.click();
 }
-function startQRScanner() {
-  document.getElementById('mo-qr').classList.add('open');
-  qrStream = null; qrAnimFrame = null;
-  navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}, audio: false})
-    .then(function(stream) {
-      qrStream = stream;
-      var video = document.getElementById('qr-video');
-      video.srcObject = stream;
-      video.play();
-      video.addEventListener('loadedmetadata', function() { scanQRFrame(); });
-    })
-    .catch(function() {
-      tst('Fotocamera non disponibile', 'er');
-      stopQRScanner();
-    });
+function leggiQRdaFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  var img = new Image();
+  var url = URL.createObjectURL(file);
+  img.onload = function() {
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width; canvas.height = img.height;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    if (window.BarcodeDetector) {
+      var det = new BarcodeDetector({formats:['qr_code','code_128','code_39','ean_13','ean_8','data_matrix']});
+      det.detect(canvas).then(function(codes) {
+        if (codes && codes.length > 0) {
+          var val = codes[0].rawValue.trim().toUpperCase();
+          if (qrTargetId) document.getElementById(qrTargetId).value = val;
+          tst('Postazione: ' + val, 'ok');
+        } else { tst('Codice non riconosciuto, riprova', 'er'); }
+      }).catch(function() { tst('Errore lettura codice', 'er'); });
+    } else { tst('Scanner non supportato su questo dispositivo', 'er'); }
+  };
+  img.onerror = function() { tst('Errore caricamento foto', 'er'); };
+  img.src = url;
 }
 
-function scanQRFrame() {
-  var video = document.getElementById('qr-video');
-  var canvas = document.getElementById('qr-canvas');
-  if (!qrStream || video.readyState !== video.HAVE_ENOUGH_DATA) {
-    qrAnimFrame = requestAnimationFrame(scanQRFrame); return;
-  }
-  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-  var ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  var code = jsQR(imageData.data, imageData.width, imageData.height, {inversionAttempts: 'dontInvert'});
-  if (code && code.data) {
-    stopQRScanner();
-    var val = code.data.trim().toUpperCase();
-    if (qrTargetId) {
-      var el = document.getElementById(qrTargetId);
-      if (el) { el.value = val; el.dispatchEvent(new Event('input')); }
-    }
-    tst('Postazione: ' + val, 'ok');
+function aggiornaBadgeUscita() {
+  var badge = document.getElementById('badge-uscita-oggi');
+  if (!badge) return;
+  var n = PROG ? PROG.length : 0;
+  if (n > 0) {
+    badge.textContent = n;
+    badge.classList.add('visible');
   } else {
-    qrAnimFrame = requestAnimationFrame(scanQRFrame);
+    badge.classList.remove('visible');
   }
-}
-
-function stopQRScanner() {
-  if (qrStream) { qrStream.getTracks().forEach(function(t) { t.stop(); }); qrStream = null; }
-  if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
-  document.getElementById('mo-qr').classList.remove('open');
 }
 </script>
-
-<!-- MODAL SCANNER QR -->
-<div class="mo" id="mo-qr" style="align-items:flex-end;">
-  <div class="mdl" style="border-radius:20px 20px 0 0;padding:0;overflow:hidden;max-height:90vh;">
-    <div style="background:var(--bg);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--tx);">📷 Scanner QR</div>
-      <button onclick="stopQRScanner()" style="background:none;border:1px solid var(--bd);color:var(--tx2);width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
-    </div>
-    <div style="position:relative;width:100%;background:#000;">
-      <video id="qr-video" playsinline autoplay muted style="width:100%;display:block;max-height:60vh;object-fit:cover;"></video>
-      <canvas id="qr-canvas" style="display:none;"></canvas>
-      <!-- Mirino -->
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
-        <div style="width:200px;height:200px;border:3px solid #388bfd;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);"></div>
-      </div>
-    </div>
-    <div style="padding:14px 16px;text-align:center;font-size:13px;color:var(--tx2);">Inquadra il codice QR della postazione</div>
-  </div>
-</div>
-
 </body>
 </html>

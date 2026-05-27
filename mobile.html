@@ -736,6 +736,9 @@ window.onload = function() {
     ui();
   }
 
+  // controlla cambio giorno ogni minuto (gestisce il caso in cui la pagina resta aperta tutta la notte)
+  setInterval(controllaGiorno, 60000);
+
   document.getElementById('imp-file').addEventListener('change', leggiFileImport);
 };
 
@@ -840,6 +843,8 @@ function salvaTentativo(username) {
 }
 
 function applicaLivello(lvl) {
+  lvl = parseInt(lvl) || 0;
+  document.body.setAttribute('data-lvl', String(lvl));
   var isAdmin=(lvl===0||lvl===2);
   document.getElementById('btn-utenti').style.display = isAdmin ? 'flex' : 'none';
   document.getElementById('btn-export').style.display = isAdmin ? 'flex' : 'none';
@@ -873,6 +878,7 @@ function applicaLivello(lvl) {
 
 function logout() {
   CURR_USER = null;
+  document.body.removeAttribute('data-lvl');
   // cancella credenziali salvate al logout manuale
   try { localStorage.removeItem('RICORDA_v1'); } catch(x) {}
   document.getElementById('login-screen').style.display = 'flex';
@@ -947,6 +953,7 @@ function caricaListaUtenti() {
 function renderListaUtenti(lista) {
   var el=document.getElementById('usr-lista');
   if(!lista.length){el.innerHTML='<div class="emp"><p>Nessun utente aggiuntivo</p></div>';return;}
+  var currLvl = CURR_USER ? CURR_USER.livello : -1;
   var html='';
   lista.forEach(function(u){
     var lvl=u.livello,lvlLabel=lvl===0?'Admin':lvl===2?'Plus':'Operatore',lvlClass=lvl===0?'l0':lvl===2?'lp':'l1';
@@ -956,11 +963,27 @@ function renderListaUtenti(lista) {
     html+='<div class="usr-lvl '+lvlClass+'">'+lvlLabel+'</div></div>';
     if(u.creato){html+='<div class="usr-last">Creato: '+new Date(u.creato).toLocaleDateString('it-IT')+'</div>';}
     html+='<div class="usr-log-box" id="log-'+uname+'"><div class="usr-log-empty">&#x23F3; Caricamento log...</div></div>';
-    if(uid){
+    // regole visibilità pulsanti: admin gestisce solo liv1+se stesso, plus gestisce solo liv1+se stesso
+    var isOwn = (CURR_USER && u.username && u.username.toLowerCase() === CURR_USER.username.toLowerCase());
+    var bloccato = false, bloccaMsg = '';
+    if (currLvl === 0) {
+      if (!isOwn && lvl !== 1) {
+        bloccato = true;
+        bloccaMsg = lvl === 2 ? '&#x1F512; Solo utenti Plus possono gestire questo account' : '&#x1F512; Non puoi gestire altri account Admin';
+      }
+    } else if (currLvl === 2) {
+      if (!isOwn && lvl === 2) {
+        bloccato = true;
+        bloccaMsg = '&#x1F512; Non puoi gestire altri account Plus';
+      }
+    }
+    if(uid && !bloccato){
       html+='<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">';
       html+='<button class="usr-edit-btn" data-uid="'+uid+'" data-uname="'+uname+'" data-ulvl="'+lvl+'" onclick="event.stopPropagation();apriModificaUtenteEl(this)">&#x270F;&#xFE0F; Modifica</button>';
       html+='<button class="usr-del-btn" data-uid="'+uid+'" data-uname="'+uname+'" onclick="event.stopPropagation();eliminaUtenteEl(this)">&#x1F5D1; Elimina</button>';
       html+='</div>';
+    } else if(uid && bloccato){
+      html+='<div style="margin-top:6px;font-size:11px;color:var(--ob);">'+bloccaMsg+'</div>';
     }
     html+='</div>';
   });
@@ -1006,19 +1029,7 @@ function caricaLogUtente(username, el) {
 }
 
 function eliminaUtente(id, username) {
-  if (!confirm('Eliminare utente ' + username + '?')) { return; }
-  if (UC && fdb) {
-    fdb.collection('utenti').doc(id).delete().then(function() {
-      tst('Utente ' + username + ' eliminato', 'ok');
-      caricaListaUtenti();
-    });
-  } else {
-    var utenti = JSON.parse(localStorage.getItem('UTENTI_v1') || '[]');
-    utenti = utenti.filter(function(u) { return u.username !== username; });
-    try { localStorage.setItem('UTENTI_v1', JSON.stringify(utenti)); } catch(x) {}
-    tst('Utente ' + username + ' eliminato', 'ok');
-    caricaListaUtenti();
-  }
+  chiPin('elimUtente', id + '|' + username);
 }
 
 // ═══ USCITE PROGRAMMATE ═══
@@ -1378,56 +1389,32 @@ function renderProgDomani() {
 
 // ═══ SPOSTAMENTO AUTOMATICO DOMANI -> OGGI ═══
 function controllaGiorno() {
-  var oggi = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
+  var mezzanotte = new Date(); mezzanotte.setHours(0, 0, 0, 0);
+  var tsOggi = mezzanotte.getTime();
+  if (!PROG_DOMANI || !PROG_DOMANI.length) return;
+  var daSposta = PROG_DOMANI.filter(function(p) { return (p.ts || 0) < tsOggi; });
+  if (!daSposta.length) return;
   if (UC && fdb) {
-    // Legge la data dell'ultimo spostamento da Firestore
-    fdb.collection('config').doc('giorno').get().then(function(doc) {
-      var ultimoGiorno = doc.exists ? doc.data().data : null;
-      if (ultimoGiorno === oggi) { return; } // stesso giorno, niente da fare
-      if (!PROG_DOMANI || PROG_DOMANI.length === 0) {
-        // niente da spostare ma aggiorna comunque la data
-        fdb.collection('config').doc('giorno').set({data: oggi});
-        return;
-      }
-      // Aggiorna subito la data per evitare doppi spostamenti
-      fdb.collection('config').doc('giorno').set({data: oggi});
-      var daAggiungere = PROG_DOMANI.slice();
-      var aggiunti = 0;
-      daAggiungere.forEach(function(p) {
-        var giaInOggi = PROG.find(function(x) { return x.numero === p.numero; });
-        if (!giaInOggi) {
-          fdb.collection('prog').add({numero: p.numero, nota: p.nota || '', ts: Date.now()});
-          aggiunti++;
-        }
-        if (p.id) { fdb.collection('prog_domani').doc(p.id).delete(); }
-      });
-      if (aggiunti > 0) {
-        setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 1000);
-      }
-    }).catch(function(e) { console.error('Errore controllaGiorno:', e); });
-
-  } else {
-    // Modalita locale: usa localStorage
-    var ultimoGiorno = null;
-    try { ultimoGiorno = localStorage.getItem('ULTIMO_GIORNO_v1'); } catch(x) {}
-    if (ultimoGiorno === oggi) { return; }
-    try { localStorage.setItem('ULTIMO_GIORNO_v1', oggi); } catch(x) {}
-    if (!PROG_DOMANI || PROG_DOMANI.length === 0) { return; }
-    var daAggiungere = PROG_DOMANI.slice();
     var aggiunti = 0;
-    daAggiungere.forEach(function(p) {
-      var giaInOggi = PROG.find(function(x) { return x.numero === p.numero; });
-      if (!giaInOggi) { PROG.push({numero: p.numero, nota: p.nota || '', ts: Date.now()}); aggiunti++; }
+    daSposta.forEach(function(p) {
+      if (!PROG.find(function(x) { return x.numero === p.numero; })) {
+        fdb.collection('prog').add({numero: p.numero, nota: p.nota || '', ts: Date.now()});
+        aggiunti++;
+      }
+      if (p.id) fdb.collection('prog_domani').doc(p.id).delete();
     });
-    PROG_DOMANI = [];
-    try {
-      localStorage.setItem('PROG_v1', JSON.stringify(PROG));
-      localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI));
-    } catch(x) {}
-    renderProg();
-    renderProgDomani();
-    if (aggiunti > 0) { setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 500); }
+    if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 800);
+  } else {
+    var aggiunti = 0;
+    daSposta.forEach(function(p) {
+      if (!PROG.find(function(x) { return x.numero === p.numero; })) {
+        PROG.push({numero: p.numero, nota: p.nota || '', ts: Date.now()}); aggiunti++;
+      }
+    });
+    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return (p.ts || 0) >= tsOggi; });
+    try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI)); } catch(x) {}
+    renderProg(); renderProgDomani();
+    if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 500);
   }
 }
 
@@ -1725,7 +1712,9 @@ function updD(st) {
 }
 function chkP(){
   var ok=(pbuf===PIN);
-  if(!ok&&CURR_USER&&CURR_USER.livello===2&&CURR_USER.pin)ok=(pbuf===CURR_USER.pin);
+  // svuota storico e elimina utente: solo PIN principale, non PIN personale Plus
+  var soloSolo=['svuota','elimUtente'];
+  if(!ok&&CURR_USER&&CURR_USER.livello===2&&CURR_USER.pin&&(!paz||soloSolo.indexOf(paz.az)===-1))ok=(pbuf===CURR_USER.pin);
   if(ok){chiM('mo-p');doPin();}
   else{updD('e');document.getElementById('perr').textContent='PIN errato, riprova';pbuf='';setTimeout(function(){updD();},600);}
 }
@@ -1739,6 +1728,20 @@ function doPin() {
     tst('Movimento eliminato', 'ok');
   } else if (az === 'svuota') {
     dbCS().then(function() { chiM('mo-s'); tst('Storico svuotato', 'ok'); });
+  } else if (az === 'elimUtente' && id) {
+    var parts = id.split('|'), uid = parts[0], uname = parts[1] || '';
+    if (UC && fdb) {
+      fdb.collection('utenti').doc(uid).delete().then(function() {
+        tst('Utente ' + uname + ' eliminato', 'ok');
+        caricaListaUtenti();
+      });
+    } else {
+      var utenti = JSON.parse(localStorage.getItem('UTENTI_v1') || '[]');
+      utenti = utenti.filter(function(u) { return u.username !== uname; });
+      try { localStorage.setItem('UTENTI_v1', JSON.stringify(utenti)); } catch(x) {}
+      tst('Utente ' + uname + ' eliminato', 'ok');
+      caricaListaUtenti();
+    }
   }
 }
 
@@ -2056,15 +2059,15 @@ function selEditLvl(n){
 
 var CAL_DATA = {};
 function isPrenotato(num) {
-  if (typeof PROG!=='undefined'&&PROG.find(function(p){return p.numero===num;})) return true;
-  if (typeof PROG_DOMANI!=='undefined'&&PROG_DOMANI.find(function(p){return p.numero===num;})) return true;
+  if (PROG.find(function(p){return p.numero===num;})) return true;
+  if (PROG_DOMANI.find(function(p){return p.numero===num;})) return true;
   var ks=Object.keys(CAL_DATA);
   for(var i=0;i<ks.length;i++){if(CAL_DATA[ks[i]].find(function(x){return x.numero===num;}))return true;}
   return false;
 }
 function infoPrenotazione(num) {
-  if (typeof PROG!=='undefined'&&PROG.find(function(p){return p.numero===num;})) return 'nelle uscite di oggi';
-  if (typeof PROG_DOMANI!=='undefined'&&PROG_DOMANI.find(function(p){return p.numero===num;})) return 'nelle uscite di domani';
+  if (PROG.find(function(p){return p.numero===num;})) return 'nelle uscite di oggi';
+  if (PROG_DOMANI.find(function(p){return p.numero===num;})) return 'nelle uscite di domani';
   var ks=Object.keys(CAL_DATA);
   for(var i=0;i<ks.length;i++){
     if(CAL_DATA[ks[i]].find(function(x){return x.numero===num;})){
@@ -2074,12 +2077,12 @@ function infoPrenotazione(num) {
   return 'in programma';
 }
 function rimuoviPrenotazioneNum(num) {
-  if(typeof PROG!=='undefined'){var ip=PROG.find(function(p){return p.numero===num;});
-    if(ip){if(UC&&fdb&&ip.id)fdb.collection('prog').doc(ip.id).delete();
-    else{PROG=PROG.filter(function(p){return p.numero!==num;});if(typeof salvaProg==='function')salvaProg();if(typeof renderProg==='function')renderProg();}}}
-  if(typeof PROG_DOMANI!=='undefined'){var id2=PROG_DOMANI.find(function(p){return p.numero===num;});
-    if(id2){if(UC&&fdb&&id2.id)fdb.collection('prog_domani').doc(id2.id).delete();
-    else{PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.numero!==num;});if(typeof salvaProgDomani==='function')salvaProgDomani();if(typeof renderProgDomani==='function')renderProgDomani();}}}
+  var ip=PROG.find(function(p){return p.numero===num;});
+  if(ip){if(UC&&fdb&&ip.id)fdb.collection('prog').doc(ip.id).delete();
+    else{PROG=PROG.filter(function(p){return p.numero!==num;});salvaProg();renderProg();}}
+  var id2=PROG_DOMANI.find(function(p){return p.numero===num;});
+  if(id2){if(UC&&fdb&&id2.id)fdb.collection('prog_domani').doc(id2.id).delete();
+    else{PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.numero!==num;});salvaProgDomani();renderProgDomani();}}
   var ks=Object.keys(CAL_DATA);
   for(var i=0;i<ks.length;i++){var item=CAL_DATA[ks[i]].find(function(x){return x.numero===num;});
     if(item&&item.id&&UC&&fdb)fdb.collection('prog_calendario').doc(item.id).delete();}

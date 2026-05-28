@@ -510,7 +510,15 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
     <div class="mha"></div>
     <div class="mtt rd">&#x26A0;&#xFE0F; Conferma</div>
     <div class="mbd" id="mo-conf-tx"></div>
-    <div style="display:flex;gap:8px;">
+    <div id="mo-conf-banc-wrap" style="display:none;margin:12px 0 4px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px;">Bancali in uscita</div>
+      <div class="crow">
+        <button class="cbt" onclick="stp('mo-conf-banc',-1)">&#x2212;</button>
+        <input class="cvl" id="mo-conf-banc" type="number" min="1" value="0" style="border-color:var(--rd)!important;">
+        <button class="cbt" onclick="stp('mo-conf-banc',1)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
       <button class="btn bgn" onclick="eseguiConf()" style="margin-bottom:0;">&#x2705; CONFERMA</button>
       <button class="btn bgh" onclick="chiM('mo-conf')" style="margin-bottom:0;">&#x274C; ANNULLA</button>
     </div>
@@ -1088,18 +1096,23 @@ function apriUscitaCoppia(docId) {
     'Confermi l\'uscita coppia?<br><br>' +
     '<strong style="color:var(--bb)">Bilico #' + itemA.numero + '</strong><br>' + rigaA + notaTagA + '<br><br>' +
     '<strong style="color:var(--pb)">Bilico #' + itemB.numero + '</strong><br>' + rigaB + notaTagB;
+  document.getElementById('mo-conf-banc-wrap').style.display = 'none';
   pendConf = 'carica-coppia';
   document.getElementById('mo-conf').classList.add('open');
 }
 
-// Carica veloce dalla lista uscite (apre modal conferma uscita semplificata)
+// Carica veloce dalla lista uscite (apre modal conferma uscita con bancali)
 var pendCarica = null;
 function caricaVeloce(num) {
   var b = BL[num];
   if (!b) { return tst('Bilico non trovato in magazzino', 'er'); }
   pendCarica = {num: num, b: b};
+  var progItem = PROG.find(function(p){ return p.numero === num; });
+  var notaTag = (progItem && progItem.nota) ? '<br><span style="font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--rd);display:block;padding:4px 8px;margin-top:6px;border-radius:3px;">&#x1F4DD; ' + progItem.nota + '</span>' : '';
   var prenMsg = isPrenotato(num) ? '<br><br><span style="color:var(--ob)">&#x1F4CC; Prenotato '+infoPrenotazione(num)+'. La prenotazione verra eliminata al carico.</span>' : '';
-  document.getElementById('mo-conf-tx').innerHTML = 'Confermi il carico del bilico <strong>#' + num + '</strong>?<br><br>&#x1F4CD; ' + b.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + b.bancali + ' bancali' + prenMsg;
+  document.getElementById('mo-conf-tx').innerHTML = 'Carico bilico <strong>#' + num + '</strong><br><br>&#x1F4CD; ' + b.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + b.bancali + ' bancali' + notaTag + prenMsg;
+  document.getElementById('mo-conf-banc').value = b.bancali;
+  document.getElementById('mo-conf-banc-wrap').style.display = 'block';
   pendConf = 'carica';
   document.getElementById('mo-conf').classList.add('open');
 }
@@ -1132,9 +1145,18 @@ function eseguiConf() {
     pendCoppia = null;
   } else if (pendConf === 'carica' && pendCarica) {
     var num = pendCarica.num, b = pendCarica.b;
+    var bu = parseInt(document.getElementById('mo-conf-banc').value) || b.bancali;
+    bu = Math.max(1, Math.min(bu, b.bancali));
+    var rim = b.bancali - bu;
     var ts = new Date().toISOString();
-    dbDB(num);
-    dbAS({tipo:'USCITA', numero:num, locazione:b.locazione, bancaliUsciti:b.bancali, bancaliRimasti:0, note:'', ts:ts});
+    if (rim === 0) {
+      dbDB(num);
+    } else {
+      var loc = b.locazione.toUpperCase();
+      dbUB(num, {bancali: rim, locazione: (loc==='SMEZZI'||loc==='FRESCO') ? b.locazione : 'SMEZZI'});
+    }
+    dbAS({tipo:'USCITA', numero:num, locazione:b.locazione, bancaliUsciti:bu, bancaliRimasti:rim, note:'', ts:ts});
+    document.getElementById('mo-conf-banc-wrap').style.display = 'none';
     // Rimuovi da prog
     rimuoviDaProg(num);
     rimuoviPrenotazioneNum(num);
@@ -1194,6 +1216,7 @@ function confTransfer() {
   }
   pendTransfer = {num: num, b: b, dest: dest};
   document.getElementById('mo-conf-tx').innerHTML = 'Trasferisci bilico <strong>#' + num + '</strong><br><br>Da: <strong>' + b.locazione + '</strong><br>A: <strong>' + dest + '</strong>';
+  document.getElementById('mo-conf-banc-wrap').style.display = 'none';
   pendConf = 'transfer';
   document.getElementById('mo-conf').classList.add('open');
 }

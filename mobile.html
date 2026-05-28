@@ -465,6 +465,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
         &#x1F4E6; <span id="out-ba" style="color:var(--ob)">-</span> bancali
       </div>
     </div>
+    <div id="out-prog-nota" style="display:none;font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--rd);padding:6px 10px;border-radius:var(--rs);margin-bottom:4px;line-height:1.5;"></div>
     <div class="fg">
       <div class="fl">Bancali in Uscita</div>
       <div class="crow">
@@ -1169,6 +1170,14 @@ function caricaVeloce(num) {
   goP('uscita');
   document.getElementById('out-n').value = num;
   trovB();
+  var progItem = PROG.find(function(p){ return p.numero === String(num); });
+  var elNota = document.getElementById('out-prog-nota');
+  if (progItem && progItem.nota) {
+    elNota.innerHTML = '&#x1F4DD; ' + progItem.nota;
+    elNota.style.display = 'block';
+  } else {
+    elNota.style.display = 'none';
+  }
 }
 
 function rimuoviProgById(docId) {
@@ -1346,7 +1355,7 @@ function renderProg() {
       html += '<div style="font-size:12px;color:var(--tx2);">Non presente in magazzino</div>';
     }
     if (p.nota) {
-      html += '<div class="prog-note-txt" style="margin-top:5px;padding-left:8px;border-left:2px solid var(--bd);line-height:1.4;">' + p.nota + '</div>';
+      html += '<div class="prog-note-txt" style="margin-top:4px;line-height:1.4;">' + p.nota + '</div>';
     } else {
       html += '<div style="font-size:11px;color:var(--tx2);margin-top:4px;font-style:italic;">tocca &#x270F; per aggiungere nota</div>';
     }
@@ -1589,7 +1598,7 @@ function renderProgDomani() {
       html += '<div style="font-size:12px;color:var(--tx2);">Non ancora in magazzino</div>';
     }
     if (p.nota) {
-      html += '<div class="prog-note-txt" style="margin-top:5px;padding-left:8px;border-left:2px solid var(--bd);line-height:1.4;">' + p.nota + '</div>';
+      html += '<div class="prog-note-txt" style="margin-top:4px;line-height:1.4;">' + p.nota + '</div>';
     } else {
       html += '<div style="font-size:11px;color:var(--tx2);margin-top:4px;font-style:italic;">tocca matita per aggiungere nota</div>';
     }
@@ -1810,6 +1819,8 @@ function trovB() {
   } else {
     box.style.display = 'none';
   }
+  // nasconde la nota PROG (visibile solo via caricaVeloce)
+  document.getElementById('out-prog-nota').style.display = 'none';
 }
 
 function regU() {

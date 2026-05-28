@@ -237,21 +237,15 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 
 .bcd-badge-pren{background:var(--og);color:#111;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
 .bbg-pren{background:var(--og)!important;color:#111!important;}
-/* Blocco rotazione manuale */
-#portrait-lock{display:none;position:fixed;inset:0;background:var(--bg);z-index:99999;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;}
-@media screen and (orientation:landscape){body.orient-locked #portrait-lock{display:flex;}}
+/* Blocco rotazione manuale - contra-ruota il contenuto per restare verticale */
+@media screen and (orientation:landscape){
+  body.orient-locked{position:fixed;top:0;left:0;width:100vh;height:100vw;transform:rotate(-90deg) translateX(-100%);transform-origin:top left;overflow-x:hidden;overflow-y:auto;}
+}
 .orient-btn{height:28px;padding:0 9px;background:none;border:1px solid var(--bd);border-radius:20px;color:var(--tx2);font-size:14px;cursor:pointer;display:flex;align-items:center;transition:border-color .2s,color .2s;}
 .orient-btn.locked{border-color:var(--bb);color:var(--bb);}
 </style>
 </head>
 <body>
-<div id="portrait-lock">
-  <div style="font-size:52px;">&#x1F4F1;</div>
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--tx);">Ruota il dispositivo<br>in verticale</div>
-  <div style="font-size:13px;color:var(--tx2);">Questa app funziona solo in modalit&agrave; verticale</div>
-  <button onclick="toggleOrientLock()" style="margin-top:8px;padding:8px 18px;background:var(--bl);border:none;border-radius:20px;color:#fff;font-weight:700;font-size:13px;cursor:pointer;">&#x1F513; Sblocca</button>
-</div>
-
 <!-- LOGIN -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">

@@ -398,7 +398,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
         <div class="sg">
           <div class="sc bl"><div class="v" id="s1">0</div><div class="lb">&#x1F69B; Bilici in magazzino</div></div>
           <div class="sc og"><div class="v" id="s2">0</div><div class="lb">&#x1F4E6; Bancali totali</div></div>
-          <div class="sc rd"><div class="v" id="s4">0</div><div class="lb">&#x1F4CB; Movimenti oggi</div></div>
+          <div class="sc rd"><div class="v" id="s4">0</div><div class="lb">&#x1F4E6; Bancali oggi</div></div>
         </div>
         <div id="supbox" style="display:none"><div class="sup"><div class="sut">&#x2699;&#xFE0F; MODALITA LOCALE</div><div class="sui">Per cloud: <a href="https://console.firebase.google.com" target="_blank">Firebase</a></div></div></div>
         <div class="two-col">
@@ -501,6 +501,32 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
           <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"></div>
         </div>
 
+        <!-- TUTTI GLI ORDINI -->
+        <div class="card" style="padding:0;margin-bottom:14px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none;" onclick="toggleTuttiOrdini()">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--tx);display:flex;align-items:center;gap:8px;">
+              &#x1F4CB; Tutti gli ordini&nbsp;<span style="background:rgba(31,111,235,.18);color:var(--bb);font-size:11px;font-weight:800;padding:1px 7px;border-radius:10px;" id="tutti-ordini-count">0</span>
+            </div>
+            <div id="tutti-ordini-chev" style="color:var(--tx2);font-size:20px;transition:transform .25s;">&#x2304;</div>
+          </div>
+          <div id="tutti-ordini-body" style="display:none;padding:0 14px 14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:10px;">
+              <div>
+                <div class="stor-fi-label">N° Bilico</div>
+                <input class="stor-fi" id="to-fn" type="text" placeholder="es. 839" oninput="renderTuttiOrdini()">
+              </div>
+              <div>
+                <div class="stor-fi-label">Data</div>
+                <input class="stor-fi" id="to-fd" type="date" oninput="renderTuttiOrdini()">
+              </div>
+              <div style="display:flex;align-items:flex-end;">
+                <button onclick="document.getElementById('to-fn').value='';document.getElementById('to-fd').value='';renderTuttiOrdini();" style="height:32px;padding:0 10px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);font-size:11px;cursor:pointer;">&#x21BA; Reset</button>
+              </div>
+            </div>
+            <div id="tutti-ordini-list" style="overflow-x:auto;max-height:340px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
         <!-- USCITE OGGI + DOMANI -->
                 <div class="two-col" style="margin-bottom:14px;">
           <div>
@@ -547,6 +573,9 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 <div class="mo" id="mo-p"><div class="mdl" style="max-width:320px;"><div class="mha"></div><div class="mtt og">&#x1F510; PIN</div><div class="pds"><div class="pd" id="pd0"></div><div class="pd" id="pd1"></div><div class="pd" id="pd2"></div><div class="pd" id="pd3"></div></div><div class="per" id="perr"></div><div class="pgd"><button class="pk" onclick="pki('1')">1</button><button class="pk" onclick="pki('2')">2</button><button class="pk" onclick="pki('3')">3</button><button class="pk" onclick="pki('4')">4</button><button class="pk" onclick="pki('5')">5</button><button class="pk" onclick="pki('6')">6</button><button class="pk" onclick="pki('7')">7</button><button class="pk" onclick="pki('8')">8</button><button class="pk" onclick="pki('9')">9</button><button class="pk em"></button><button class="pk" onclick="pki('0')">0</button><button class="pk dl" onclick="pkd()">&#x232B;</button></div><button class="btn bgh" onclick="chiM('mo-p')" style="width:100%;">Annulla</button></div></div>
 <!-- MODAL IMPORTA -->
 <div class="mo" id="mo-imp"><div class="mdl wide"><div class="mha"></div><div class="mtt cy">&#x1F4E5; Importa da Excel</div><div class="imp-info"><strong style="color:var(--cb)">Colonne:</strong><div class="col-hdr"><div class="col-tag">NUMERO</div><div class="col-tag">LOCAZIONE</div><div class="col-tag">BANCALI</div><div class="col-tag">NOTE</div><div class="col-tag">DATA</div></div></div><div class="imp-note">&#x2139;&#xFE0F; DATA opzionale. BANCHINA, SMEZZI, FRESCO illimitate.</div><div style="margin-bottom:8px;"><button class="btn bgh" style="padding:6px 10px;font-size:12px;" onclick="scaricaTemplate()">&#x1F4CB; TEMPLATE</button></div><div class="fg"><div class="fl">File Excel</div><input type="file" id="imp-file" accept=".xlsx,.xls" style="background:var(--bg);border:1.5px solid var(--cy);border-radius:var(--rs);color:var(--tx);padding:8px;width:100%;font-size:13px;"></div><div id="imp-preview" style="display:none;margin-bottom:12px;"><div class="fl" style="margin-bottom:5px;">Anteprima:</div><div id="imp-preview-content" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:10px;font-size:12px;max-height:150px;overflow-y:auto;"></div></div><div id="imp-err" style="display:none;background:rgba(218,54,51,.1);border:1px solid var(--rd);border-radius:var(--rs);padding:8px 12px;color:var(--rb);font-size:12px;margin-bottom:10px;"></div><div class="btn-row"><button class="btn bcy" id="imp-btn" onclick="eseguiImport()" style="display:none;">&#x1F4E5; IMPORTA</button><button class="btn bgh" onclick="chiM('mo-imp')">&#x2716; Chiudi</button></div></div></div>
+<!-- MODAL MODIFICA ORDINE PROGRAMMAZIONE -->
+<div class="mo" id="mo-ordine"><div class="mdl" style="max-width:340px;"><div class="mha"></div><div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Ordine</div><div style="font-size:13px;color:var(--tx2);margin-bottom:12px;">Bilico <strong id="mo-ord-num" style="color:var(--bb);font-size:15px;"></strong></div><div class="edit-field"><div class="edit-label">Data</div><input class="edit-inp" id="mo-ord-data" type="date"></div><div class="edit-field"><div class="edit-label">Nota</div><input class="edit-inp" id="mo-ord-nota" type="text" placeholder="Nota opzionale..." autocomplete="off"></div><div class="btn-row" style="margin-top:10px;"><button class="btn bgn" onclick="salvaOrdine()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-ordine')">&#x2716; Annulla</button></div></div></div>
+
 <!-- MODAL MODIFICA -->
 <div class="mo" id="mo-edit"><div class="mdl"><div class="mha"></div><div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Bilico</div><div class="edit-field"><div class="edit-label">Numero</div><input class="edit-inp big" id="edit-n" type="number" inputmode="numeric" autocomplete="off"></div><div class="edit-field"><div class="edit-label">Locazione</div><div class="loc-wrap"><input class="edit-inp" id="edit-l" type="text" autocomplete="off" style="text-transform:uppercase;flex:1;border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;"><button class="qr-btn" onclick="apriQR('edit-l')">&#x1F4F7;</button></div></div><div class="edit-field"><div class="edit-label">Bancali</div><div class="crow"><button class="cbt" onclick="stp('edit-b',-1)">&#x2212;</button><input class="cvl" id="edit-b" type="number" min="0" inputmode="numeric"><button class="cbt" onclick="stp('edit-b',1)">+</button></div></div><div class="edit-field"><div class="edit-label">Data entrata</div><input class="edit-inp" id="edit-d" type="datetime-local"></div><div class="edit-field"><div class="edit-label">Note</div><input class="edit-inp" id="edit-nt" type="text" placeholder="Note..." autocomplete="off"></div><div class="btn-row" style="margin-top:6px;"><button class="btn bgn" onclick="salvaModifica()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-edit')">&#x2716; Annulla</button></div></div></div>
 
@@ -705,6 +734,130 @@ function renderProgDomani() {
   if (sb) { sb.textContent = (PROG ? PROG.length : 0) + (PROG_DOMANI ? PROG_DOMANI.length : 0); }
 }
 
+// ═══ TUTTI GLI ORDINI ═══
+function getAllOrdini() {
+  var oggiD = new Date(); oggiD.setHours(0,0,0,0);
+  var domaniD = new Date(oggiD.getTime() + 86400000);
+  var oggiStr = oggiD.toISOString().slice(0,10);
+  var domaniStr = domaniD.toISOString().slice(0,10);
+  var lista = [];
+  (PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',data:oggiStr,fonte:'prog'});});
+  (PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',data:domaniStr,fonte:'prog_domani'});});
+  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',data:dt,fonte:'prog_calendario'});});});
+  lista.sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:(a.numero||0)-(b.numero||0);});
+  return lista;
+}
+function aggTuttiOrdini() {
+  var c = document.getElementById('tutti-ordini-count');
+  if (c) c.textContent = getAllOrdini().length;
+  var body = document.getElementById('tutti-ordini-body');
+  if (body && body.style.display !== 'none') renderTuttiOrdini();
+}
+function toggleTuttiOrdini() {
+  var body = document.getElementById('tutti-ordini-body');
+  var chev = document.getElementById('tutti-ordini-chev');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+  if (!open) renderTuttiOrdini();
+}
+function renderTuttiOrdini() {
+  var el = document.getElementById('tutti-ordini-list');
+  if (!el) return;
+  var fn = (document.getElementById('to-fn').value||'').trim();
+  var fd = (document.getElementById('to-fd').value||'').trim();
+  var lista = getAllOrdini();
+  if (fn) lista = lista.filter(function(p){return String(p.numero).indexOf(fn)!==-1;});
+  if (fd) lista = lista.filter(function(p){return p.data===fd;});
+  if (!lista.length){el.innerHTML='<div class="emp" style="padding:16px;"><p>Nessun ordine trovato</p></div>';return;}
+  var html='<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html+='<thead><tr style="color:var(--tx2);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">';
+  html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Bilico</th>';
+  html+='<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">PLT</th>';
+  html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Nota</th>';
+  html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Data</th>';
+  html+='<th style="padding:5px 8px;border-bottom:1px solid var(--bd);"></th>';
+  html+='</tr></thead><tbody>';
+  lista.forEach(function(p){
+    var b=BL[p.numero];
+    var plt=b&&b.bancali!=null?b.bancali:'–';
+    var df=p.data?p.data.split('-').reverse().join('/'):'–';
+    var badge=p.fonte==='prog'?'<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(218,54,51,.15);color:var(--rb);margin-left:4px;">Oggi</span>'
+      :p.fonte==='prog_domani'?'<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(31,111,235,.15);color:var(--bb);margin-left:4px;">Domani</span>'
+      :'<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(46,160,67,.15);color:var(--gb);margin-left:4px;">Cal</span>';
+    var idQ="'"+( p.id||'')+"'";
+    var notaQ="'"+(p.nota||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"'";
+    var fonteQ="'"+p.fonte+"'";
+    html+='<tr style="border-bottom:1px solid rgba(48,54,61,.4);">';
+    html+='<td style="padding:6px 8px;white-space:nowrap;"><strong style="color:var(--bb);">#'+p.numero+'</strong>'+badge+'</td>';
+    html+='<td style="padding:6px 8px;text-align:center;color:var(--tx);">'+plt+'</td>';
+    html+='<td style="padding:6px 8px;color:var(--tx2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(p.nota||'–')+'</td>';
+    html+='<td style="padding:6px 8px;color:var(--tx2);white-space:nowrap;">'+df+'</td>';
+    html+='<td style="padding:6px 8px;white-space:nowrap;text-align:right;">';
+    html+='<button onclick="modificaOrdine('+fonteQ+','+idQ+','+p.numero+','+notaQ+',\''+p.data+'\')" style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--bb);padding:3px 8px;font-size:12px;cursor:pointer;margin-right:4px;">&#x270F;&#xFE0F;</button>';
+    html+='<button onclick="eliminaOrdine('+fonteQ+','+idQ+','+p.numero+')" style="background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 8px;font-size:12px;cursor:pointer;">&#x2715;</button>';
+    html+='</td></tr>';
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
+}
+var _editOrdine = null;
+function modificaOrdine(fonte,id,numero,notaAttuale,dataAttuale){
+  _editOrdine = {fonte:fonte, id:id, numero:numero};
+  document.getElementById('mo-ord-num').textContent = '#'+numero;
+  document.getElementById('mo-ord-data').value = dataAttuale || '';
+  document.getElementById('mo-ord-nota').value = notaAttuale || '';
+  document.getElementById('mo-ordine').classList.add('open');
+}
+function salvaOrdine(){
+  if(!_editOrdine) return;
+  var nuovaData = document.getElementById('mo-ord-data').value;
+  var nuovaNota = document.getElementById('mo-ord-nota').value.trim();
+  if(!nuovaData){ tst('Inserisci una data','er'); return; }
+  var oggiD=new Date(); oggiD.setHours(0,0,0,0);
+  var domaniD=new Date(oggiD.getTime()+86400000);
+  var oggiStr=oggiD.toISOString().slice(0,10);
+  var domaniStr=domaniD.toISOString().slice(0,10);
+  var nuovaFonte = nuovaData===oggiStr?'prog':nuovaData===domaniStr?'prog_domani':'prog_calendario';
+  var vecchiaFonte=_editOrdine.fonte, id=_editOrdine.id, numero=_editOrdine.numero;
+  var stessoGiorno = nuovaFonte===vecchiaFonte && !(vecchiaFonte==='prog_calendario');
+  if(UC&&fdb){
+    if(stessoGiorno){
+      // stessa collection non-calendario: solo nota
+      if(id) fdb.collection(vecchiaFonte).doc(id).update({nota:nuovaNota});
+    } else if(nuovaFonte==='prog_calendario'&&vecchiaFonte==='prog_calendario'){
+      // calendario→calendario: aggiorna data e nota
+      if(id) fdb.collection('prog_calendario').doc(id).update({nota:nuovaNota,data:nuovaData});
+    } else {
+      // cambio di collection: elimina da vecchia, aggiungi in nuova
+      if(id) fdb.collection(vecchiaFonte).doc(id).delete();
+      if(nuovaFonte==='prog_calendario') fdb.collection('prog_calendario').add({numero:numero,nota:nuovaNota,data:nuovaData,ts:Date.now()});
+      else fdb.collection(nuovaFonte).add({numero:numero,nota:nuovaNota,ts:Date.now()});
+    }
+  } else {
+    // modalita locale
+    if(vecchiaFonte==='prog'){PROG=PROG.filter(function(p){return p.id!==id;});salvaProg();renderProg();}
+    else if(vecchiaFonte==='prog_domani'){PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==id;});salvaProgDomani();renderProgDomani();}
+    else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=CAL_DATA[dt].filter(function(p){return p.id!==id;});});renderCalendario();}
+    var fake=Date.now().toString();
+    if(nuovaFonte==='prog'){PROG.push({id:fake,numero:numero,nota:nuovaNota,ts:Date.now()});salvaProg();renderProg();}
+    else if(nuovaFonte==='prog_domani'){PROG_DOMANI.push({id:fake,numero:numero,nota:nuovaNota,ts:Date.now()});salvaProgDomani();renderProgDomani();}
+    else{if(!CAL_DATA[nuovaData])CAL_DATA[nuovaData]=[];CAL_DATA[nuovaData].push({id:fake,numero:numero,nota:nuovaNota});renderCalendario();}
+  }
+  chiM('mo-ordine'); _editOrdine=null;
+  tst('Ordine aggiornato','ok');
+  setTimeout(renderTuttiOrdini,300);
+}
+function eliminaOrdine(fonte,id,numero){
+  if(!confirm('Rimuovere bilico #'+numero+' dalla programmazione?'))return;
+  if(fonte==='prog'){if(UC&&fdb&&id)fdb.collection('prog').doc(id).delete();else{PROG=PROG.filter(function(p){return p.id!==id;});salvaProg();renderProg();}}
+  else if(fonte==='prog_domani'){if(UC&&fdb&&id)fdb.collection('prog_domani').doc(id).delete();else{PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==id;});salvaProgDomani();renderProgDomani();}}
+  else if(fonte==='prog_calendario'){if(UC&&fdb&&id)fdb.collection('prog_calendario').doc(id).delete();else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=CAL_DATA[dt].filter(function(p){return p.id!==id;});});renderCalendario();}}
+  tst('Bilico #'+numero+' rimosso','ok');
+  setTimeout(renderTuttiOrdini,300);
+}
+
 function buildProgItem(p, isDomani) {
   var b = BL[p.numero];
   var inMag = !!b;
@@ -788,7 +941,7 @@ function ui() {
   var oggi = new Date().toDateString();
   var s1 = document.getElementById('s1'); if (s1) { s1.textContent = lst.length; }
   var s2 = document.getElementById('s2'); if (s2) { s2.textContent = tot; }
-  var s4 = document.getElementById('s4'); if (s4) { s4.textContent = ST.filter(function(m) { return new Date(m.ts).toDateString() === oggi; }).length; }
+  var s4 = document.getElementById('s4'); if (s4) { var movOggi=ST.filter(function(m){return new Date(m.ts).toDateString()===oggi;}); s4.textContent=movOggi.reduce(function(acc,m){if(m.tipo==='ENTRATA')return acc+(m.bancali||0);if(m.tipo==='USCITA')return acc+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali||0));return acc;},0); }
   var sbMag = document.getElementById('sb-mag-badge'); if (sbMag) { sbMag.textContent = lst.length; }
   aggiornaSidebarUtente();
   // magazzino
@@ -1166,6 +1319,7 @@ function caricaProg() {
     PROG = [];
     snap.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
     renderProg();
+    aggTuttiOrdini();
     setTimeout(function(){cerca();},50); // aggiorna badge prenotato
   });
 }
@@ -1351,6 +1505,7 @@ function caricaProgDomani() {
     snap.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
     renderProgDomani();
     aggiornaBadgeMag();
+    aggTuttiOrdini();
   });
   fdb.collection('prog_calendario').orderBy('data', 'asc').onSnapshot(function(snap) {
     CAL_DATA = {};
@@ -1360,6 +1515,7 @@ function caricaProgDomani() {
       CAL_DATA[d.data].push({numero: d.numero, nota: d.nota || '', id: doc.id});
     });
     renderCalendario();
+    aggTuttiOrdini();
     controllaCalendarioGiorno();
     aggiornaBadgeMag();
     var moC = document.getElementById('mo-cal');

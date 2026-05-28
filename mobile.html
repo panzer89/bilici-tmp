@@ -102,7 +102,14 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .li{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd);}
 .li:last-child{border-bottom:none;}
 .ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.ldot.in{background:var(--gb);}.ldot.ou{background:var(--rb);}
+.ldot.in{background:var(--gb);}.ldot.ou{background:var(--rb);}.ldot.mod{background:var(--og);}.ldot.tr{background:var(--cb);}
+.op-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:rgba(96,165,250,.12);color:var(--bb);border:1px solid rgba(96,165,250,.2);margin-left:5px;vertical-align:middle;}
+.diff-box{margin-top:5px;display:flex;flex-direction:column;gap:3px;}
+.diff-row{display:flex;align-items:center;gap:5px;font-size:11px;}
+.diff-field{color:var(--tx3);min-width:68px;font-weight:600;}
+.diff-old{color:var(--rb);text-decoration:line-through;background:rgba(239,68,68,.1);padding:1px 5px;border-radius:4px;}
+.diff-arr{color:var(--tx3);}
+.diff-new{color:var(--gb);background:rgba(34,197,94,.1);padding:1px 5px;border-radius:4px;}
 .ltx{flex:1;min-width:0;}
 .lm{font-size:14px;font-weight:600;}
 .ls{font-size:12px;color:var(--tx2);margin-top:2px;}
@@ -1051,16 +1058,19 @@ function renderListaUtenti(lista) {
     html+='<div class="usr-log-box" id="log-'+uname+'"><div class="usr-log-empty">&#x23F3; Caricamento log...</div></div>';
     // regole visibilità pulsanti: admin gestisce solo liv1+se stesso, plus gestisce solo liv1+se stesso
     var isOwn = (CURR_USER && u.username && u.username.toLowerCase() === CURR_USER.username.toLowerCase());
+    var isMaster = CURR_USER && CURR_USER.username.toLowerCase() === ADMIN_DEFAULT.username.toLowerCase();
     var bloccato = false, bloccaMsg = '';
-    if (currLvl === 0) {
-      if (!isOwn && lvl !== 1) {
-        bloccato = true;
-        bloccaMsg = lvl === 2 ? '&#x1F512; Solo utenti Plus possono gestire questo account' : '&#x1F512; Non puoi gestire altri account Admin';
-      }
-    } else if (currLvl === 2) {
-      if (!isOwn && lvl === 2) {
-        bloccato = true;
-        bloccaMsg = '&#x1F512; Non puoi gestire altri account Plus';
+    if (!isMaster) {
+      if (currLvl === 0) {
+        if (!isOwn && lvl !== 1) {
+          bloccato = true;
+          bloccaMsg = lvl === 2 ? '&#x1F512; Solo utenti Plus possono gestire questo account' : '&#x1F512; Non puoi gestire altri account Admin';
+        }
+      } else if (currLvl === 2) {
+        if (!isOwn && lvl === 2) {
+          bloccato = true;
+          bloccaMsg = '&#x1F512; Non puoi gestire altri account Plus';
+        }
       }
     }
     if(uid && !bloccato){
@@ -1706,8 +1716,13 @@ function salvaModifica() {
   if (!nuovaL) { return tst('Inserisci locazione', 'er'); }
   if (nuovoB <= 0) { return tst('Inserisci almeno 1 bancale', 'er'); }
   var nuovoTs = nuovaD ? new Date(nuovaD).toISOString() : BL[editKey].ts;
+  var old = BL[editKey] || {};
+  var diff = [];
+  if (String(old.numero||'') !== nuovoN) diff.push({campo:'Numero', da:String(old.numero||'—'), a:nuovoN});
+  if ((old.locazione||'').toUpperCase() !== nuovaL) diff.push({campo:'Locazione', da:old.locazione||'—', a:nuovaL});
+  if ((old.bancali||0) !== nuovoB) diff.push({campo:'Bancali', da:String(old.bancali||0), a:String(nuovoB)});
+  if ((old.note||'') !== nuovoNt) diff.push({campo:'Note', da:old.note||'—', a:nuovoNt||'—'});
   var datiAggiornati = {numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: nuovoTs};
-  // se il numero e cambiato dobbiamo cancellare il vecchio e creare il nuovo
   if (nuovoN !== editKey) {
     var vecchiaKey = editKey;
     dbSB(nuovoN, datiAggiornati).then(function() {
@@ -1716,7 +1731,9 @@ function salvaModifica() {
   } else {
     dbUB(editKey, datiAggiornati);
   }
-  dbAS({tipo: 'MODIFICA', numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: new Date().toISOString()});
+  var recMod = {tipo: 'MODIFICA', numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: new Date().toISOString()};
+  if (diff.length) recMod.diff = diff;
+  dbAS(recMod);
   chiM('mo-edit');
   editKey = null;
   tst('Bilico ' + nuovoN + ' modificato', 'ok');
@@ -2022,6 +2039,7 @@ function dbDB(id) {
   delete BL[id]; svLoc(); ui(); return Promise.resolve();
 }
 function dbAS(d) {
+  if (!d.operatore && CURR_USER) { d.operatore = CURR_USER.username; }
   if (UC) { return fdb.collection('storico').add(d); }
   ST.unshift(Object.assign({id: 'L' + Date.now()}, d)); svLoc(); ui(); return Promise.resolve();
 }
@@ -2463,27 +2481,45 @@ function crdB(b, act) {
 }
 
 function lgRow(m) {
-  var isIn = m.tipo === 'ENTRATA';
-  var caricoTag = m.caricoId ? '<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>' : '';
-  var s = '<div class="li"><div class="ldot ' + (isIn ? 'in' : 'ou') + '"></div><div class="ltx">';
-  s += '<div class="lm">' + (isIn ? '&#x1F7E2;' : '&#x1F534;') + ' Bilico <strong>#' + m.numero + '</strong> - ' + (isIn ? 'Entrato' : 'Uscito') + caricoTag + '</div>';
-  var dettaglio = isIn
-    ? (m.bancali != null ? m.bancali + ' bancali' : '—')
-    : ('Usciti: ' + (m.bancaliUsciti != null ? m.bancaliUsciti : (m.bancali != null ? m.bancali : '—')) + ', Rimasti: ' + (m.bancaliRimasti != null ? m.bancaliRimasti : '—'));
-  s += '<div class="ls">Loc: ' + (m.locazione || '—') + ' - ' + dettaglio + (m.note ? ' - ' + m.note : '') + '</div>';
-  s += '</div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+  var isIn=m.tipo==='ENTRATA', isMod=m.tipo==='MODIFICA', isTr=m.tipo==='TRASFERIMENTO';
+  var dotCls=isIn?'in':(isMod?'mod':(isTr?'tr':'ou'));
+  var ico=isIn?'&#x1F7E2;':(isMod?'&#x270F;&#xFE0F;':(isTr?'&#x1F504;':'&#x1F534;'));
+  var label=isIn?'Entrato':(isMod?'Modificato':(isTr?'Trasferito':'Uscito'));
+  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
+  var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
+  var det;
+  if(isTr) det=(m.bancali!=null?m.bancali+' bancali':'-')+' &mdash; Da: '+(m.locazioneDa||'-')+' &rarr; '+(m.locazioneA||'-');
+  else if(isIn) det=(m.bancali!=null?m.bancali+' bancali':'—');
+  else if(isMod) det=(m.bancali||'-')+' bancali';
+  else det='Usciti: '+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali!=null?m.bancali:'—'))+', Rimasti: '+(m.bancaliRimasti!=null?m.bancaliRimasti:'—');
+  var s='<div class="li"><div class="ldot '+dotCls+'"></div><div class="ltx">';
+  s+='<div class="lm">'+ico+' Bilico <strong>#'+m.numero+'</strong> - '+label+caricoTag+opTag+'</div>';
+  if(!isMod) s+='<div class="ls">'+(isTr?det:'Loc: '+(m.locazione||'—')+' - '+det)+(m.note?' - '+m.note:'')+'</div>';
+  if(isMod&&m.diff&&m.diff.length){s+='<div class="diff-box">';m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">&rarr;</span><span class="diff-new">'+d.a+'</span></div>';});s+='</div>';}
+  else if(isMod) s+='<div class="ls">'+det+(m.note?' - '+m.note:'')+'</div>';
+  s+='</div><div class="lti">'+fmtH(m.ts)+'</div></div>';
   return s;
 }
 
 function lgDel(m) {
-  var isIn = m.tipo === 'ENTRATA';
-  var mid = m.id;
-  var caricoTag = m.caricoId ? '<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>' : '';
-  var s = '<div class="li"><div class="ldot ' + (isIn ? 'in' : 'ou') + '"></div><div class="ltx">';
-  s += '<div class="lm">' + (isIn ? '&#x1F7E2;' : '&#x1F534;') + ' <strong>#' + m.numero + '</strong> - ' + (isIn ? 'Entrato' : 'Uscito') + caricoTag + '</div>';
-  s += '<div class="ls">Loc: ' + m.locazione + ' - ' + (isIn ? m.bancali + ' bancali' : 'Usciti: ' + m.bancaliUsciti + ', Rimasti: ' + m.bancaliRimasti) + (m.note ? '<br>' + m.note : '') + '</div>';
-  s += '<div class="lti" style="white-space:normal;text-align:left;">' + fmtT(m.ts) + '</div>';
-  s += '</div><button class="ldb" onclick="chiPin(' + "'del'" + ',' + "'" + mid + "'" + ')">&#x1F5D1;</button></div>';
+  var isIn=m.tipo==='ENTRATA', isMod=m.tipo==='MODIFICA', isTr=m.tipo==='TRASFERIMENTO', mid=m.id;
+  var dotCls=isIn?'in':(isMod?'mod':(isTr?'tr':'ou'));
+  var ico=isIn?'&#x1F7E2;':(isMod?'&#x270F;&#xFE0F;':(isTr?'&#x1F504;':'&#x1F534;'));
+  var label=isIn?'Entrato':(isMod?'Modificato':(isTr?'Trasferito':'Uscito'));
+  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
+  var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
+  var det;
+  if(isTr) det=(m.bancali!=null?m.bancali+' bancali':'-')+' &mdash; Da: '+(m.locazioneDa||'-')+' &rarr; '+(m.locazioneA||'-');
+  else if(isIn) det=(m.bancali!=null?m.bancali+' bancali':'—');
+  else if(isMod) det=(m.bancali||'-')+' bancali';
+  else det='Usciti: '+(m.bancaliUsciti||'—')+', Rimasti: '+(m.bancaliRimasti||'—');
+  var s='<div class="li"><div class="ldot '+dotCls+'"></div><div class="ltx">';
+  s+='<div class="lm">'+ico+' <strong>#'+m.numero+'</strong> - '+label+caricoTag+opTag+'</div>';
+  if(!isMod) s+='<div class="ls">'+(isTr?det:'Loc: '+(m.locazione||'—')+' - '+det)+(m.note?'<br>'+m.note:'')+'</div>';
+  if(isMod&&m.diff&&m.diff.length){s+='<div class="diff-box">';m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">&rarr;</span><span class="diff-new">'+d.a+'</span></div>';});s+='</div>';}
+  else if(isMod) s+='<div class="ls">'+det+(m.note?'<br>'+m.note:'')+'</div>';
+  s+='<div class="lti" style="white-space:normal;text-align:left;">'+fmtT(m.ts)+'</div>';
+  s+='</div><button class="ldb" onclick="chiPin(\'del\',\''+mid+'\')">&#x1F5D1;</button></div>';
   return s;
 }
 

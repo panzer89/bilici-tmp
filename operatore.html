@@ -168,6 +168,7 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 .li:last-child{border-bottom:none;}
 .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px;}
 .ldot.in{background:var(--gb);}.ldot.ou{background:var(--rb);}.ldot.tr{background:var(--ob);}
+.op-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.2);margin-left:5px;vertical-align:middle;}
 .prog-agg-info{font-size:11px;color:var(--pb);font-weight:700;margin-top:3px;}
 .ltx{flex:1;min-width:0;}
 .lm{font-size:14px;font-weight:600;}
@@ -960,7 +961,8 @@ function aggiornaLogEntrate(cat) {
   var el = document.getElementById('log-ent-list');
   if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessuna entrata recente</div>'; return; }
   el.innerHTML = lista.map(function(m) {
-    return '<div class="li"><div class="ldot in"></div><div class="ltx"><div class="lm">#' + m.numero + ' &rarr; ' + m.locazione + '</div><div class="ls">&#x1F4E6; ' + m.bancali + ' bancali' + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+    var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
+    return '<div class="li"><div class="ldot in"></div><div class="ltx"><div class="lm">#' + m.numero + ' &rarr; ' + m.locazione + opTag + '</div><div class="ls">&#x1F4E6; ' + m.bancali + ' bancali' + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
   }).join('');
 }
 
@@ -974,6 +976,7 @@ function dbDB(id) {
   delete BL[id]; svLoc(); return Promise.resolve();
 }
 function dbAS(d) {
+  if (!d.operatore && CURR_USER) { d.operatore = CURR_USER.username; }
   if (UC && fdb) return fdb.collection('storico').add(d);
   ST.unshift(Object.assign({id:'L'+Date.now()}, d)); svLoc(); return Promise.resolve();
 }
@@ -986,7 +989,8 @@ function aggiornaLogUscite() {
   if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessun carico effettuato</div>'; return; }
   el.innerHTML = lista.map(function(m) {
     var caricoTag = m.caricoId ? '<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>' : '';
-    return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + caricoTag + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+    var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
+    return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + caricoTag + opTag + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
   }).join('');
 }
 function salvaProg() { if (!UC) { try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); } catch(x) {} } }
@@ -1513,7 +1517,8 @@ function aggiornaLogTransfer() {
   var el = document.getElementById('log-tr-list');
   if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessun trasferimento recente</div>'; return; }
   el.innerHTML = lista.map(function(m) {
-    return '<div class="li"><div class="ldot tr"></div><div class="ltx"><div class="lm">#' + m.numero + ' &nbsp; ' + (m.locazioneDa || '?') + ' &#x2192; ' + (m.locazioneA || '?') + '</div><div class="ls">&#x1F4E6; ' + (m.bancali || '?') + ' bancali</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+    var opTagTr=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
+    return '<div class="li"><div class="ldot tr"></div><div class="ltx"><div class="lm">#' + m.numero + ' &nbsp; ' + (m.locazioneDa || '?') + ' &#x2192; ' + (m.locazioneA || '?') + opTagTr + '</div><div class="ls">&#x1F4E6; ' + (m.bancali || '?') + ' bancali</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
   }).join('');
 }
 

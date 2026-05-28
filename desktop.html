@@ -303,6 +303,13 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 .stor-fi-label{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
 .ldot.mod{background:var(--og);}.ldot.tr{background:var(--cb);}
 .prog-agg-info{font-size:11px;color:var(--pb);font-weight:700;margin-top:3px;}
+.op-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:rgba(96,165,250,.12);color:var(--bb);border:1px solid rgba(96,165,250,.2);margin-left:5px;vertical-align:middle;}
+.diff-box{margin-top:5px;display:flex;flex-direction:column;gap:3px;}
+.diff-row{display:flex;align-items:center;gap:5px;font-size:11px;}
+.diff-field{color:var(--tx3);min-width:68px;font-weight:600;}
+.diff-old{color:var(--rb);text-decoration:line-through;background:rgba(239,68,68,.1);padding:1px 5px;border-radius:4px;}
+.diff-arr{color:var(--tx3);}
+.diff-new{color:var(--gb);background:rgba(34,197,94,.1);padding:1px 5px;border-radius:4px;}
 </style>
 </head>
 <body>
@@ -577,6 +584,9 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 <!-- MODAL MODIFICA ORDINE PROGRAMMAZIONE -->
 <div class="mo" id="mo-ordine"><div class="mdl" style="max-width:340px;"><div class="mha"></div><div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Ordine</div><div style="font-size:13px;color:var(--tx2);margin-bottom:12px;">Bilico <strong id="mo-ord-num" style="color:var(--bb);font-size:15px;"></strong></div><div class="edit-field"><div class="edit-label">Data</div><input class="edit-inp" id="mo-ord-data" type="date"></div><div class="edit-field"><div class="edit-label">Nota</div><input class="edit-inp" id="mo-ord-nota" type="text" placeholder="Nota opzionale..." autocomplete="off"></div><div class="btn-row" style="margin-top:10px;"><button class="btn bgn" onclick="salvaOrdine()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-ordine')">&#x2716; Annulla</button></div></div></div>
 
+<!-- MODAL TRASFERISCI (da cerca) -->
+<div class="mo" id="mo-trasf"><div class="mdl" style="max-width:340px;"><div class="mha"></div><div class="mtt" style="color:var(--cy);">&#x1F69B; Trasferisci Bilico</div><div style="font-size:13px;color:var(--tx2);margin-bottom:14px;">Bilico <strong id="mo-trasf-num" style="color:var(--cy);font-size:16px;"></strong><br><span style="font-size:12px;">Locazione attuale: <strong id="mo-trasf-loc-da" style="color:var(--tx);"></strong></span></div><div class="edit-field"><div class="edit-label">Nuova Locazione</div><div class="loc-wrap"><input class="edit-inp" id="trasf-loc" type="text" autocomplete="off" style="text-transform:uppercase;flex:1;border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;" placeholder="es. A1, BANCHINA..." oninput="this.value=this.value.toUpperCase()"><button class="qr-btn" onclick="apriQR('trasf-loc')">&#x1F4F7;</button></div></div><div class="btn-row" style="margin-top:12px;"><button class="btn bcy" onclick="confermaTrasferisci()">&#x1F4CD; TRASFERISCI</button><button class="btn bgh" onclick="chiM('mo-trasf')">&#x2716; Annulla</button></div></div></div>
+
 <!-- MODAL MODIFICA -->
 <div class="mo" id="mo-edit"><div class="mdl"><div class="mha"></div><div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Bilico</div><div class="edit-field"><div class="edit-label">Numero</div><input class="edit-inp big" id="edit-n" type="number" inputmode="numeric" autocomplete="off"></div><div class="edit-field"><div class="edit-label">Locazione</div><div class="loc-wrap"><input class="edit-inp" id="edit-l" type="text" autocomplete="off" style="text-transform:uppercase;flex:1;border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;"><button class="qr-btn" onclick="apriQR('edit-l')">&#x1F4F7;</button></div></div><div class="edit-field"><div class="edit-label">Bancali</div><div class="crow"><button class="cbt" onclick="stp('edit-b',-1)">&#x2212;</button><input class="cvl" id="edit-b" type="number" min="0" inputmode="numeric"><button class="cbt" onclick="stp('edit-b',1)">+</button></div></div><div class="edit-field"><div class="edit-label">Data entrata</div><input class="edit-inp" id="edit-d" type="datetime-local"></div><div class="edit-field"><div class="edit-label">Note</div><input class="edit-inp" id="edit-nt" type="text" placeholder="Note..." autocomplete="off"></div><div class="btn-row" style="margin-top:6px;"><button class="btn bgn" onclick="salvaModifica()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-edit')">&#x2716; Annulla</button></div></div></div>
 
@@ -712,6 +722,7 @@ function crdB(b, act) {
   s += '</div>';
   s += '<div class="bcd-acts">';
   if (act) { s += '<button class="bcd-btn bcd-rd" onclick="uscV(&quot;' + num + '&quot;)">&#x1F534; Carica</button>'; }
+  if (act) { s += '<button class="bcd-btn" style="background:var(--cy);width:36px;height:36px;padding:5px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;" title="Trasferisci" onclick="event.stopPropagation();apriTrasferisci(&quot;' + num + '&quot;)"><svg width="22" height="9" viewBox="0 0 24 10"><line x1="0" y1="5" x2="20" y2="5" stroke="#000" stroke-width="2"/><polyline points="14,1 20,5 14,9" fill="none" stroke="#000" stroke-width="2"/></svg><svg width="22" height="9" viewBox="0 0 24 10" style="transform:scaleX(-1)"><line x1="0" y1="5" x2="20" y2="5" stroke="#000" stroke-width="2"/><polyline points="14,1 20,5 14,9" fill="none" stroke="#000" stroke-width="2"/></svg></button>'; }
   s += penBtn + delBtn;
   s += '</div></div>';
   return s;
@@ -1308,18 +1319,21 @@ function renderListaUtenti(lista) {
     html+='<div class="usr-log-box" id="log-'+uname+'"><div class="usr-log-empty">&#x23F3; Caricamento log...</div></div>';
     // mostra pulsanti solo se l'utente corrente può agire su questo account
     var isOwn = (CURR_USER && u.username && u.username.toLowerCase() === CURR_USER.username.toLowerCase());
+    var isMaster = CURR_USER && CURR_USER.username.toLowerCase() === ADMIN_DEFAULT.username.toLowerCase();
     var bloccato = false, bloccaMsg = '';
-    if (currLvl === 0) {
-      // Admin: solo liv1 e se stesso — bloccato su altri admin (liv0) e su Plus (liv2)
-      if (!isOwn && lvl !== 1) {
-        bloccato = true;
-        bloccaMsg = lvl === 2 ? '&#x1F512; Solo utenti Plus possono gestire questo account' : '&#x1F512; Non puoi gestire altri account Admin';
-      }
-    } else if (currLvl === 2) {
-      // Plus: solo liv1 e se stesso — bloccato su altri Plus (liv2)
-      if (!isOwn && lvl === 2) {
-        bloccato = true;
-        bloccaMsg = '&#x1F512; Non puoi gestire altri account Plus';
+    if (!isMaster) {
+      if (currLvl === 0) {
+        // Admin: solo liv1 e se stesso — bloccato su altri admin (liv0) e su Plus (liv2)
+        if (!isOwn && lvl !== 1) {
+          bloccato = true;
+          bloccaMsg = lvl === 2 ? '&#x1F512; Solo utenti Plus possono gestire questo account' : '&#x1F512; Non puoi gestire altri account Admin';
+        }
+      } else if (currLvl === 2) {
+        // Plus: solo liv1 e se stesso — bloccato su altri Plus (liv2)
+        if (!isOwn && lvl === 2) {
+          bloccato = true;
+          bloccaMsg = '&#x1F512; Non puoi gestire altri account Plus';
+        }
       }
     }
     if(uid && !bloccato){
@@ -1902,6 +1916,13 @@ function salvaModifica() {
   if (!nuovaL) { return tst('Inserisci locazione', 'er'); }
   if (nuovoB <= 0) { return tst('Inserisci almeno 1 bancale', 'er'); }
   var nuovoTs = nuovaD ? new Date(nuovaD).toISOString() : BL[editKey].ts;
+  // calcola diff prima/dopo
+  var old = BL[editKey] || {};
+  var diff = [];
+  if (String(old.numero||'') !== nuovoN) diff.push({campo:'Numero', da:String(old.numero||'—'), a:nuovoN});
+  if ((old.locazione||'').toUpperCase() !== nuovaL) diff.push({campo:'Locazione', da:old.locazione||'—', a:nuovaL});
+  if ((old.bancali||0) !== nuovoB) diff.push({campo:'Bancali', da:String(old.bancali||0), a:String(nuovoB)});
+  if ((old.note||'') !== nuovoNt) diff.push({campo:'Note', da:old.note||'—', a:nuovoNt||'—'});
   var datiAggiornati = {numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: nuovoTs};
   // se il numero e cambiato dobbiamo cancellare il vecchio e creare il nuovo
   if (nuovoN !== editKey) {
@@ -1912,10 +1933,45 @@ function salvaModifica() {
   } else {
     dbUB(editKey, datiAggiornati);
   }
-  dbAS({tipo: 'MODIFICA', numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: new Date().toISOString()});
+  var recMod = {tipo: 'MODIFICA', numero: nuovoN, locazione: nuovaL, bancali: nuovoB, note: nuovoNt, ts: new Date().toISOString()};
+  if (diff.length) recMod.diff = diff;
+  dbAS(recMod);
   chiM('mo-edit');
   editKey = null;
   tst('Bilico ' + nuovoN + ' modificato', 'ok');
+}
+
+// ── TRASFERIMENTO RAPIDO DA CERCA ──────────────────────────────────
+var trasfKey = null;
+function apriTrasferisci(num) {
+  var b = BL[num];
+  if (!b) { return tst('Bilico non trovato', 'er'); }
+  trasfKey = num;
+  document.getElementById('mo-trasf-num').textContent = '#' + num;
+  document.getElementById('mo-trasf-loc-da').textContent = b.locazione;
+  document.getElementById('trasf-loc').value = '';
+  document.getElementById('mo-trasf').classList.add('open');
+  setTimeout(function(){ document.getElementById('trasf-loc').focus(); }, 150);
+}
+function confermaTrasferisci() {
+  if (!trasfKey) { return; }
+  var b = BL[trasfKey];
+  if (!b) { return tst('Bilico non trovato', 'er'); }
+  var nuovaLoc = document.getElementById('trasf-loc').value.trim().toUpperCase();
+  if (!nuovaLoc) { return tst('Inserisci la nuova locazione', 'er'); }
+  if (nuovaLoc === b.locazione.toUpperCase()) { return tst('La locazione e gia ' + nuovaLoc, 'er'); }
+  // controllo locazione occupata
+  if (!isIllimitata(nuovaLoc)) {
+    var occ = null;
+    Object.values(BL).forEach(function(x) { if (x.locazione.toUpperCase() === nuovaLoc && x.numero !== trasfKey) { occ = x; } });
+    if (occ) { return tst('Locazione ' + nuovaLoc + ' occupata da #' + occ.numero, 'er'); }
+  }
+  var locDa = b.locazione;
+  dbUB(trasfKey, { locazione: nuovaLoc });
+  dbAS({ tipo: 'TRASFERIMENTO', numero: trasfKey, locazioneDa: locDa, locazioneA: nuovaLoc, bancali: b.bancali, ts: new Date().toISOString() });
+  chiM('mo-trasf');
+  trasfKey = null;
+  tst('Bilico #' + b.numero + ' spostato → ' + nuovaLoc, 'ok');
 }
 
 
@@ -2154,6 +2210,7 @@ function dbDB(id) {
   delete BL[id]; svLoc(); ui(); return Promise.resolve();
 }
 function dbAS(d) {
+  if (!d.operatore && CURR_USER) { d.operatore = CURR_USER.username; }
   if (UC) { return fdb.collection('storico').add(d); }
   ST.unshift(Object.assign({id: 'L' + Date.now()}, d)); svLoc(); ui(); return Promise.resolve();
 }
@@ -2544,9 +2601,12 @@ function lgRow(m) {
   else if(isMod) det=(m.bancali||'-')+' bancali';
   else det='Usciti: '+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali!=null?m.bancali:'-'))+', Rimasti: '+(m.bancaliRimasti!=null?m.bancaliRimasti:'-');
   var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
+  var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
-  s += '<div class="lm">' + ico + ' Bilico <strong>#' + m.numero + '</strong> - ' + label + caricoTag + '</div>';
-  s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? ' - ' + m.note : '') + '</div>';
+  s += '<div class="lm">' + ico + ' Bilico <strong>#' + m.numero + '</strong> - ' + label + caricoTag + opTag + '</div>';
+  if(!isMod) s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? ' - ' + m.note : '') + '</div>';
+  if(isMod && m.diff && m.diff.length) { s += '<div class="diff-box">'; m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">&rarr;</span><span class="diff-new">'+d.a+'</span></div>';}); s+='</div>'; }
+  else if(isMod) s += '<div class="ls">' + det + (m.note ? ' - ' + m.note : '') + '</div>';
   s += '</div><div class="lti">' + fmtH(m.ts) + '</div></div>';
   return s;
 }
@@ -2562,9 +2622,12 @@ function lgDel(m) {
   else if(isMod) det=(m.bancali||'-')+' bancali';
   else det='Usciti: '+(m.bancaliUsciti||'-')+', Rimasti: '+(m.bancaliRimasti||'-');
   var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
+  var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
-  s += '<div class="lm">' + ico + ' <strong>#' + m.numero + '</strong> - ' + label + caricoTag + '</div>';
-  s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? '<br>' + m.note : '') + '</div>';
+  s += '<div class="lm">' + ico + ' <strong>#' + m.numero + '</strong> - ' + label + caricoTag + opTag + '</div>';
+  if(!isMod) s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? '<br>' + m.note : '') + '</div>';
+  if(isMod && m.diff && m.diff.length) { s += '<div class="diff-box">'; m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">&rarr;</span><span class="diff-new">'+d.a+'</span></div>';}); s+='</div>'; }
+  else if(isMod) s += '<div class="ls">' + det + (m.note ? '<br>' + m.note : '') + '</div>';
   s += '<div class="lti" style="white-space:normal;text-align:left;">' + fmtT(m.ts) + '</div>';
   s += '</div><button class="ldb" onclick="chiPin(' + "'" + 'del' + "'" + ',' + "'" + mid + "'" + ')">&#x1F5D1;</button></div>';
   return s;

@@ -673,6 +673,7 @@ window.onload = function() {
     if (FBC.apiKey === 'INSERISCI_API_KEY') throw new Error('no cfg');
     if (!firebase.apps.length) firebase.initializeApp(FBC);
     fdb = firebase.firestore(); UC = true;
+    tentaAutoLogin();
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent = 'CLOUD';
     fdb.collection('bilici').onSnapshot(function(s) {
@@ -694,6 +695,7 @@ window.onload = function() {
     });
     setTimeout(controllaGiorno, 2000);
   } catch(e) {
+    tentaAutoLogin();
     ldLoc();
     caricaProgLocale();
     setTimeout(controllaGiorno, 500);
@@ -757,6 +759,21 @@ function caricaCredenziali() {
       document.getElementById('log-pass').value = s.p;
       document.getElementById('log-ricorda').checked = true;
     }
+  } catch(x) {}
+}
+
+function tentaAutoLogin() {
+  try {
+    var s = JSON.parse(localStorage.getItem('RICORDA_OP_v1') || 'null');
+    if (!s || !s.u || !s.p) return;
+    cercaUtente(s.u, s.p, function(usr) {
+      if (!usr) return; // credenziali non valide, lascia il form visibile (già pre-compilato)
+      CURR_USER = usr;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('shell').style.display = 'flex';
+      document.getElementById('usr-badge').textContent = usr.username.toUpperCase();
+      tst('Bentornato ' + usr.username + '!', 'ok');
+    });
   } catch(x) {}
 }
 function doLogin() {
@@ -999,8 +1016,13 @@ function renderProg() {
     var inMag = !!b;
     var docId = p.id || '';
     var borderStyle = p.aggancioId ? 'border-left:3px solid var(--pb);' : '';
+    var partner = p.aggancioId ? PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;}) : null;
     var s = '<div class="prog-item" style="' + borderStyle + '">';
-    s += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
+    s += '<div class="prog-num"><span>#</span>' + p.numero;
+    if (p.aggancioId) {
+      s += '<div class="prog-agg-info" style="font-size:10px;margin-top:3px;">&#x1F517; #' + (partner ? partner.numero : '?') + '</div>';
+    }
+    s += '</div>';
     s += '<div class="prog-info">';
     if (inMag) {
       s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
@@ -1009,10 +1031,6 @@ function renderProg() {
       s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>';
     }
     if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
-    if (p.aggancioId) {
-      var partner = PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
-      s += '<div class="prog-agg-info">&#x1F517; Agganciato a #' + (partner ? partner.numero : '?') + '</div>';
-    }
     s += '</div>';
     s += '<div class="prog-actions">';
     if (inMag) {

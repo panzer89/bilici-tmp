@@ -156,7 +156,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .prog-add button{height:42px;padding:0 14px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;}
 .prog-add button:active{opacity:.8;}
 .prog-list{display:flex;flex-direction:column;}
-.prog-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);}
+.prog-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);}
 .prog-item:last-child{border-bottom:none;}
 .prog-num{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--tx);min-width:60px;}
 .prog-num span{color:var(--bb);font-size:14px;}
@@ -741,6 +741,7 @@ window.onload = function() {
     if (!firebase.apps.length) { firebase.initializeApp(FBC); }
     fdb = firebase.firestore();
     UC = true;
+    tentaAutoLogin();
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent = 'CLOUD';
     fdb.collection('bilici').onSnapshot(function(s) {
@@ -759,6 +760,7 @@ window.onload = function() {
     // controlla cambio giorno dopo 2 secondi (tempo per caricare i dati)
     setTimeout(controllaGiorno, 2000);
   } catch(e) {
+    tentaAutoLogin();
     document.getElementById('supbox').style.display = 'block';
     caricaProg();
     caricaProgDomani();
@@ -824,6 +826,21 @@ function caricaCredenziali() {
       document.getElementById('log-pass').value = salvate.p;
       document.getElementById('log-ricorda').checked = true;
     }
+  } catch(x) {}
+}
+
+function tentaAutoLogin() {
+  try {
+    var s = JSON.parse(localStorage.getItem('RICORDA_v1') || 'null');
+    if (!s || !s.u || !s.p) return;
+    cercaUtente(s.u, s.p, function(usr) {
+      if (!usr) return; // credenziali non valide, lascia il form visibile (già pre-compilato)
+      CURR_USER = usr;
+      salvaTentativo(s.u);
+      document.getElementById('login-screen').style.display = 'none';
+      applicaLivello(usr.livello);
+      tst('Bentornato ' + usr.username + '!', 'ok');
+    });
   } catch(x) {}
 }
 
@@ -1308,8 +1325,13 @@ function renderProg() {
     var borderStyle = '';
     if (p.aggancioId) { borderStyle = 'border-left:3px solid var(--pb);'; }
     else if (isSelected) { borderStyle = 'border-left:3px solid var(--cb);'; }
+    var partner = p.aggancioId ? PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;}) : null;
     html += '<div class="prog-item" style="' + borderStyle + '">';
-    html += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
+    html += '<div class="prog-num"><span>#</span>' + p.numero;
+    if (p.aggancioId) {
+      html += '<div class="prog-agg-info" style="font-size:10px;margin-top:3px;">&#x1F517; #' + (partner ? partner.numero : '?') + '</div>';
+    }
+    html += '</div>';
     html += '<div class="prog-info">';
     if (inMag) {
       html += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
@@ -1321,10 +1343,6 @@ function renderProg() {
       html += '<div class="prog-note-txt" style="margin-top:5px;padding-left:8px;border-left:2px solid var(--bd);line-height:1.4;">' + p.nota + '</div>';
     } else {
       html += '<div style="font-size:11px;color:var(--tx2);margin-top:4px;font-style:italic;">tocca &#x270F; per aggiungere nota</div>';
-    }
-    if (p.aggancioId) {
-      var partner = PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
-      html += '<div class="prog-agg-info">&#x1F517; Agganciato a #' + (partner ? partner.numero : '?') + '</div>';
     }
     if (isSelected) {
       html += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato &mdash; tocca &#x1F517; su un altro bilico</div>';

@@ -872,8 +872,15 @@ function buildProgItem(p, isDomani) {
   if (!isDomani && p.aggancioId) { borderStyle = 'border-left:3px solid var(--pb);'; }
   else if (isSelected) { borderStyle = 'border-left:3px solid var(--cb);'; }
 
+  // Lookup partner per il tag numero
+  var partner = (!isDomani && p.aggancioId) ? PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;}) : null;
+
   var s = '<div class="prog-item" style="' + borderStyle + '">';
-  s += '<div class="prog-num"><span>#</span>' + num + '</div>';
+  s += '<div class="prog-num"><span>#</span>' + num;
+  if (!isDomani && p.aggancioId) {
+    s += '<div class="prog-agg-info" style="font-size:10px;margin-top:3px;">&#x1F517; #' + (partner ? partner.numero : '?') + '</div>';
+  }
+  s += '</div>';
   s += '<div class="prog-info">';
   if (inMag) {
     s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
@@ -882,12 +889,6 @@ function buildProgItem(p, isDomani) {
     s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>';
   }
   if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
-
-  // Info partner agganciato
-  if (!isDomani && p.aggancioId) {
-    var partner = PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
-    s += '<div class="prog-agg-info">&#x1F517; Agganciato a #' + (partner ? partner.numero : '?') + '</div>';
-  }
   if (isSelected) {
     s += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato &mdash; tocca &#x1F517; su un altro bilico</div>';
   }

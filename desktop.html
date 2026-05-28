@@ -302,6 +302,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 .stor-fi:focus{border-color:var(--bl);}
 .stor-fi-label{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
 .ldot.mod{background:var(--og);}.ldot.tr{background:var(--cb);}
+.prog-agg-info{font-size:11px;color:var(--pb);font-weight:700;margin-top:3px;}
 </style>
 </head>
 <body>
@@ -863,8 +864,15 @@ function buildProgItem(p, isDomani) {
   var inMag = !!b;
   var num = p.numero;
   var notaFn = isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg';
-  var delFn  = isDomani ? 'rimuoviProgDomani' : 'rimuoviProg';
-  var s = '<div class="prog-item">';
+  var docId = p.id || '';
+  var isSelected = !isDomani && aggancioSel !== null && aggancioSel.docId === docId && docId !== '';
+
+  // Bordo colorato per stato aggancio
+  var borderStyle = '';
+  if (!isDomani && p.aggancioId) { borderStyle = 'border-left:3px solid var(--pb);'; }
+  else if (isSelected) { borderStyle = 'border-left:3px solid var(--cb);'; }
+
+  var s = '<div class="prog-item" style="' + borderStyle + '">';
   s += '<div class="prog-num"><span>#</span>' + num + '</div>';
   s += '<div class="prog-info">';
   if (inMag) {
@@ -874,11 +882,52 @@ function buildProgItem(p, isDomani) {
     s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>';
   }
   if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
+
+  // Info partner agganciato
+  if (!isDomani && p.aggancioId) {
+    var partner = PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
+    s += '<div class="prog-agg-info">&#x1F517; Agganciato a #' + (partner ? partner.numero : '?') + '</div>';
+  }
+  if (isSelected) {
+    s += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato &mdash; tocca &#x1F517; su un altro bilico</div>';
+  }
+
   s += '</div>';
   s += '<div class="prog-actions">';
-  if (inMag && !isDomani) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + num + '&quot;)">&#x1F534; CARICA</button>'; }
+
+  // Pulsante CARICA
+  if (!isDomani && inMag) {
+    if (p.aggancioId) {
+      s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x1F534; CARICA</button>';
+    } else {
+      s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + num + '&quot;)">&#x1F534; CARICA</button>';
+    }
+  }
+
+  // Pulsante modifica nota
   s += '<button class="prog-del-btn" onclick="' + notaFn + '(&quot;' + num + '&quot;)">&#x270F;&#xFE0F;</button>';
-  if (isAdmin()) { s += '<button class="prog-del-btn" onclick="' + delFn + '(&quot;' + num + '&quot;)">&#x2716;</button>'; }
+
+  // Pulsante aggancio / sgancia (solo per oggi)
+  if (!isDomani) {
+    if (p.aggancioId) {
+      s += '<button class="prog-del-btn" style="border-color:var(--pb);color:var(--pb);" title="Sgancia" onclick="sganciaProg(\'' + docId + '\')">&#x2702;</button>';
+    } else {
+      var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);'
+                             : (aggancioSel !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
+      var aggTitle = isSelected ? 'Annulla selezione' : 'Aggancia';
+      s += '<button class="prog-del-btn" style="' + aggSt + '" title="' + aggTitle + '" onclick="startAggancio(\'' + docId + '\',\'' + num + '\')">&#x1F517;</button>';
+    }
+  }
+
+  // Pulsante elimina
+  if (isAdmin()) {
+    if (isDomani) {
+      s += '<button class="prog-del-btn" onclick="rimuoviProgDomani(&quot;' + num + '&quot;)">&#x2716;</button>';
+    } else {
+      s += '<button class="prog-del-btn" onclick="rimuoviProgById(\'' + docId + '\')">&#x2716;</button>';
+    }
+  }
+
   s += '</div></div>';
   return s;
 }
@@ -910,7 +959,9 @@ function aggProgFromInput(inpId, notaId) {
   var val = String(document.getElementById(inpId).value || '').trim().toUpperCase();
   var nota = document.getElementById(notaId).value.trim();
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
-  if (isPrenotato(val)) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
+  // blocca solo se in domani o calendario (in oggi i duplicati sono permessi)
+  var giaAltrove = (PROG_DOMANI && PROG_DOMANI.find(function(p){return p.numero===val;})) || (Object.keys(CAL_DATA||{}).some(function(dt){return !!(CAL_DATA[dt]||[]).find(function(x){return x.numero===val;});}));
+  if (giaAltrove) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
   var dati = {numero: val, nota: nota, ts: Date.now()};
   if (UC && fdb) { fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG.push(dati); salvaProg(); renderProg(); }
@@ -1000,6 +1051,8 @@ var BL = {}, ST = [], fdb = null, UC = false;
 var SMM = 'b', pend = null, pbuf = '', paz = null;
 var PIN = '4114';
 var impDati = [];
+var aggancioSel = null; // {docId, numero} — primo item selezionato per l'aggancio
+var _coppiaA = null, _coppiaB = null; // item accoppiati per il modal uscita coppia
 
 window.onload = function() {
   ldLoc();
@@ -1342,7 +1395,8 @@ function aggProg() {
   var val = String(document.getElementById('prog-inp').value || '').trim().toUpperCase();
   var nota = document.getElementById('prog-nota-inp').value.trim();
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
-  if (isPrenotato(val)) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
+  var giaAltrove = (PROG_DOMANI && PROG_DOMANI.find(function(p){return p.numero===val;})) || (Object.keys(CAL_DATA||{}).some(function(dt){return !!(CAL_DATA[dt]||[]).find(function(x){return x.numero===val;});}));
+  if (giaAltrove) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
   var dati = {numero: val, nota: nota, ts: Date.now()};
   if (UC && fdb) {
     fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
@@ -1377,6 +1431,11 @@ function rimuoviProg(num) {
   if (UC && fdb) {
     var item = PROG.find(function(p) { return p.numero === num; });
     if (item && item.id) {
+      // Se agganciato, sciogli il collegamento sul partner
+      if (item.aggancioId) {
+        var partner = PROG.find(function(p){return p.aggancioId===item.aggancioId && p.id!==item.id;});
+        if (partner && partner.id) fdb.collection('prog').doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+      }
       fdb.collection('prog').doc(item.id).delete().catch(function(e) { tst('Errore: ' + e.message, 'er'); });
     }
   } else {
@@ -1386,10 +1445,169 @@ function rimuoviProg(num) {
   }
 }
 
+function rimuoviProgById(docId) {
+  if (!docId) { return; }
+  var item = PROG.find(function(p) { return p.id === docId; });
+  if (!item) { return; }
+  if (item.aggancioId) {
+    var partner = PROG.find(function(p){return p.aggancioId===item.aggancioId && p.id!==docId;});
+    var partnerInfo = partner ? ' (agganciato a #' + partner.numero + ')' : '';
+    if (!confirm('Bilico #' + item.numero + partnerInfo + '.\nRimuovendolo il collegamento verrà sciolto. Continuare?')) { return; }
+    if (UC && fdb) {
+      fdb.collection('prog').doc(docId).delete().catch(function(e){tst('Errore: '+e.message,'er');});
+      if (partner && partner.id) fdb.collection('prog').doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+    } else {
+      PROG = PROG.filter(function(p) { return p.id !== docId; });
+      if (partner) { delete partner.aggancioId; }
+      salvaProg(); renderProg();
+    }
+  } else {
+    if (UC && fdb) {
+      fdb.collection('prog').doc(docId).delete().catch(function(e){tst('Errore: '+e.message,'er');});
+    } else {
+      PROG = PROG.filter(function(p) { return p.id !== docId; });
+      salvaProg(); renderProg();
+    }
+  }
+}
+
+function startAggancio(docId, numero) {
+  if (!docId) { tst('Funzione disponibile solo con connessione cloud', 'er'); return; }
+  if (aggancioSel && aggancioSel.docId === docId) {
+    aggancioSel = null;
+    renderProg();
+    tst('Selezione annullata', 'ok');
+    return;
+  }
+  var target = PROG.find(function(p){ return p.id === docId; });
+  if (target && target.aggancioId) {
+    tst('Bilico #' + numero + ' è già agganciato', 'er');
+    return;
+  }
+  if (aggancioSel === null) {
+    aggancioSel = {docId: docId, numero: numero};
+    renderProg();
+    tst('Bilico #' + numero + ' selezionato — tocca 🔗 su un altro bilico', 'ok');
+  } else {
+    var selItem = PROG.find(function(p){ return p.id === aggancioSel.docId; });
+    if (!selItem) {
+      aggancioSel = null;
+      tst('Bilico non più disponibile', 'er');
+      renderProg();
+      return;
+    }
+    if (selItem.aggancioId) {
+      tst('Bilico #' + aggancioSel.numero + ' è già agganciato', 'er');
+      aggancioSel = null; renderProg();
+      return;
+    }
+    completaAggancio(docId, numero);
+  }
+}
+
+function completaAggancio(docId2, numero2) {
+  var aggId = 'AG' + Date.now();
+  var docId1 = aggancioSel.docId;
+  var numero1 = aggancioSel.numero;
+  aggancioSel = null;
+  if (UC && fdb) {
+    fdb.collection('prog').doc(docId1).update({aggancioId: aggId}).catch(function(){});
+    fdb.collection('prog').doc(docId2).update({aggancioId: aggId}).catch(function(){});
+  } else {
+    var p1 = PROG.find(function(p){return p.id===docId1;});
+    var p2 = PROG.find(function(p){return p.id===docId2;});
+    if (p1) p1.aggancioId = aggId;
+    if (p2) p2.aggancioId = aggId;
+    salvaProg(); renderProg();
+  }
+  tst('Bilici #' + numero1 + ' e #' + numero2 + ' agganciati!', 'ok');
+}
+
+function sganciaProg(docId) {
+  if (!docId) return;
+  var item = PROG.find(function(p){return p.id===docId;});
+  if (!item || !item.aggancioId) return;
+  var partner = PROG.find(function(p){return p.aggancioId===item.aggancioId && p.id!==docId;});
+  if (UC && fdb) {
+    fdb.collection('prog').doc(docId).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+    if (partner && partner.id) fdb.collection('prog').doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+  } else {
+    delete item.aggancioId;
+    if (partner) delete partner.aggancioId;
+    salvaProg(); renderProg();
+  }
+  tst('Aggancio sciolto', 'ok');
+}
+
 function caricaVeloce(num) {
   goP('uscita');
   document.getElementById('out-n').value = num;
   trovB();
+}
+
+function apriUscitaCoppia(docId) {
+  var itemA = PROG.find(function(p){return p.id===docId;});
+  if (!itemA || !itemA.aggancioId) {
+    if (itemA) caricaVeloce(itemA.numero);
+    return;
+  }
+  var itemB = PROG.find(function(p){return p.aggancioId===itemA.aggancioId && p.id!==docId;});
+  if (!itemB) { caricaVeloce(itemA.numero); return; }
+  var bilA = BL[itemA.numero], bilB = BL[itemB.numero];
+  _coppiaA = {item:itemA, bilico:bilA};
+  _coppiaB = {item:itemB, bilico:bilB};
+  document.getElementById('mcu-numA').textContent = '#'+itemA.numero;
+  document.getElementById('mcu-numB').textContent = '#'+itemB.numero;
+  document.getElementById('mcu-bancA').value = bilA ? bilA.bancali : 0;
+  document.getElementById('mcu-bancB').value = bilB ? bilB.bancali : 0;
+  document.getElementById('mcu-ntA').value = '';
+  document.getElementById('mcu-ntB').value = '';
+  var infoA = bilA ? (bilA.locazione + ' — ' + bilA.bancali + ' bancali') : 'Non in magazzino';
+  var infoB = bilB ? (bilB.locazione + ' — ' + bilB.bancali + ' bancali') : 'Non in magazzino';
+  document.getElementById('mcu-info').innerHTML =
+    '<strong style="color:var(--bb)">#'+itemA.numero+'</strong>: '+infoA+'<br>'+
+    '<strong style="color:var(--pb)">#'+itemB.numero+'</strong>: '+infoB;
+  document.getElementById('mo-coppia-uscita').classList.add('open');
+}
+
+function confUscitaCoppia() {
+  if (!_coppiaA || !_coppiaB) return;
+  var buA = parseInt(document.getElementById('mcu-bancA').value) || 0;
+  var buB = parseInt(document.getElementById('mcu-bancB').value) || 0;
+  var ntA = document.getElementById('mcu-ntA').value.trim();
+  var ntB = document.getElementById('mcu-ntB').value.trim();
+  var itemA=_coppiaA.item, bilA=_coppiaA.bilico;
+  var itemB=_coppiaB.item, bilB=_coppiaB.bilico;
+  if (bilA && buA <= 0) { return tst('Inserisci bancali per bilico #'+itemA.numero,'er'); }
+  if (bilB && buB <= 0) { return tst('Inserisci bancali per bilico #'+itemB.numero,'er'); }
+  if (bilA && buA > bilA.bancali) { return tst('Bancali #'+itemA.numero+': supera i presenti ('+bilA.bancali+')','er'); }
+  if (bilB && buB > bilB.bancali) { return tst('Bancali #'+itemB.numero+': supera i presenti ('+bilB.bancali+')','er'); }
+  chiM('mo-coppia-uscita');
+  var caricoId = 'C'+Date.now();
+  var ts = new Date().toISOString();
+  var rimA = 0, rimB = 0;
+  if (bilA) {
+    rimA = bilA.bancali - buA;
+    if (rimA===0) { dbDB(itemA.numero); }
+    else { var lA=bilA.locazione.toUpperCase(); dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'}); }
+    dbAS({tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId});
+  }
+  if (bilB) {
+    rimB = bilB.bancali - buB;
+    if (rimB===0) { dbDB(itemB.numero); }
+    else { var lB=bilB.locazione.toUpperCase(); dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'}); }
+    dbAS({tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId});
+  }
+  if (UC&&fdb) {
+    if(itemA.id) fdb.collection('prog').doc(itemA.id).delete().catch(function(){});
+    if(itemB.id) fdb.collection('prog').doc(itemB.id).delete().catch(function(){});
+  } else {
+    PROG=PROG.filter(function(p){return p.id!==itemA.id&&p.id!==itemB.id;});
+    salvaProg(); renderProg();
+  }
+  suonoUscita();
+  tst('Uscita coppia: #'+itemA.numero+' + #'+itemB.numero+' confermata!','ok');
+  _coppiaA=null; _coppiaB=null;
 }
 
 
@@ -2111,8 +2329,9 @@ function lgRow(m) {
   else if(isIn) det=(m.bancali!=null?m.bancali+' bancali':'-');
   else if(isMod) det=(m.bancali||'-')+' bancali';
   else det='Usciti: '+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali!=null?m.bancali:'-'))+', Rimasti: '+(m.bancaliRimasti!=null?m.bancaliRimasti:'-');
+  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
-  s += '<div class="lm">' + ico + ' Bilico <strong>#' + m.numero + '</strong> - ' + label + '</div>';
+  s += '<div class="lm">' + ico + ' Bilico <strong>#' + m.numero + '</strong> - ' + label + caricoTag + '</div>';
   s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? ' - ' + m.note : '') + '</div>';
   s += '</div><div class="lti">' + fmtH(m.ts) + '</div></div>';
   return s;
@@ -2128,8 +2347,9 @@ function lgDel(m) {
   else if(isIn) det=(m.bancali!=null?m.bancali+' bancali':'-');
   else if(isMod) det=(m.bancali||'-')+' bancali';
   else det='Usciti: '+(m.bancaliUsciti||'-')+', Rimasti: '+(m.bancaliRimasti||'-');
+  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
-  s += '<div class="lm">' + ico + ' <strong>#' + m.numero + '</strong> - ' + label + '</div>';
+  s += '<div class="lm">' + ico + ' <strong>#' + m.numero + '</strong> - ' + label + caricoTag + '</div>';
   s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? '<br>' + m.note : '') + '</div>';
   s += '<div class="lti" style="white-space:normal;text-align:left;">' + fmtT(m.ts) + '</div>';
   s += '</div><button class="ldb" onclick="chiPin(' + "'" + 'del' + "'" + ',' + "'" + mid + "'" + ')">&#x1F5D1;</button></div>';
@@ -2458,6 +2678,31 @@ function eseguiAzzeraDB() {
 </div>
 
 
+
+<!-- MODAL USCITA COPPIA -->
+<div class="mo" id="mo-coppia-uscita">
+  <div class="mdl wide">
+    <div class="mha"></div>
+    <div class="mtt rd">&#x1F517; Uscita Coppia</div>
+    <div id="mcu-info" style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:14px;line-height:1.7;"></div>
+    <!-- Bilico A -->
+    <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--bb);margin-bottom:8px;">Bilico <span id="mcu-numA">#—</span></div>
+      <div class="fg" style="margin-bottom:8px;"><div class="fl">Bancali uscita</div><div class="crow"><button class="cbt" onclick="stp('mcu-bancA',-1)">&#x2212;</button><input class="cvl" id="mcu-bancA" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancA',1)">+</button></div></div>
+      <div class="fg" style="margin-bottom:0;"><div class="fl">Note</div><input class="edit-inp" id="mcu-ntA" type="text" placeholder="Destinazione..." autocomplete="off"></div>
+    </div>
+    <!-- Bilico B -->
+    <div style="background:var(--sf2);border:1px solid rgba(110,64,201,.35);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--pb);margin-bottom:8px;">Bilico <span id="mcu-numB">#—</span></div>
+      <div class="fg" style="margin-bottom:8px;"><div class="fl">Bancali uscita</div><div class="crow"><button class="cbt" onclick="stp('mcu-bancB',-1)">&#x2212;</button><input class="cvl" id="mcu-bancB" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancB',1)">+</button></div></div>
+      <div class="fg" style="margin-bottom:0;"><div class="fl">Note</div><input class="edit-inp" id="mcu-ntB" type="text" placeholder="Destinazione..." autocomplete="off"></div>
+    </div>
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn brd" onclick="confUscitaCoppia()">&#x2705; CONFERMA USCITA</button>
+      <button class="btn bgh" onclick="chiM('mo-coppia-uscita')">&#x274C; ANNULLA</button>
+    </div>
+  </div>
+</div>
 
 <!-- PANNELLO IMPOSTAZIONI -->
 <div class="impost-panel" id="impost-panel">

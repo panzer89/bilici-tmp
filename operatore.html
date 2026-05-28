@@ -168,6 +168,7 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 .li:last-child{border-bottom:none;}
 .ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px;}
 .ldot.in{background:var(--gb);}.ldot.ou{background:var(--rb);}.ldot.tr{background:var(--ob);}
+.prog-agg-info{font-size:11px;color:var(--pb);font-weight:700;margin-top:3px;}
 .ltx{flex:1;min-width:0;}
 .lm{font-size:14px;font-weight:600;}
 .ls{font-size:12px;color:var(--tx2);margin-top:2px;}
@@ -540,6 +541,7 @@ var CURR_USER = null;
 var pageStack = ['home'];
 var currentCat = 'secco'; // 'secco' o 'fresco'
 var pendConf = null;
+var pendCoppia = null; // {itemA, bilA, itemB, bilB} per uscita coppia agganciata
 var qrTargetId = null;
 var magMode = 'b';
 var audioCtx = null;
@@ -932,7 +934,8 @@ function aggiornaLogUscite() {
   var el = document.getElementById('log-usc-list');
   if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessun carico effettuato</div>'; return; }
   el.innerHTML = lista.map(function(m) {
-    return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+    var caricoTag = m.caricoId ? '<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>' : '';
+    return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + caricoTag + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
   }).join('');
 }
 function salvaProg() { if (!UC) { try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); } catch(x) {} } }
@@ -994,7 +997,9 @@ function renderProg() {
   el.innerHTML = PROG.map(function(p) {
     var b = BL[p.numero];
     var inMag = !!b;
-    var s = '<div class="prog-item">';
+    var docId = p.id || '';
+    var borderStyle = p.aggancioId ? 'border-left:3px solid var(--pb);' : '';
+    var s = '<div class="prog-item" style="' + borderStyle + '">';
     s += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
     s += '<div class="prog-info">';
     if (inMag) {
@@ -1004,9 +1009,19 @@ function renderProg() {
       s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>';
     }
     if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
+    if (p.aggancioId) {
+      var partner = PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
+      s += '<div class="prog-agg-info">&#x1F517; Agganciato a #' + (partner ? partner.numero : '?') + '</div>';
+    }
     s += '</div>';
     s += '<div class="prog-actions">';
-    if (inMag) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + p.numero + '&quot;)">&#x1F534; CARICA</button>'; }
+    if (inMag) {
+      if (p.aggancioId) {
+        s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(&quot;' + docId + '&quot;)">&#x1F534; CARICA</button>';
+      } else {
+        s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + p.numero + '&quot;)">&#x1F534; CARICA</button>';
+      }
+    }
     s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProg(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
     s += '</div></div>';
     return s;
@@ -1039,6 +1054,24 @@ function renderProgDomani() {
   }).join('');
 }
 
+// Uscita coppia agganciata
+function apriUscitaCoppia(docId) {
+  var itemA = PROG.find(function(p){return p.id===docId;});
+  if (!itemA || !itemA.aggancioId) { if (itemA) caricaVeloce(itemA.numero); return; }
+  var itemB = PROG.find(function(p){return p.aggancioId===itemA.aggancioId && p.id!==docId;});
+  if (!itemB) { caricaVeloce(itemA.numero); return; }
+  var bilA = BL[itemA.numero], bilB = BL[itemB.numero];
+  pendCoppia = {itemA:itemA, bilA:bilA, itemB:itemB, bilB:bilB};
+  var rigaA = bilA ? ('&#x1F4CD; ' + bilA.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + bilA.bancali + ' bancali') : 'Non in magazzino';
+  var rigaB = bilB ? ('&#x1F4CD; ' + bilB.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + bilB.bancali + ' bancali') : 'Non in magazzino';
+  document.getElementById('mo-conf-tx').innerHTML =
+    'Confermi l\'uscita coppia?<br><br>' +
+    '<strong style="color:var(--bb)">Bilico #' + itemA.numero + '</strong><br>' + rigaA + '<br><br>' +
+    '<strong style="color:var(--pb)">Bilico #' + itemB.numero + '</strong><br>' + rigaB;
+  pendConf = 'carica-coppia';
+  document.getElementById('mo-conf').classList.add('open');
+}
+
 // Carica veloce dalla lista uscite (apre modal conferma uscita semplificata)
 var pendCarica = null;
 function caricaVeloce(num) {
@@ -1052,7 +1085,32 @@ function caricaVeloce(num) {
 }
 function eseguiConf() {
   chiM('mo-conf');
-  if (pendConf === 'carica' && pendCarica) {
+  if (pendConf === 'carica-coppia' && pendCoppia) {
+    var caricoId = 'C' + Date.now();
+    var ts = new Date().toISOString();
+    var iA = pendCoppia.itemA, bA = pendCoppia.bilA;
+    var iB = pendCoppia.itemB, bB = pendCoppia.bilB;
+    if (bA) {
+      dbDB(iA.numero);
+      dbAS({tipo:'USCITA', numero:iA.numero, locazione:bA.locazione, bancaliUsciti:bA.bancali, bancaliRimasti:0, note:'', ts:ts, caricoId:caricoId});
+    }
+    if (bB) {
+      dbDB(iB.numero);
+      dbAS({tipo:'USCITA', numero:iB.numero, locazione:bB.locazione, bancaliUsciti:bB.bancali, bancaliRimasti:0, note:'', ts:new Date(Date.now()+1).toISOString(), caricoId:caricoId});
+    }
+    if (UC && fdb) {
+      if (iA.id) fdb.collection('prog').doc(iA.id).delete().catch(function(){});
+      if (iB.id) fdb.collection('prog').doc(iB.id).delete().catch(function(){});
+    } else {
+      PROG = PROG.filter(function(p){return p.id!==iA.id && p.id!==iB.id;});
+      salvaProg(); renderProg();
+    }
+    rimuoviPrenotazioneNum(iA.numero);
+    rimuoviPrenotazioneNum(iB.numero);
+    suonoOk();
+    tst('Coppia #' + iA.numero + ' + #' + iB.numero + ' — uscita confermata!', 'ok');
+    pendCoppia = null;
+  } else if (pendConf === 'carica' && pendCarica) {
     var num = pendCarica.num, b = pendCarica.b;
     var ts = new Date().toISOString();
     dbDB(num);
@@ -1071,6 +1129,11 @@ function eseguiConf() {
 function rimuoviDaProg(num) {
   var item = PROG.find(function(p) { return p.numero === num; });
   if (item) {
+    if (item.aggancioId) {
+      var partner = PROG.find(function(p){return p.aggancioId===item.aggancioId && p.numero!==num;});
+      if (partner && partner.id && UC && fdb) fdb.collection('prog').doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+      else if (partner) delete partner.aggancioId;
+    }
     if (UC && fdb && item.id) { fdb.collection('prog').doc(item.id).delete(); }
     else { PROG = PROG.filter(function(p) { return p.numero !== num; }); salvaProg(); renderProg(); }
   }
@@ -1177,7 +1240,6 @@ function crdMag(b) {
   return s;
 }
 function addToProg(num) {
-  if (PROG.find(function(p) { return p.numero === num; })) { return tst('Bilico ' + num + ' gia in lista uscite', 'er'); }
   var dati = {numero: num, nota: '', ts: Date.now()};
   if (UC && fdb) { fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG.push(dati); salvaProg(); renderProg(); }

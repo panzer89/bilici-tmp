@@ -237,9 +237,20 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 
 .bcd-badge-pren{background:var(--og);color:#111;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
 .bbg-pren{background:var(--og)!important;color:#111!important;}
+/* Blocco rotazione manuale */
+#portrait-lock{display:none;position:fixed;inset:0;background:var(--bg);z-index:99999;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;}
+@media screen and (orientation:landscape){body.orient-locked #portrait-lock{display:flex;}}
+.orient-btn{height:28px;padding:0 9px;background:none;border:1px solid var(--bd);border-radius:20px;color:var(--tx2);font-size:14px;cursor:pointer;display:flex;align-items:center;transition:border-color .2s,color .2s;}
+.orient-btn.locked{border-color:var(--bb);color:var(--bb);}
 </style>
 </head>
 <body>
+<div id="portrait-lock">
+  <div style="font-size:52px;">&#x1F4F1;</div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--tx);">Ruota il dispositivo<br>in verticale</div>
+  <div style="font-size:13px;color:var(--tx2);">Questa app funziona solo in modalit&agrave; verticale</div>
+  <button onclick="toggleOrientLock()" style="margin-top:8px;padding:8px 18px;background:var(--bl);border:none;border-radius:20px;color:#fff;font-weight:700;font-size:13px;cursor:pointer;">&#x1F513; Sblocca</button>
+</div>
 
 <!-- LOGIN -->
 <div class="login-screen" id="login-screen">
@@ -271,6 +282,7 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
     <div class="hdr-right">
       <div class="cbg" id="cbg"><span class="dot"></span><span id="cbl">LOC</span></div>
       <div class="usr-badge" id="usr-badge"></div>
+      <button id="orient-btn" class="orient-btn" onclick="toggleOrientLock()" title="Blocca rotazione schermo">&#x1F513;</button>
       <button onclick="logout()" style="background:none;border:1px solid var(--bd);color:var(--tx2);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">ESCI</button>
     </div>
   </div>
@@ -636,9 +648,31 @@ function goEntrata(cat) {
   pageStack.push('entrata-form');
 }
 
+// ═══ BLOCCO ROTAZIONE ═══
+function toggleOrientLock() {
+  var locked = document.body.classList.toggle('orient-locked');
+  localStorage.setItem('ORIENT_LOCK_v1', locked ? '1' : '0');
+  _aggiOrientBtn();
+}
+function _aggiOrientBtn() {
+  var btn = document.getElementById('orient-btn');
+  if (!btn) return;
+  var locked = document.body.classList.contains('orient-locked');
+  btn.textContent = locked ? '🔒' : '🔓';
+  btn.classList.toggle('locked', locked);
+  btn.title = locked ? 'Sblocca rotazione schermo' : 'Blocca rotazione schermo';
+}
+function initOrientLock() {
+  // default: lucchetto chiuso (a meno che l'utente non l'abbia esplicitamente sbloccato)
+  var pref = localStorage.getItem('ORIENT_LOCK_v1');
+  if (pref === null || pref === '1') document.body.classList.add('orient-locked');
+  _aggiOrientBtn();
+}
+
 // ═══ LOGIN ═══
 window.onload = function() {
   caricaCredenziali();
+  initOrientLock();
   try {
     if (FBC.apiKey === 'INSERISCI_API_KEY') throw new Error('no cfg');
     if (!firebase.apps.length) firebase.initializeApp(FBC);

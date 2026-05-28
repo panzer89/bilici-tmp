@@ -160,11 +160,12 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .prog-item:last-child{border-bottom:none;}
 .prog-num{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--tx);min-width:60px;}
 .prog-num span{color:var(--bb);font-size:14px;}
-.prog-info{flex:1;min-width:0;}
+.prog-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.prog-info{min-width:0;}
 .prog-loc{font-size:13px;color:var(--pb);font-weight:600;}
 .prog-ban{font-size:12px;color:var(--ob);}
 .prog-note-txt{font-size:11px;color:var(--tx2);}
-.prog-actions{display:flex;gap:6px;flex-shrink:0;}
+.prog-actions{display:flex;gap:6px;flex-wrap:wrap;}
 .prog-carica-btn{height:38px;padding:0 12px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;}
 .prog-carica-btn:active{opacity:.8;}
 .prog-del-btn{height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
@@ -1347,6 +1348,7 @@ function renderProg() {
       html += '<div class="prog-agg-info" style="font-size:10px;margin-top:3px;">&#x1F517; #' + (partner ? partner.numero : '?') + '</div>';
     }
     html += '</div>';
+    html += '<div class="prog-body">';
     html += '<div class="prog-info">';
     if (inMag) {
       html += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
@@ -1383,6 +1385,7 @@ function renderProg() {
     if (CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2)) {
       html += '<button class="prog-del-btn" onclick="rimuoviProgById(\'' + docId + '\')">&#x2716;</button>';
     }
+    html += '</div>';
     html += '</div>';
     html += '</div>';
   }
@@ -1590,6 +1593,7 @@ function renderProgDomani() {
     var inMag = !!b;
     html += '<div class="prog-item">';
     html += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
+    html += '<div class="prog-body">';
     html += '<div class="prog-info">';
     if (inMag) {
       html += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
@@ -1608,6 +1612,7 @@ function renderProgDomani() {
     if (CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2)) {
       html += '<button class="prog-del-btn" onclick="rimuoviProgDomani(' + "'" + p.numero + "'" + ')">&#x2716;</button>';
     }
+    html += '</div>';
     html += '</div>';
     html += '</div>';
   }
@@ -2337,7 +2342,7 @@ function aggiornaBadgeMag() {
     <div class="mha"></div>
     <div class="mtt" style="color:var(--pb);">&#x1F517; Uscita Coppia</div>
     <div id="mcu-info" style="font-size:13px;color:var(--tx2);margin-bottom:14px;line-height:1.6;"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
       <div style="background:var(--bg);border:2px solid var(--bb);border-radius:var(--rs);padding:12px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--bb);margin-bottom:8px;" id="mcu-numA">#—</div>
         <div id="mcu-notaA" style="display:none;font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--bb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;white-space:pre-wrap;"></div>

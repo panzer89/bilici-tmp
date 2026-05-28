@@ -1082,10 +1082,12 @@ function apriUscitaCoppia(docId) {
   pendCoppia = {itemA:itemA, bilA:bilA, itemB:itemB, bilB:bilB};
   var rigaA = bilA ? ('&#x1F4CD; ' + bilA.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + bilA.bancali + ' bancali') : 'Non in magazzino';
   var rigaB = bilB ? ('&#x1F4CD; ' + bilB.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + bilB.bancali + ' bancali') : 'Non in magazzino';
+  var notaTagA = itemA.nota ? '<br><span style="font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--bb);display:block;padding:4px 8px;margin-top:4px;border-radius:3px;">&#x1F4DD; ' + itemA.nota + '</span>' : '';
+  var notaTagB = itemB.nota ? '<br><span style="font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--pb);display:block;padding:4px 8px;margin-top:4px;border-radius:3px;">&#x1F4DD; ' + itemB.nota + '</span>' : '';
   document.getElementById('mo-conf-tx').innerHTML =
     'Confermi l\'uscita coppia?<br><br>' +
-    '<strong style="color:var(--bb)">Bilico #' + itemA.numero + '</strong><br>' + rigaA + '<br><br>' +
-    '<strong style="color:var(--pb)">Bilico #' + itemB.numero + '</strong><br>' + rigaB;
+    '<strong style="color:var(--bb)">Bilico #' + itemA.numero + '</strong><br>' + rigaA + notaTagA + '<br><br>' +
+    '<strong style="color:var(--pb)">Bilico #' + itemB.numero + '</strong><br>' + rigaB + notaTagB;
   pendConf = 'carica-coppia';
   document.getElementById('mo-conf').classList.add('open');
 }

@@ -1259,6 +1259,12 @@ function apriUscitaCoppia(docId) {
   document.getElementById('mcu-bancB').value = bilB ? bilB.bancali : 0;
   document.getElementById('mcu-ntA').value = '';
   document.getElementById('mcu-ntB').value = '';
+  var elNotaA = document.getElementById('mcu-notaA');
+  if (itemA.nota) { elNotaA.textContent = '📝 ' + itemA.nota; elNotaA.style.display = 'block'; }
+  else { elNotaA.style.display = 'none'; }
+  var elNotaB = document.getElementById('mcu-notaB');
+  if (itemB.nota) { elNotaB.textContent = '📝 ' + itemB.nota; elNotaB.style.display = 'block'; }
+  else { elNotaB.style.display = 'none'; }
   var infoA = bilA ? (bilA.locazione + ' — ' + bilA.bancali + ' bancali') : 'Non in magazzino';
   var infoB = bilB ? (bilB.locazione + ' — ' + bilB.bancali + ' bancali') : 'Non in magazzino';
   document.getElementById('mcu-info').innerHTML =
@@ -2323,24 +2329,26 @@ function aggiornaBadgeMag() {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div style="background:var(--bg);border:2px solid var(--bb);border-radius:var(--rs);padding:12px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--bb);margin-bottom:8px;" id="mcu-numA">#—</div>
+        <div id="mcu-notaA" style="display:none;font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--bb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;white-space:pre-wrap;"></div>
         <div class="fl" style="margin-bottom:5px;">Bancali usciti</div>
         <div class="crow">
           <button class="cbt" onclick="var v=document.getElementById('mcu-bancA');v.value=Math.max(0,(parseInt(v.value)||0)-1)">−</button>
           <input class="cvl" id="mcu-bancA" type="number" min="0" value="0" style="border-color:var(--bl)!important;">
           <button class="cbt" onclick="var v=document.getElementById('mcu-bancA');v.value=(parseInt(v.value)||0)+1">+</button>
         </div>
-        <div class="fl" style="margin-top:8px;margin-bottom:5px;">Note</div>
+        <div class="fl" style="margin-top:8px;margin-bottom:5px;">Note uscita</div>
         <input class="fi" id="mcu-ntA" type="text" placeholder="Facoltativo" autocomplete="off">
       </div>
       <div style="background:var(--bg);border:2px solid var(--pb);border-radius:var(--rs);padding:12px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--pb);margin-bottom:8px;" id="mcu-numB">#—</div>
+        <div id="mcu-notaB" style="display:none;font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--pb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;white-space:pre-wrap;"></div>
         <div class="fl" style="margin-bottom:5px;">Bancali usciti</div>
         <div class="crow">
           <button class="cbt" onclick="var v=document.getElementById('mcu-bancB');v.value=Math.max(0,(parseInt(v.value)||0)-1)">−</button>
           <input class="cvl" id="mcu-bancB" type="number" min="0" value="0" style="border-color:var(--pu)!important;">
           <button class="cbt" onclick="var v=document.getElementById('mcu-bancB');v.value=(parseInt(v.value)||0)+1">+</button>
         </div>
-        <div class="fl" style="margin-top:8px;margin-bottom:5px;">Note</div>
+        <div class="fl" style="margin-top:8px;margin-bottom:5px;">Note uscita</div>
         <input class="fi" id="mcu-ntB" type="text" placeholder="Facoltativo" autocomplete="off">
       </div>
     </div>

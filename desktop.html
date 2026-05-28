@@ -1563,6 +1563,12 @@ function apriUscitaCoppia(docId) {
   document.getElementById('mcu-bancB').value = bilB ? bilB.bancali : 0;
   document.getElementById('mcu-ntA').value = '';
   document.getElementById('mcu-ntB').value = '';
+  var elNotaA = document.getElementById('mcu-notaA');
+  if (itemA.nota) { elNotaA.textContent = '📝 ' + itemA.nota; elNotaA.style.display = 'block'; }
+  else { elNotaA.style.display = 'none'; }
+  var elNotaB = document.getElementById('mcu-notaB');
+  if (itemB.nota) { elNotaB.textContent = '📝 ' + itemB.nota; elNotaB.style.display = 'block'; }
+  else { elNotaB.style.display = 'none'; }
   var infoA = bilA ? (bilA.locazione + ' — ' + bilA.bancali + ' bancali') : 'Non in magazzino';
   var infoB = bilB ? (bilB.locazione + ' — ' + bilB.bancali + ' bancali') : 'Non in magazzino';
   document.getElementById('mcu-info').innerHTML =
@@ -2689,14 +2695,16 @@ function eseguiAzzeraDB() {
     <!-- Bilico A -->
     <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--bb);margin-bottom:8px;">Bilico <span id="mcu-numA">#—</span></div>
+      <div id="mcu-notaA" style="display:none;font-size:12px;color:var(--tx2);background:var(--bg);border-left:3px solid var(--bb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;white-space:pre-wrap;"></div>
       <div class="fg" style="margin-bottom:8px;"><div class="fl">Bancali uscita</div><div class="crow"><button class="cbt" onclick="stp('mcu-bancA',-1)">&#x2212;</button><input class="cvl" id="mcu-bancA" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancA',1)">+</button></div></div>
-      <div class="fg" style="margin-bottom:0;"><div class="fl">Note</div><input class="edit-inp" id="mcu-ntA" type="text" placeholder="Destinazione..." autocomplete="off"></div>
+      <div class="fg" style="margin-bottom:0;"><div class="fl">Note uscita</div><input class="edit-inp" id="mcu-ntA" type="text" placeholder="Destinazione..." autocomplete="off"></div>
     </div>
     <!-- Bilico B -->
     <div style="background:var(--sf2);border:1px solid rgba(110,64,201,.35);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--pb);margin-bottom:8px;">Bilico <span id="mcu-numB">#—</span></div>
+      <div id="mcu-notaB" style="display:none;font-size:12px;color:var(--tx2);background:var(--bg);border-left:3px solid var(--pb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;white-space:pre-wrap;"></div>
       <div class="fg" style="margin-bottom:8px;"><div class="fl">Bancali uscita</div><div class="crow"><button class="cbt" onclick="stp('mcu-bancB',-1)">&#x2212;</button><input class="cvl" id="mcu-bancB" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancB',1)">+</button></div></div>
-      <div class="fg" style="margin-bottom:0;"><div class="fl">Note</div><input class="edit-inp" id="mcu-ntB" type="text" placeholder="Destinazione..." autocomplete="off"></div>
+      <div class="fg" style="margin-bottom:0;"><div class="fl">Note uscita</div><input class="edit-inp" id="mcu-ntB" type="text" placeholder="Destinazione..." autocomplete="off"></div>
     </div>
     <div class="btn-row" style="justify-content:center;">
       <button class="btn brd" onclick="confUscitaCoppia()">&#x2705; CONFERMA USCITA</button>

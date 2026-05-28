@@ -416,7 +416,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
             <div class="prog-box-d">
               <div class="prog-hdr-d" onclick="toggleProgDomani()"><div class="prog-hdr-l"><span style="font-size:16px;">&#x1F4C5;</span><div class="prog-hdr-dt">DOMANI</div><div class="prog-badge-d" id="prog-domani-count">0</div></div><div class="prog-chevron" id="prog-domani-chev">&#x2304;</div></div>
               <div class="prog-body-b" id="prog-domani-body">
-                <div class="prog-add" style="border-color:rgba(31,111,235,.2);"><div class="prog-add-row"><input type="number" id="prog-domani-inp" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomani()" style="max-width:110px;"><input type="number" id="prog-domani-banc-inp" placeholder="Plt..." min="1" inputmode="numeric" autocomplete="off" style="max-width:72px;" title="Plt previsti (opzionale)"><button onclick="aggProgDomani()" style="height:34px;padding:0 10px;background:var(--bl);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button></div><input class="prog-nota-inp" type="text" id="prog-domani-nota-inp" placeholder="Nota opzionale..." autocomplete="off" style="border-color:var(--bd);"></div>
+                <div class="prog-add" style="border-color:rgba(31,111,235,.2);"><div class="prog-add-row"><input type="number" id="prog-domani-inp" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomani()" style="max-width:110px;"><input type="number" id="prog-domani-banc-inp" placeholder="Plt..." min="1" inputmode="numeric" autocomplete="off" style="max-width:72px;" title="Plt previsti (opzionale)"><button onclick="aggProgDomani()" style="height:34px;padding:0 10px;background:var(--bl);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button></div><input class="prog-nota-inp" type="text" id="prog-domani-nota-inp" placeholder="Nota opzionale..." autocomplete="off" style="border-color:var(--bd);"><div id="prog-domani-agg-ext-row" style="display:none;margin-top:8px;border-top:1px dashed rgba(163,113,247,.3);padding-top:8px;"><div style="font-size:11px;color:var(--pb);font-weight:700;margin-bottom:6px;">&#x1F517; Aggancia bilico esterno (non in lista)</div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="prog-domani-agg-ext-n" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" style="flex:1;height:32px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;padding:0 8px;outline:none;"><input type="number" id="prog-domani-agg-ext-plt" placeholder="Plt..." inputmode="numeric" min="1" autocomplete="off" style="width:70px;height:32px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;padding:0 8px;outline:none;"><button onclick="agganciaEsternoDomani()" style="height:32px;padding:0 10px;background:rgba(163,113,247,.15);border:1.5px solid var(--pb);border-radius:var(--rs);color:var(--pb);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">&#x1F517; AGGANCIA</button></div></div></div>
                 <div class="prog-list" id="prog-domani-list"><div class="prog-empty">Nessuna uscita programmata</div></div>
               </div>
             </div>
@@ -583,6 +583,16 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 <input type="file" id="qr-input-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
 <div class="tst" id="tst"></div>
 
+<!-- overlay accesso negato livello 1 -->
+<div id="overlay-no-access" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1e1e2e;border-radius:16px;padding:36px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.6);">
+    <div style="font-size:2.4rem;margin-bottom:12px;">🚫</div>
+    <div style="font-size:1.1rem;font-weight:700;color:#f87171;margin-bottom:8px;">Accesso non autorizzato</div>
+    <div style="font-size:.9rem;color:#aaa;margin-bottom:24px;">Questo portale è riservato ad Admin e utenti Plus.<br>Gli operatori devono utilizzare l'app dedicata.</div>
+    <a href="operatore.html" style="display:inline-block;background:#6366f1;color:#fff;font-weight:700;padding:12px 28px;border-radius:10px;text-decoration:none;font-size:.95rem;">Vai all'app Operatore →</a>
+  </div>
+</div>
+
 <script>
 // ═══ FUNZIONI SPECIFICHE DESKTOP ═══
 
@@ -628,6 +638,12 @@ function aggiornaTopbarAzioni() {
 
 function applicaLivello(lvl) {
   lvl = parseInt(lvl) || 0; // normalizza: stringa "1" → numero 1
+  if (lvl === 1) {
+    logout();
+    var ov = document.getElementById('overlay-no-access');
+    if (ov) { ov.style.display = 'flex'; }
+    return;
+  }
   document.body.setAttribute('data-lvl', String(lvl)); // regole CSS visibilita
   var adm = lvl === 0;
   var isOp = lvl === 1; // operatore: nasconde pianificazione e impostazioni
@@ -726,7 +742,7 @@ function renderProgDomani() {
   if (!el || !badge) { return; }
   badge.textContent = PROG_DOMANI ? PROG_DOMANI.length : 0;
   if (!PROG_DOMANI || !PROG_DOMANI.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata</div>'; }
-  else { el.innerHTML = PROG_DOMANI.map(function(p) { return buildProgItem(p, true); }).join(''); }
+  else { var rAggD = {}; el.innerHTML = PROG_DOMANI.map(function(p) { return buildProgItem(p, true, rAggD); }).join(''); }
   var p2 = document.getElementById('prog-domani-list2');
   var b2 = document.getElementById('prog-domani-count2');
   if (p2) { p2.innerHTML = el.innerHTML; }
@@ -861,18 +877,20 @@ function eliminaOrdine(fonte,id,numero){
 
 function buildProgItem(p, isDomani, renderedAggIds) {
   // Se questo item fa parte di una coppia già renderizzata, salta
-  if (!isDomani && p.aggancioId && renderedAggIds && renderedAggIds[p.aggancioId]) { return ''; }
+  if (p.aggancioId && renderedAggIds && renderedAggIds[p.aggancioId]) { return ''; }
 
   var b = BL[p.numero];
   var inMag = !!b;
   var num = p.numero;
   var docId = p.id || '';
-  var isSelected = !isDomani && aggancioSel !== null && aggancioSel.docId === docId && docId !== '';
+  var selObj = isDomani ? aggancioSelD : aggancioSel;
+  var isSelected = selObj !== null && selObj.docId === docId && docId !== '';
 
-  // Trova partner
+  // Trova partner nella lista corretta
   var partner = null, bilB = null;
-  if (!isDomani && p.aggancioId) {
-    partner = PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
+  if (p.aggancioId) {
+    var srcList = isDomani ? PROG_DOMANI : PROG;
+    partner = srcList.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
     if (partner && renderedAggIds) { renderedAggIds[p.aggancioId] = true; }
     if (partner) { bilB = BL[partner.numero]; }
   }
@@ -925,21 +943,19 @@ function buildProgItem(p, isDomani, renderedAggIds) {
   // Azioni
   s += '<div class="prog-actions">';
   if (isPaired) {
-    if (inMag || bilB) { s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x1F534; CARICA</button>'; }
-    s += '<button class="prog-del-btn" onclick="modificaNotaProg(&quot;' + num + '&quot;)">&#x270F;&#xFE0F;</button>';
-    s += '<button class="prog-del-btn" style="border-color:var(--pb);color:var(--pb);" title="Sgancia" onclick="sganciaProg(\'' + docId + '\')">&#x2702;</button>';
-    if (isAdmin()) { s += '<button class="prog-del-btn" onclick="rimuoviProgById(\'' + docId + '\')">&#x2716;</button>'; }
+    if (!isDomani && (inMag || bilB)) { s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x1F534; CARICA</button>'; }
+    s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(&quot;' + num + '&quot;)">&#x270F;&#xFE0F;</button>';
+    s += '<button class="prog-del-btn" style="border-color:var(--pb);color:var(--pb);" title="Sgancia" onclick="' + (isDomani ? 'sganciaProgDomani' : 'sganciaProg') + '(\'' + docId + '\')">&#x2702;</button>';
+    if (isAdmin()) { s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'rimuoviProgDomaniById' : 'rimuoviProgById') + '(\'' + docId + '\')">&#x2716;</button>'; }
   } else {
     if (!isDomani && inMag) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + num + '&quot;)">&#x1F534; CARICA</button>'; }
     s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(&quot;' + num + '&quot;)">&#x270F;&#xFE0F;</button>';
-    if (!isDomani) {
-      var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggancioSel !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
-      var aggTitle = isSelected ? 'Annulla selezione' : 'Aggancia';
-      s += '<button class="prog-del-btn" style="' + aggSt + '" title="' + aggTitle + '" onclick="startAggancio(\'' + docId + '\',\'' + num + '\')">&#x1F517;</button>';
-    }
+    var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (selObj !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
+    var aggTitle = isSelected ? 'Annulla selezione' : 'Aggancia';
+    var aggFn = isDomani ? 'startAggancioDomani' : 'startAggancio';
+    s += '<button class="prog-del-btn" style="' + aggSt + '" title="' + aggTitle + '" onclick="' + aggFn + '(\'' + docId + '\',\'' + num + '\')">&#x1F517;</button>';
     if (isAdmin()) {
-      if (isDomani) { s += '<button class="prog-del-btn" onclick="rimuoviProgDomani(&quot;' + num + '&quot;)">&#x2716;</button>'; }
-      else { s += '<button class="prog-del-btn" onclick="rimuoviProgById(\'' + docId + '\')">&#x2716;</button>'; }
+      s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'rimuoviProgDomaniById' : 'rimuoviProgById') + '(\'' + docId + '\')">&#x2716;</button>';
     }
   }
   s += '</div></div>';
@@ -1065,7 +1081,9 @@ var BL = {}, ST = [], fdb = null, UC = false;
 var SMM = 'b', pend = null, pbuf = '', paz = null;
 var PIN = '4114';
 var impDati = [];
-var aggancioSel = null; // {docId, numero} — primo item selezionato per l'aggancio
+var aggancioSel = null;  // {docId, numero} — aggancio oggi
+var aggancioSelD = null; // {docId, numero} — aggancio domani
+var aggancioSelC = null; // {id, numero}   — aggancio calendario
 var _coppiaA = null, _coppiaB = null; // item accoppiati per il modal uscita coppia
 
 window.onload = function() {
@@ -1594,6 +1612,129 @@ function sganciaProg(docId) {
     salvaProg(); renderProg();
   }
   tst('Aggancio sciolto', 'ok');
+}
+
+// ═══ AGGANCIO DOMANI ═══
+function startAggancioDomani(docId, numero) {
+  if (!docId) { tst('Funzione disponibile solo con connessione cloud', 'er'); return; }
+  if (aggancioSelD && aggancioSelD.docId === docId) {
+    aggancioSelD = null;
+    var extR = document.getElementById('prog-domani-agg-ext-row');
+    if (extR) { extR.style.display = 'none'; document.getElementById('prog-domani-agg-ext-n').value = ''; document.getElementById('prog-domani-agg-ext-plt').value = ''; }
+    renderProgDomani(); tst('Selezione annullata', 'ok'); return;
+  }
+  var target = PROG_DOMANI.find(function(p){ return p.id === docId; });
+  if (target && target.aggancioId) { tst('Bilico #' + numero + ' è già agganciato', 'er'); return; }
+  if (aggancioSelD === null) {
+    aggancioSelD = {docId: docId, numero: numero};
+    var extR2 = document.getElementById('prog-domani-agg-ext-row');
+    if (extR2) extR2.style.display = 'block';
+    renderProgDomani();
+    tst('Bilico #' + numero + ' selezionato — tocca 🔗 su un altro bilico o usa il campo sotto', 'ok');
+  } else {
+    var selItem = PROG_DOMANI.find(function(p){ return p.id === aggancioSelD.docId; });
+    if (!selItem) {
+      aggancioSelD = null;
+      var extR3 = document.getElementById('prog-domani-agg-ext-row');
+      if (extR3) extR3.style.display = 'none';
+      tst('Bilico non più disponibile', 'er'); renderProgDomani(); return;
+    }
+    if (selItem.aggancioId) { tst('Bilico #' + aggancioSelD.numero + ' è già agganciato', 'er'); aggancioSelD = null; renderProgDomani(); return; }
+    completaAggancioDomani(docId, numero);
+  }
+}
+
+function completaAggancioDomani(docId2, numero2) {
+  var aggId = 'AG' + Date.now();
+  var docId1 = aggancioSelD.docId, numero1 = aggancioSelD.numero;
+  aggancioSelD = null;
+  var extR = document.getElementById('prog-domani-agg-ext-row');
+  if (extR) extR.style.display = 'none';
+  if (UC && fdb) {
+    fdb.collection('prog_domani').doc(docId1).update({aggancioId: aggId}).catch(function(){});
+    fdb.collection('prog_domani').doc(docId2).update({aggancioId: aggId}).catch(function(){});
+  } else {
+    var p1 = PROG_DOMANI.find(function(p){return p.id===docId1;});
+    var p2 = PROG_DOMANI.find(function(p){return p.id===docId2;});
+    if (p1) p1.aggancioId = aggId;
+    if (p2) p2.aggancioId = aggId;
+    salvaProgDomani(); renderProgDomani();
+  }
+  tst('Bilici #' + numero1 + ' e #' + numero2 + ' agganciati!', 'ok');
+}
+
+function agganciaEsternoDomani() {
+  if (!aggancioSelD) { return tst('Nessun bilico selezionato per l\'aggancio', 'er'); }
+  var num = String(document.getElementById('prog-domani-agg-ext-n').value || '').trim().toUpperCase();
+  var plt = parseInt(document.getElementById('prog-domani-agg-ext-plt').value) || 0;
+  if (!num) { return tst('Inserisci il numero bilico', 'er'); }
+  if (plt <= 0) { return tst('Inserisci i plt da caricare', 'er'); }
+  var b = BL[num];
+  if (!b) { return tst('Bilico #' + num + ' non trovato in magazzino', 'er'); }
+  if (plt > b.bancali) { return tst('Plt inseriti (' + plt + ') superano i disponibili (' + b.bancali + ')', 'er'); }
+  var giaProg = PROG_DOMANI.find(function(p){ return p.numero === num; });
+  if (giaProg) { return tst('Bilico #' + num + ' è già in lista — usa 🔗 direttamente', 'er'); }
+  var aggId = 'AG' + Date.now();
+  var docId1 = aggancioSelD.docId, numero1 = aggancioSelD.numero;
+  aggancioSelD = null;
+  var extR = document.getElementById('prog-domani-agg-ext-row');
+  if (extR) { extR.style.display = 'none'; document.getElementById('prog-domani-agg-ext-n').value = ''; document.getElementById('prog-domani-agg-ext-plt').value = ''; }
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  if (UC && fdb) {
+    fdb.collection('prog_domani').add(dati).then(function() {
+      fdb.collection('prog_domani').doc(docId1).update({aggancioId: aggId}).catch(function(){});
+    }).catch(function(e){ tst('Errore: ' + e.message, 'er'); });
+  } else {
+    dati.id = 'local_' + Date.now();
+    PROG_DOMANI.push(dati);
+    var p1 = PROG_DOMANI.find(function(p){return p.id===docId1;});
+    if (p1) p1.aggancioId = aggId;
+    salvaProgDomani(); renderProgDomani();
+  }
+  tst('Bilico #' + num + ' (' + plt + ' plt) agganciato a #' + numero1 + '!', 'ok');
+}
+
+function sganciaProgDomani(docId) {
+  if (!docId) return;
+  var item = PROG_DOMANI.find(function(p){return p.id===docId;});
+  if (!item || !item.aggancioId) return;
+  var partner = PROG_DOMANI.find(function(p){return p.aggancioId===item.aggancioId && p.id!==docId;});
+  if (UC && fdb) {
+    fdb.collection('prog_domani').doc(docId).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+    if (partner && partner.id) fdb.collection('prog_domani').doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+  } else {
+    delete item.aggancioId;
+    if (partner) delete partner.aggancioId;
+    salvaProgDomani(); renderProgDomani();
+  }
+  tst('Aggancio sciolto', 'ok');
+}
+
+function rimuoviProgDomaniById(docId) {
+  if (!docId) return;
+  var item = PROG_DOMANI.find(function(p){ return p.id === docId; });
+  if (!item) return;
+  if (item.aggancioId) {
+    var partner = PROG_DOMANI.find(function(p){return p.aggancioId===item.aggancioId && p.id!==docId;});
+    var info = partner ? ' + #' + partner.numero : '';
+    if (!confirm('Rimuovere la coppia #' + item.numero + info + ' dalle uscite di domani?')) return;
+    if (UC && fdb) {
+      fdb.collection('prog_domani').doc(docId).delete().catch(function(e){tst('Errore: '+e.message,'er');});
+      if (partner && partner.id) fdb.collection('prog_domani').doc(partner.id).delete().catch(function(){});
+    } else {
+      var pid = partner ? partner.id : null;
+      PROG_DOMANI = PROG_DOMANI.filter(function(p){ return p.id !== docId && p.id !== pid; });
+      salvaProgDomani(); renderProgDomani();
+    }
+  } else {
+    if (!confirm('Rimuovere bilico #' + item.numero + ' dalle uscite di domani?')) return;
+    if (UC && fdb) {
+      fdb.collection('prog_domani').doc(docId).delete().catch(function(e){tst('Errore: '+e.message,'er');});
+    } else {
+      PROG_DOMANI = PROG_DOMANI.filter(function(p){ return p.id !== docId; });
+      salvaProgDomani(); renderProgDomani();
+    }
+  }
 }
 
 function caricaVeloce(num) {
@@ -2574,38 +2715,206 @@ function calApriGiorno(dateStr) {
 }
 
 function renderCalModalList() {
-  var el=document.getElementById('cal-modal-list');
-  if(!el||!CAL_GIORNO_SEL)return;
-  var items=CAL_DATA[CAL_GIORNO_SEL]||[];
-  if(!items.length){el.innerHTML='<div style="font-size:13px;color:var(--tx2);text-align:center;padding:8px 0;">Nessun bilico per questo giorno</div>';return;}
-  el.innerHTML=items.map(function(item){
-    var delBtn=item.id?'<button class="cal-mi-del" onclick="calElimina(\''+item.id+'\')">&#x2716; Rimuovi</button>':'';
-    return '<div class="cal-mi"><div><div class="cal-mi-num">#'+item.numero+'</div>'+(item.nota?'<div class="cal-mi-nota">'+item.nota+'</div>':'')+'</div>'+delBtn+'</div>';
-  }).join('');
+  var el = document.getElementById('cal-modal-list');
+  if (!el || !CAL_GIORNO_SEL) return;
+  var items = CAL_DATA[CAL_GIORNO_SEL] || [];
+  if (!items.length) { el.innerHTML = '<div style="font-size:13px;color:var(--tx2);text-align:center;padding:8px 0;">Nessun bilico per questo giorno</div>'; return; }
+  var rAgg = {}, html = '';
+  items.forEach(function(item) {
+    if (item.aggancioId && rAgg[item.aggancioId]) { return; }
+    var partner = null;
+    if (item.aggancioId) {
+      partner = items.find(function(x){ return x.aggancioId === item.aggancioId && x.id !== item.id; });
+      if (partner) rAgg[item.aggancioId] = true;
+    }
+    var isPaired = !!partner;
+    var isSelC = aggancioSelC !== null && aggancioSelC.id === item.id;
+    var bA = BL[item.numero], bB = partner ? BL[partner.numero] : null;
+    var border = isPaired ? 'border-left:3px solid var(--pb);' : (isSelC ? 'border-left:3px solid var(--cb);' : '');
+    var s = '<div class="cal-mi" style="align-items:flex-start;' + border + '">';
+    s += '<div style="flex:1;min-width:0;">';
+    if (isPaired) {
+      s += '<div class="cal-mi-num">#' + item.numero + ' <span style="color:var(--pb);">&#x1F517;</span> #' + partner.numero + '</div>';
+      if (item.nota) s += '<div class="cal-mi-nota">' + item.nota + '</div>';
+      if (bA) { var bndA = (item.bancaliProg && item.bancaliProg < bA.bancali) ? item.bancaliProg + ' / ' + bA.bancali : bA.bancali; s += '<div style="font-size:12px;color:var(--tx2);">&#x1F4CD; ' + bA.locazione + ' &nbsp;&#x1F4E6; ' + bndA + '</div>'; }
+      s += '<div style="border-top:1px dashed rgba(163,113,247,.4);margin:4px 0;"></div>';
+      if (bB) { var bndB = (partner.bancaliProg && partner.bancaliProg < bB.bancali) ? partner.bancaliProg + ' / ' + bB.bancali : bB.bancali; s += '<div style="font-size:12px;color:var(--pb);">&#x1F4CD; ' + bB.locazione + ' &nbsp;&#x1F4E6; ' + bndB + '</div>'; }
+      if (partner.nota) s += '<div class="cal-mi-nota" style="border-color:var(--pb);color:var(--pb);">' + partner.nota + '</div>';
+    } else {
+      s += '<div class="cal-mi-num">#' + item.numero + '</div>';
+      if (item.nota) s += '<div class="cal-mi-nota">' + item.nota + '</div>';
+      if (bA) { var banDisp = (item.bancaliProg && item.bancaliProg < bA.bancali) ? item.bancaliProg + ' / ' + bA.bancali : bA.bancali; s += '<div style="font-size:12px;color:var(--tx2);">&#x1F4CD; ' + bA.locazione + ' &nbsp;&#x1F4E6; ' + banDisp + '</div>'; }
+      if (isSelC) s += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato — tocca &#x1F517; su un altro bilico o usa il campo sotto</div>';
+    }
+    s += '</div>';
+    s += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;margin-left:8px;">';
+    if (isPaired) {
+      s += '<button class="cal-mi-del" style="border-color:var(--pb);color:var(--pb);" onclick="sganciaProgCal(\'' + item.id + '\')">&#x2702;</button>';
+      if (isAdmin() && item.id) s += '<button class="cal-mi-del" onclick="calElimina(\'' + item.id + '\')">&#x2716;</button>';
+    } else {
+      var aggCStyle = isSelC ? 'border-color:var(--cb);color:var(--cb);' : (aggancioSelC !== null ? 'border-color:var(--gb);color:var(--gb);' : 'border-color:var(--pb);color:var(--pb);');
+      s += '<button class="cal-mi-del" style="' + aggCStyle + '" onclick="startAggancioCal(\'' + item.id + '\',\'' + item.numero + '\')">&#x1F517;</button>';
+      if (item.id) s += '<button class="cal-mi-del" onclick="calElimina(\'' + item.id + '\')">&#x2716;</button>';
+    }
+    s += '</div></div>';
+    html += s;
+  });
+  el.innerHTML = html || '<div style="font-size:13px;color:var(--tx2);text-align:center;padding:8px 0;">Nessun bilico per questo giorno</div>';
 }
 
 function calAggiungi() {
-  var num=String(document.getElementById('cal-add-num').value||'').trim().toUpperCase();
-  var nota=document.getElementById('cal-add-nota').value.trim();
-  if(!num||!CAL_GIORNO_SEL){return tst('Inserisci il numero bilico','er');}
-  if(isPrenotato(num)){return tst('Bilico #'+num+' gia prenotato '+infoPrenotazione(num),'er');}
-  if(UC&&fdb){
-    fdb.collection('prog_calendario').add({numero:num,nota:nota,data:CAL_GIORNO_SEL,ts:Date.now()})
-      .then(function(){tst('Bilico #'+num+' aggiunto al '+CAL_GIORNO_SEL,'ok');document.getElementById('cal-add-num').value='';document.getElementById('cal-add-nota').value='';})
-      .catch(function(e){tst('Errore: '+e.message,'er');});
+  var num = String(document.getElementById('cal-add-num').value||'').trim().toUpperCase();
+  var nota = document.getElementById('cal-add-nota').value.trim();
+  var bancProg = parseInt(document.getElementById('cal-add-plt').value) || 0;
+  if (!num || !CAL_GIORNO_SEL) { return tst('Inserisci il numero bilico', 'er'); }
+  if (isPrenotato(num)) { return tst('Bilico #' + num + ' gia prenotato ' + infoPrenotazione(num), 'er'); }
+  var dati = {numero: num, nota: nota, data: CAL_GIORNO_SEL, ts: Date.now()};
+  if (bancProg > 0) dati.bancaliProg = bancProg;
+  function clearCalForm() {
+    document.getElementById('cal-add-num').value = '';
+    document.getElementById('cal-add-nota').value = '';
+    document.getElementById('cal-add-plt').value = '';
+  }
+  if (UC && fdb) {
+    fdb.collection('prog_calendario').add(dati)
+      .then(function() { tst('Bilico #' + num + ' aggiunto al ' + CAL_GIORNO_SEL, 'ok'); clearCalForm(); })
+      .catch(function(e) { tst('Errore: ' + e.message, 'er'); });
   } else {
-    if(!CAL_DATA[CAL_GIORNO_SEL]) CAL_DATA[CAL_GIORNO_SEL]=[];
-    CAL_DATA[CAL_GIORNO_SEL].push({numero:num,nota:nota,id:null});
+    if (!CAL_DATA[CAL_GIORNO_SEL]) CAL_DATA[CAL_GIORNO_SEL] = [];
+    CAL_DATA[CAL_GIORNO_SEL].push({numero: num, nota: nota, bancaliProg: bancProg || undefined, id: null});
     renderCalendario(); renderCalModalList();
-    tst('Bilico #'+num+' aggiunto','ok');
-    document.getElementById('cal-add-num').value='';
-    document.getElementById('cal-add-nota').value='';
+    tst('Bilico #' + num + ' aggiunto', 'ok');
+    clearCalForm();
   }
 }
 
 function calElimina(id) {
-  if(!id)return;
-  if(UC&&fdb)fdb.collection('prog_calendario').doc(id).delete().then(function(){tst('Rimosso dal calendario','ok');});
+  if (!id) return;
+  var items = CAL_DATA[CAL_GIORNO_SEL] || [];
+  var item = items.find(function(x){ return x.id === id; });
+  if (item && item.aggancioId) {
+    var partner = items.find(function(x){ return x.aggancioId === item.aggancioId && x.id !== id; });
+    var info = partner ? ' + #' + partner.numero : '';
+    if (!confirm('Rimuovere la coppia #' + item.numero + info + ' dal calendario?')) return;
+    if (UC && fdb) {
+      fdb.collection('prog_calendario').doc(id).delete();
+      if (partner && partner.id) fdb.collection('prog_calendario').doc(partner.id).delete();
+      tst('Coppia rimossa dal calendario', 'ok');
+    } else {
+      var delIds = [id, partner ? partner.id : null];
+      Object.keys(CAL_DATA).forEach(function(dt){ CAL_DATA[dt] = CAL_DATA[dt].filter(function(x){ return delIds.indexOf(x.id) === -1; }); });
+      renderCalendario(); renderCalModalList(); tst('Coppia rimossa', 'ok');
+    }
+  } else {
+    if (!confirm('Rimuovere bilico' + (item ? ' #' + item.numero : '') + ' dal calendario?')) return;
+    if (UC && fdb) {
+      fdb.collection('prog_calendario').doc(id).delete().then(function(){ tst('Rimosso dal calendario', 'ok'); });
+    } else {
+      Object.keys(CAL_DATA).forEach(function(dt){ CAL_DATA[dt] = CAL_DATA[dt].filter(function(x){ return x.id !== id; }); });
+      renderCalendario(); renderCalModalList(); tst('Rimosso', 'ok');
+    }
+  }
+}
+
+// ═══ AGGANCIO CALENDARIO ═══
+function startAggancioCal(id, numero) {
+  if (!id) { tst('Funzione disponibile solo con connessione cloud', 'er'); return; }
+  if (aggancioSelC && aggancioSelC.id === id) {
+    aggancioSelC = null;
+    var extR = document.getElementById('cal-agg-ext-row');
+    if (extR) { extR.style.display = 'none'; document.getElementById('cal-agg-ext-n').value = ''; document.getElementById('cal-agg-ext-plt').value = ''; }
+    renderCalModalList(); tst('Selezione annullata', 'ok'); return;
+  }
+  var items = CAL_DATA[CAL_GIORNO_SEL] || [];
+  var target = items.find(function(x){ return x.id === id; });
+  if (target && target.aggancioId) { tst('Bilico #' + numero + ' è già agganciato', 'er'); return; }
+  if (aggancioSelC === null) {
+    aggancioSelC = {id: id, numero: numero};
+    var extR2 = document.getElementById('cal-agg-ext-row');
+    if (extR2) extR2.style.display = 'block';
+    renderCalModalList();
+    tst('Bilico #' + numero + ' selezionato — tocca 🔗 su un altro bilico o usa il campo sotto', 'ok');
+  } else {
+    var selItem = items.find(function(x){ return x.id === aggancioSelC.id; });
+    if (!selItem) {
+      aggancioSelC = null;
+      var extR3 = document.getElementById('cal-agg-ext-row');
+      if (extR3) extR3.style.display = 'none';
+      tst('Bilico non più disponibile', 'er'); renderCalModalList(); return;
+    }
+    if (selItem.aggancioId) { tst('Bilico #' + aggancioSelC.numero + ' è già agganciato', 'er'); aggancioSelC = null; renderCalModalList(); return; }
+    completaAggancioCal(id, numero);
+  }
+}
+
+function completaAggancioCal(id2, numero2) {
+  var aggId = 'AG' + Date.now();
+  var id1 = aggancioSelC.id, numero1 = aggancioSelC.numero;
+  aggancioSelC = null;
+  var extR = document.getElementById('cal-agg-ext-row');
+  if (extR) extR.style.display = 'none';
+  if (UC && fdb) {
+    fdb.collection('prog_calendario').doc(id1).update({aggancioId: aggId}).catch(function(){});
+    fdb.collection('prog_calendario').doc(id2).update({aggancioId: aggId}).catch(function(){});
+  } else {
+    var items = CAL_DATA[CAL_GIORNO_SEL] || [];
+    var p1 = items.find(function(x){return x.id===id1;});
+    var p2 = items.find(function(x){return x.id===id2;});
+    if (p1) p1.aggancioId = aggId;
+    if (p2) p2.aggancioId = aggId;
+    renderCalendario(); renderCalModalList();
+  }
+  tst('Bilici #' + numero1 + ' e #' + numero2 + ' agganciati!', 'ok');
+}
+
+function agganciaEsternoCal() {
+  if (!aggancioSelC) { return tst('Nessun bilico selezionato per l\'aggancio', 'er'); }
+  var num = String(document.getElementById('cal-agg-ext-n').value || '').trim().toUpperCase();
+  var plt = parseInt(document.getElementById('cal-agg-ext-plt').value) || 0;
+  if (!num) { return tst('Inserisci il numero bilico', 'er'); }
+  if (plt <= 0) { return tst('Inserisci i plt da caricare', 'er'); }
+  var b = BL[num];
+  if (!b) { return tst('Bilico #' + num + ' non trovato in magazzino', 'er'); }
+  if (plt > b.bancali) { return tst('Plt inseriti (' + plt + ') superano i disponibili (' + b.bancali + ')', 'er'); }
+  var items = CAL_DATA[CAL_GIORNO_SEL] || [];
+  var giaProg = items.find(function(x){ return x.numero === num; });
+  if (giaProg) { return tst('Bilico #' + num + ' è già in lista — usa 🔗 direttamente', 'er'); }
+  var aggId = 'AG' + Date.now();
+  var id1 = aggancioSelC.id, numero1 = aggancioSelC.numero;
+  aggancioSelC = null;
+  var extR = document.getElementById('cal-agg-ext-row');
+  if (extR) { extR.style.display = 'none'; document.getElementById('cal-agg-ext-n').value = ''; document.getElementById('cal-agg-ext-plt').value = ''; }
+  var dati = {numero: num, nota: '', bancaliProg: plt, data: CAL_GIORNO_SEL, ts: Date.now(), aggancioId: aggId};
+  if (UC && fdb) {
+    fdb.collection('prog_calendario').add(dati).then(function(){
+      fdb.collection('prog_calendario').doc(id1).update({aggancioId: aggId}).catch(function(){});
+    }).catch(function(e){ tst('Errore: ' + e.message, 'er'); });
+  } else {
+    dati.id = 'local_' + Date.now();
+    if (!CAL_DATA[CAL_GIORNO_SEL]) CAL_DATA[CAL_GIORNO_SEL] = [];
+    CAL_DATA[CAL_GIORNO_SEL].push(dati);
+    var p1 = items.find(function(x){return x.id===id1;});
+    if (p1) p1.aggancioId = aggId;
+    renderCalendario(); renderCalModalList();
+  }
+  tst('Bilico #' + num + ' (' + plt + ' plt) agganciato a #' + numero1 + '!', 'ok');
+}
+
+function sganciaProgCal(id) {
+  if (!id) return;
+  var items = CAL_DATA[CAL_GIORNO_SEL] || [];
+  var item = items.find(function(x){return x.id===id;});
+  if (!item || !item.aggancioId) return;
+  var partner = items.find(function(x){return x.aggancioId===item.aggancioId && x.id!==id;});
+  if (UC && fdb) {
+    fdb.collection('prog_calendario').doc(id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+    if (partner && partner.id) fdb.collection('prog_calendario').doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+  } else {
+    delete item.aggancioId;
+    if (partner) delete partner.aggancioId;
+    renderCalendario(); renderCalModalList();
+  }
+  tst('Aggancio sciolto', 'ok');
 }
 
 function isPrenotato(num) {
@@ -2742,9 +3051,18 @@ function eseguiAzzeraDB() {
       <div class="fl" style="margin-bottom:8px;">Aggiungi bilico</div>
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <input type="number" id="cal-add-num" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)calAggiungi()" style="flex:1;height:36px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;padding:0 10px;outline:none;">
+        <input type="number" id="cal-add-plt" placeholder="Plt..." inputmode="numeric" min="1" autocomplete="off" style="width:80px;height:36px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;padding:0 8px;outline:none;" title="Plt previsti (opzionale)">
         <button onclick="calAggiungi()" style="height:36px;padding:0 14px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button>
       </div>
-      <input type="text" id="cal-add-nota" placeholder="Nota opzionale..." autocomplete="off" style="width:100%;height:34px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow',sans-serif;font-size:13px;padding:0 10px;outline:none;">
+      <input type="text" id="cal-add-nota" placeholder="Nota opzionale..." autocomplete="off" style="width:100%;height:34px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow',sans-serif;font-size:13px;padding:0 10px;outline:none;box-sizing:border-box;">
+      <div id="cal-agg-ext-row" style="display:none;margin-top:8px;border-top:1px dashed rgba(163,113,247,.3);padding-top:8px;">
+        <div style="font-size:11px;color:var(--pb);font-weight:700;margin-bottom:6px;">&#x1F517; Aggancia bilico esterno (non in lista)</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="number" id="cal-agg-ext-n" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" style="flex:1;height:32px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;padding:0 8px;outline:none;">
+          <input type="number" id="cal-agg-ext-plt" placeholder="Plt..." inputmode="numeric" min="1" autocomplete="off" style="width:70px;height:32px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;padding:0 8px;outline:none;">
+          <button onclick="agganciaEsternoCal()" style="height:32px;padding:0 10px;background:rgba(163,113,247,.15);border:1.5px solid var(--pb);border-radius:var(--rs);color:var(--pb);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">&#x1F517; AGGANCIA</button>
+        </div>
+      </div>
     </div>
     <button class="btn bgh" onclick="chiM('mo-cal')" style="width:100%;margin-top:10px;">&#x2716; Chiudi</button>
   </div>

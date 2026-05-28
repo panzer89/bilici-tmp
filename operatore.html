@@ -195,6 +195,9 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 .bnt{font-size:13px;color:var(--tx2);margin-bottom:8px;}
 .add-prog-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border:none;border-radius:var(--rs);background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;float:right;margin-top:8px;}
 .add-prog-btn:active{opacity:.8;}
+/* livello 1: niente aggiunta bilici alle uscite */
+body[data-lvl="1"] .prog-add{display:none!important;}
+body[data-lvl="1"] .add-prog-btn{display:none!important;}
 
 /* ── TRASFERIMENTO ── */
 .trv{background:var(--bg);border:1.5px solid var(--gn);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;display:none;}
@@ -429,9 +432,18 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
           <div class="prog-add" style="border-color:rgba(31,111,235,.3);">
             <div class="prog-add-row">
               <input type="number" id="prog-domani-inp" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomani()" style="max-width:140px;">
+              <input type="number" id="prog-domani-banc-inp" placeholder="Plt..." min="1" inputmode="numeric" autocomplete="off" style="max-width:72px;" title="Plt previsti (opzionale)">
               <button class="prog-add-btn" onclick="aggProgDomani()" style="background:var(--bl);">+ AGGIUNGI</button>
             </div>
             <input class="prog-nota-inp fi" type="text" id="prog-domani-nota-inp" placeholder="Nota opzionale..." autocomplete="off">
+            <div id="prog-domani-agg-ext-row" style="display:none;margin-top:8px;border-top:1px dashed rgba(163,113,247,.3);padding-top:8px;">
+              <div style="font-size:11px;color:var(--pb);font-weight:700;margin-bottom:6px;">&#x1F517; Aggancia bilico esterno (non in lista)</div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="number" id="prog-domani-agg-ext-n" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" style="flex:1;height:38px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;padding:0 10px;outline:none;">
+                <input type="number" id="prog-domani-agg-ext-plt" placeholder="Plt..." inputmode="numeric" min="1" autocomplete="off" style="width:70px;height:38px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;padding:0 8px;outline:none;">
+                <button onclick="agganciaEsternoDomani()" style="height:38px;padding:0 12px;background:rgba(163,113,247,.15);border:1.5px solid var(--pb);border-radius:var(--rs);color:var(--pb);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">&#x1F517;</button>
+              </div>
+            </div>
           </div>
           <div class="prog-list" id="prog-domani-list">
             <div class="prog-empty">Nessuna uscita programmata per domani</div>
@@ -555,7 +567,8 @@ var pageStack = ['home'];
 var currentCat = 'secco'; // 'secco' o 'fresco'
 var pendConf = null;
 var pendCoppia = null; // {itemA, bilA, itemB, bilB} per uscita coppia agganciata
-var aggancioSel = null; // {docId, numero} — primo item selezionato per l'aggancio
+var aggancioSel = null;  // {docId, numero} — aggancio oggi
+var aggancioSelD = null; // {docId, numero} — aggancio domani
 var qrTargetId = null;
 var magMode = 'b';
 var audioCtx = null;
@@ -783,6 +796,7 @@ function tentaAutoLogin() {
     cercaUtente(s.u, s.p, function(usr) {
       if (!usr) return; // credenziali non valide, lascia il form visibile (già pre-compilato)
       CURR_USER = usr;
+      applicaLivelloOp(usr.livello);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('shell').style.display = 'flex';
       document.getElementById('usr-badge').textContent = usr.username.toUpperCase();
@@ -798,6 +812,7 @@ function doLogin() {
   cercaUtente(u, p, function(usr) {
     if (!usr) { document.getElementById('log-err').textContent = 'Credenziali non valide'; document.getElementById('log-pass').value = ''; return; }
     CURR_USER = usr;
+    applicaLivelloOp(usr.livello);
     if (ric) { try { localStorage.setItem('RICORDA_OP_v1', JSON.stringify({u:u, p:p})); } catch(x) {} }
     else { try { localStorage.removeItem('RICORDA_OP_v1'); } catch(x) {} }
     document.getElementById('login-screen').style.display = 'none';
@@ -824,8 +839,13 @@ function cercaUtente(u, p, cb) {
     cb(found);
   }
 }
+function applicaLivelloOp(lvl) {
+  document.body.setAttribute('data-lvl', String(lvl || 0));
+}
+
 function logout() {
   CURR_USER = null;
+  document.body.removeAttribute('data-lvl');
   try { localStorage.removeItem('RICORDA_OP_v1'); } catch(x) {}
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('shell').style.display = 'none';
@@ -991,13 +1011,16 @@ function aggProg() {
 function aggProgDomani() {
   var val = String(document.getElementById('prog-domani-inp').value || '').trim().toUpperCase();
   var nota = document.getElementById('prog-domani-nota-inp').value.trim();
+  var bancProg = parseInt(document.getElementById('prog-domani-banc-inp').value) || 0;
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   if (PROG_DOMANI.find(function(p) { return p.numero === val; })) { return tst('Bilico ' + val + ' gia in lista', 'er'); }
   var dati = {numero: val, nota: nota, ts: Date.now()};
+  if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) { fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG_DOMANI.push(dati); salvaProgDomani(); renderProgDomani(); }
   document.getElementById('prog-domani-inp').value = '';
   document.getElementById('prog-domani-nota-inp').value = '';
+  document.getElementById('prog-domani-banc-inp').value = '';
   suonoSirena();
   tst('Bilico ' + val + ' aggiunto alle uscite di domani', 'ok');
 }
@@ -1096,25 +1119,67 @@ function renderProgDomani() {
   if (!el || !badge) return;
   badge.textContent = PROG_DOMANI.length;
   if (!PROG_DOMANI.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per domani</div>'; return; }
-  el.innerHTML = PROG_DOMANI.map(function(p) {
+  var rAgg = {}, rows = [];
+  for (var i = 0; i < PROG_DOMANI.length; i++) {
+    var p = PROG_DOMANI[i];
+    if (p.aggancioId && rAgg[p.aggancioId]) { continue; }
     var b = BL[p.numero];
     var inMag = !!b;
-    var s = '<div class="prog-item">';
-    s += '<div class="prog-num"><span>#</span>' + p.numero + '</div>';
-    s += '<div class="prog-info">';
-    if (inMag) {
-      s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
-      s += '<div class="prog-ban">&#x1F4E6; ' + b.bancali + ' bancali</div>';
-    } else {
-      s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>';
+    var docId = p.id || '';
+    var isSelected = aggancioSelD !== null && aggancioSelD.docId === docId && docId !== '';
+    var partner = null, bilB = null;
+    if (p.aggancioId) {
+      partner = PROG_DOMANI.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
+      if (partner) { rAgg[p.aggancioId] = true; bilB = BL[partner.numero]; }
     }
-    if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
+    var isPaired = !!partner;
+    var borderSt = isPaired ? 'border-left:3px solid var(--pb);' : (isSelected ? 'border-left:3px solid var(--cb);' : '');
+    var s = '<div class="prog-item" style="' + borderSt + '">';
+    s += '<div class="prog-num">';
+    if (isPaired) {
+      s += '<span>#</span>' + p.numero;
+      s += '<div style="color:var(--pb);font-size:15px;font-weight:900;margin:3px 0;line-height:1;">&#x1F517;</div>';
+      s += '<div style="font-size:14px;font-weight:900;color:var(--pb);">#' + partner.numero + '</div>';
+    } else { s += '<span>#</span>' + p.numero; }
+    s += '</div>';
+    s += '<div class="prog-info">';
+    if (isPaired) {
+      if (inMag) {
+        var bndA = (p.bancaliProg && p.bancaliProg < b.bancali) ? p.bancaliProg + ' / ' + b.bancali : b.bancali;
+        s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
+        s += '<div class="prog-ban">&#x1F4E6; ' + bndA + ' bancali</div>';
+      } else { s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>'; }
+      if (p.nota) s += '<div class="prog-note-txt">' + p.nota + '</div>';
+      s += '<div style="border-top:1px dashed rgba(163,113,247,.4);margin:5px 0;"></div>';
+      if (bilB) {
+        var bndB = (partner.bancaliProg && partner.bancaliProg < bilB.bancali) ? partner.bancaliProg + ' / ' + bilB.bancali : bilB.bancali;
+        s += '<div class="prog-loc" style="color:var(--pb);">&#x1F4CD; ' + bilB.locazione + '</div>';
+        s += '<div class="prog-ban" style="color:var(--pb);">&#x1F4E6; ' + bndB + ' bancali</div>';
+      } else { s += '<div style="font-size:12px;color:var(--pb);">Non in magazzino</div>'; }
+      if (partner.nota) s += '<div class="prog-note-txt" style="border-color:var(--pb);color:var(--pb);">' + partner.nota + '</div>';
+    } else {
+      if (inMag) {
+        var banDisp = (p.bancaliProg && p.bancaliProg < b.bancali) ? p.bancaliProg + ' / ' + b.bancali : b.bancali;
+        s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
+        s += '<div class="prog-ban">&#x1F4E6; ' + banDisp + ' bancali</div>';
+      } else { s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>'; }
+      if (p.nota) s += '<div class="prog-note-txt">' + p.nota + '</div>';
+      if (isSelected) s += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato — tocca &#x1F517; su un altro bilico o usa il campo sotto</div>';
+    }
     s += '</div>';
     s += '<div class="prog-actions">';
-    s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProgDomani(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
+    if (isPaired) {
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProgDomani(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--pb);border-radius:var(--rs);color:var(--pb);cursor:pointer;font-size:14px;" title="Sgancia" onclick="sganciaProgDomani(\'' + docId + '\')">&#x2702;</button>';
+    } else {
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProgDomani(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
+      var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggancioSelD !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);cursor:pointer;font-size:14px;' + aggSt + '" title="Aggancia" onclick="startAggancioDomani(\'' + docId + '\',\'' + p.numero + '\')">&#x1F517;</button>';
+    }
     s += '</div></div>';
-    return s;
-  }).join('');
+    rows.push(s);
+  }
+  el.innerHTML = rows.join('');
 }
 
 // Uscita coppia agganciata
@@ -1222,6 +1287,91 @@ function agganciaEsterno() {
   tst('Bilico #' + num + ' (' + plt + ' plt) agganciato a #' + numero1 + '!', 'ok');
 }
 
+// ═══ AGGANCIO DOMANI ═══
+function startAggancioDomani(docId, numero) {
+  if (!docId) { tst('Funzione disponibile solo con connessione cloud', 'er'); return; }
+  if (aggancioSelD && aggancioSelD.docId === docId) {
+    aggancioSelD = null;
+    var extR = document.getElementById('prog-domani-agg-ext-row');
+    if (extR) { extR.style.display = 'none'; document.getElementById('prog-domani-agg-ext-n').value = ''; document.getElementById('prog-domani-agg-ext-plt').value = ''; }
+    renderProgDomani(); tst('Selezione annullata', 'ok'); return;
+  }
+  var target = PROG_DOMANI.find(function(p){ return p.id === docId; });
+  if (target && target.aggancioId) { tst('Bilico #' + numero + ' è già agganciato', 'er'); return; }
+  if (aggancioSelD === null) {
+    aggancioSelD = {docId: docId, numero: numero};
+    var extR2 = document.getElementById('prog-domani-agg-ext-row');
+    if (extR2) extR2.style.display = 'block';
+    renderProgDomani();
+    tst('Bilico #' + numero + ' selezionato — tocca 🔗 su un altro o usa il campo sotto', 'ok');
+  } else {
+    var selItem = PROG_DOMANI.find(function(p){ return p.id === aggancioSelD.docId; });
+    if (!selItem) { aggancioSelD = null; var extR3=document.getElementById('prog-domani-agg-ext-row'); if(extR3)extR3.style.display='none'; tst('Bilico non più disponibile', 'er'); renderProgDomani(); return; }
+    if (selItem.aggancioId) { tst('Bilico #' + aggancioSelD.numero + ' è già agganciato', 'er'); aggancioSelD = null; renderProgDomani(); return; }
+    completaAggancioDomani(docId, numero);
+  }
+}
+function completaAggancioDomani(docId2, numero2) {
+  var aggId = 'AG' + Date.now();
+  var docId1 = aggancioSelD.docId, numero1 = aggancioSelD.numero;
+  aggancioSelD = null;
+  var extR = document.getElementById('prog-domani-agg-ext-row');
+  if (extR) extR.style.display = 'none';
+  if (UC && fdb) {
+    fdb.collection('prog_domani').doc(docId1).update({aggancioId: aggId}).catch(function(){});
+    fdb.collection('prog_domani').doc(docId2).update({aggancioId: aggId}).catch(function(){});
+  } else {
+    var p1 = PROG_DOMANI.find(function(p){return p.id===docId1;}); var p2 = PROG_DOMANI.find(function(p){return p.id===docId2;});
+    if (p1) p1.aggancioId = aggId; if (p2) p2.aggancioId = aggId;
+    salvaProgDomani(); renderProgDomani();
+  }
+  tst('Bilici #' + numero1 + ' e #' + numero2 + ' agganciati!', 'ok');
+}
+function agganciaEsternoDomani() {
+  if (!aggancioSelD) { return tst('Nessun bilico selezionato per l\'aggancio', 'er'); }
+  var num = String(document.getElementById('prog-domani-agg-ext-n').value || '').trim().toUpperCase();
+  var plt = parseInt(document.getElementById('prog-domani-agg-ext-plt').value) || 0;
+  if (!num) { return tst('Inserisci il numero bilico', 'er'); }
+  if (plt <= 0) { return tst('Inserisci i plt da caricare', 'er'); }
+  var b = BL[num];
+  if (!b) { return tst('Bilico #' + num + ' non trovato in magazzino', 'er'); }
+  if (plt > b.bancali) { return tst('Plt (' + plt + ') superano i disponibili (' + b.bancali + ')', 'er'); }
+  var giaProg = PROG_DOMANI.find(function(p){ return p.numero === num; });
+  if (giaProg) { return tst('Bilico #' + num + ' è già in lista — usa &#x1F517; direttamente', 'er'); }
+  var aggId = 'AG' + Date.now();
+  var docId1 = aggancioSelD.docId, numero1 = aggancioSelD.numero;
+  aggancioSelD = null;
+  var extR = document.getElementById('prog-domani-agg-ext-row');
+  if (extR) { extR.style.display = 'none'; document.getElementById('prog-domani-agg-ext-n').value = ''; document.getElementById('prog-domani-agg-ext-plt').value = ''; }
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  if (UC && fdb) {
+    fdb.collection('prog_domani').add(dati).then(function(){
+      fdb.collection('prog_domani').doc(docId1).update({aggancioId: aggId}).catch(function(){});
+    }).catch(function(e){ tst('Errore: ' + e.message, 'er'); });
+  } else {
+    dati.id = 'local_' + Date.now();
+    PROG_DOMANI.push(dati);
+    var p1 = PROG_DOMANI.find(function(p){return p.id===docId1;});
+    if (p1) p1.aggancioId = aggId;
+    salvaProgDomani(); renderProgDomani();
+  }
+  tst('Bilico #' + num + ' (' + plt + ' plt) agganciato a #' + numero1 + '!', 'ok');
+}
+function sganciaProgDomani(docId) {
+  if (!docId) return;
+  var item = PROG_DOMANI.find(function(p){return p.id===docId;});
+  if (!item || !item.aggancioId) return;
+  var partner = PROG_DOMANI.find(function(p){return p.aggancioId===item.aggancioId && p.id!==docId;});
+  if (UC && fdb) {
+    fdb.collection('prog_domani').doc(docId).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+    if (partner && partner.id) fdb.collection('prog_domani').doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+  } else {
+    delete item.aggancioId; if (partner) delete partner.aggancioId;
+    salvaProgDomani(); renderProgDomani();
+  }
+  tst('Aggancio sciolto', 'ok');
+}
+
 // Carica veloce dalla lista uscite (apre modal conferma uscita con bancali)
 var pendCarica = null;
 function caricaVeloce(num) {
@@ -1320,7 +1470,6 @@ function trovaBilicoTransfer() {
   } else {
     trv.style.display = 'none';
     destBox.style.display = 'none';
-    if (num.length >= 2) tst('Bilico ' + num + ' non trovato', 'er');
   }
 }
 function confTransfer() {

@@ -835,6 +835,17 @@ window.onload = function() {
       renderProgDomani();
       controllaGiorno();
     });
+    fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(snap) {
+      CAL_DATA = {};
+      snap.forEach(function(doc) {
+        var item = Object.assign({id: doc.id}, doc.data());
+        if (!item.data) return;
+        if (!CAL_DATA[item.data]) CAL_DATA[item.data] = [];
+        CAL_DATA[item.data].push(item);
+      });
+      var cur = pageStack[pageStack.length - 1];
+      if (cur === 'magazzino') renderMagAll();
+    });
     setTimeout(controllaGiorno, 2000);
   } catch(e) {
     tentaAutoLogin();

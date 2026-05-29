@@ -278,7 +278,8 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'Barlow',
 .cal-mi-del{background:none;border:1px solid var(--rd);color:var(--rb);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;}
 
 /* ── STORICO SIDEBAR BUTTON ── */
-.sb-item-stor{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:none;border:none;color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;border-radius:var(--rs);transition:background .12s,color .12s;text-align:left;}
+.sb-item-stor{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;background:none;border:none;color:var(--tx2);font-size:13px;font-weight:500;cursor:pointer;border-radius:var(--rs);transition:background .12s,color .12s;text-align:left;}
+.sb-item-stor svg{width:17px;height:17px;flex-shrink:0;}
 .sb-item-stor:hover{background:var(--sf2);color:var(--tx);}
 /* ── IMPOSTAZIONI ── */
 .sb-settings-btn{background:none;border:none;color:var(--tx2);cursor:pointer;padding:6px;border-radius:var(--rs);font-size:18px;transition:color .12s;line-height:1;}
@@ -376,7 +377,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
       <button class="sb-item" id="tbu" onclick="goP('uscita')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 16 12 8"/><polyline points="8 12 12 16 16 12"/></svg>Uscita / Carico</button>
       <div class="sb-sect">MAGAZZINO</div>
       <button class="sb-item" id="tbm" onclick="goP('magazzino')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Magazzino<span class="sb-badge" id="sb-mag-badge">0</span></button>
-      <button class="sb-item" id="tbc" onclick="goP('cerca')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Cerca</button>
+
       <div class="sb-sect" id="sb-sect-pianif">PIANIFICAZIONE</div>
       <button class="sb-item" id="tbprog" onclick="goP('programmazione')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Programmazione<span class="sb-badge bl" id="sb-prog-badge">0</span></button>
       <div class="sb-sect">STRUMENTI</div>
@@ -475,21 +476,16 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 
       <!-- MAGAZZINO -->
       <div class="page" id="page-magazzino">
-        <div class="stl">Bilici presenti (<span id="mag-count">0</span>)</div>
-        <div class="blst" id="lst-magazzino"><div class="emp"><div class="ic">&#x1F69B;</div><p>Nessun bilico</p></div></div>
-      </div>
-
-      <!-- CERCA -->
-      <div class="page" id="page-cerca">
-        <div class="two-col">
-          <div><div class="card"><div class="card-t" style="color:var(--bb);">Cerca</div>
-            <div class="swp"><span class="sic">&#x1F50D;</span><input class="fi" id="s-in" type="text" placeholder="Numero bilico o locazione..." autocomplete="off" oninput="cerca()"></div>
-            <div class="btn-row" style="margin-bottom:8px;"><button class="btn bbl" style="padding:7px 12px;font-size:12px;" onclick="setSM('b')">&#x1F69B; Per Bilico</button><button class="btn bpu" style="padding:7px 12px;font-size:12px;" onclick="setSM('l')">&#x1F4CD; Per Locazione</button></div>
-            <div id="smlbl" style="font-size:12px;color:var(--tx2);margin-bottom:10px;">Modalita: <strong style="color:var(--bb)">Bilico</strong></div>
-            <div id="s-res"></div>
-          </div></div>
-          <div><div class="stl">Tutte le Locazioni</div><div id="loc-lst"><div class="emp"><div class="ic">&#x1F4CD;</div><p>Nessuna locazione</p></div></div></div>
+        <div class="card" style="padding:14px;margin-bottom:14px;position:sticky;top:0;z-index:10;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div class="swp" style="flex:1;margin:0;"><span class="sic">&#x1F50D;</span><input class="fi" id="s-in" type="text" placeholder="Cerca per numero o locazione..." autocomplete="off" oninput="cerca()" style="margin:0;"></div>
+            <button class="btn bbl" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="setSM('b')">&#x1F69B; Bilico</button>
+            <button class="btn bpu" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="setSM('l')">&#x1F4CD; Locazione</button>
+            <button class="btn bgh" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="document.getElementById('s-in').value='';cerca();">&#x21BA; Reset</button>
+          </div>
+          <div id="smlbl" style="font-size:12px;color:var(--tx2);">Modalita: <strong style="color:var(--bb)">Bilico</strong> &nbsp;—&nbsp; <span id="mag-count">0</span> bilici presenti</div>
         </div>
+        <div class="blst" id="s-res"><div class="emp"><div class="ic">&#x1F69B;</div><p>Nessun bilico</p></div></div>
       </div>
 
       <!-- PROGRAMMAZIONE -->
@@ -524,11 +520,12 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
                 <input class="stor-fi" id="to-fn" type="text" placeholder="es. 839" oninput="renderTuttiOrdini()">
               </div>
               <div>
-                <div class="stor-fi-label">Data</div>
+                <div class="stor-fi-label">Data Carico</div>
                 <input class="stor-fi" id="to-fd" type="date" oninput="renderTuttiOrdini()">
               </div>
-              <div style="display:flex;align-items:flex-end;">
+              <div style="display:flex;align-items:flex-end;gap:6px;">
                 <button onclick="document.getElementById('to-fn').value='';document.getElementById('to-fd').value='';renderTuttiOrdini();" style="height:32px;padding:0 10px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);font-size:11px;cursor:pointer;">&#x21BA; Reset</button>
+                <button onclick="expOrdini()" style="height:32px;padding:0 11px;background:var(--gn);border:none;border-radius:var(--rs);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">&#x1F4E5; Excel</button>
               </div>
             </div>
             <div id="tutti-ordini-list" style="overflow-x:auto;max-height:340px;overflow-y:auto;"></div>
@@ -544,7 +541,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
                 <div class="prog-chevron open" id="pc2">&#x2304;</div>
               </div>
               <div class="prog-body open" id="pb2">
-                <div class="prog-add"><div class="prog-add-row"><input type="number" id="prog-inp2" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgFromInput('prog-inp2','prog-nota-inp2')" style="max-width:110px;"><button onclick="aggProgFromInput('prog-inp2','prog-nota-inp2')" style="height:34px;padding:0 10px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button></div><input class="prog-nota-inp" type="text" id="prog-nota-inp2" placeholder="Nota opzionale..." autocomplete="off"></div>
+                <div class="prog-add"><div class="prog-add-row"><input type="number" id="prog-inp2" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgFromInput('prog-inp2','prog-banc-inp2','prog-nota-inp2')" style="max-width:110px;"><input type="number" id="prog-banc-inp2" placeholder="Plt..." min="1" inputmode="numeric" autocomplete="off" style="max-width:72px;" title="Plt previsti (opzionale)"><button onclick="aggProgFromInput('prog-inp2','prog-banc-inp2','prog-nota-inp2')" style="height:34px;padding:0 10px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button></div><input class="prog-nota-inp" type="text" id="prog-nota-inp2" placeholder="Nota opzionale..." autocomplete="off"></div>
                 <div class="prog-list" id="prog-list2"><div class="prog-empty">Nessuna uscita programmata</div></div>
               </div>
             </div>
@@ -556,7 +553,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
                 <div class="prog-chevron open" id="pc-dom2">&#x2304;</div>
               </div>
               <div class="prog-body-b open" id="pb-dom2">
-                <div class="prog-add" style="border-color:rgba(31,111,235,.2);"><div class="prog-add-row"><input type="number" id="prog-domani-inp2" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomaniFromInput('prog-domani-inp2','prog-domani-nota-inp2')" style="max-width:110px;"><button onclick="aggProgDomaniFromInput('prog-domani-inp2','prog-domani-nota-inp2')" style="height:34px;padding:0 10px;background:var(--bl);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button></div><input class="prog-nota-inp" type="text" id="prog-domani-nota-inp2" placeholder="Nota opzionale..." autocomplete="off" style="border-color:var(--bd);"></div>
+                <div class="prog-add" style="border-color:rgba(31,111,235,.2);"><div class="prog-add-row"><input type="number" id="prog-domani-inp2" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomaniFromInput('prog-domani-inp2','prog-domani-banc-inp2','prog-domani-nota-inp2')" style="max-width:110px;"><input type="number" id="prog-domani-banc-inp2" placeholder="Plt..." min="1" inputmode="numeric" autocomplete="off" style="max-width:72px;" title="Plt previsti (opzionale)"><button onclick="aggProgDomaniFromInput('prog-domani-inp2','prog-domani-banc-inp2','prog-domani-nota-inp2')" style="height:34px;padding:0 10px;background:var(--bl);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+ AGGIUNGI</button></div><input class="prog-nota-inp" type="text" id="prog-domani-nota-inp2" placeholder="Nota opzionale..." autocomplete="off" style="border-color:var(--bd);"></div>
                 <div class="prog-list" id="prog-domani-list2"><div class="prog-empty">Nessuna uscita programmata</div></div>
               </div>
             </div>
@@ -582,7 +579,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 <!-- MODAL IMPORTA -->
 <div class="mo" id="mo-imp"><div class="mdl wide"><div class="mha"></div><div class="mtt cy">&#x1F4E5; Importa da Excel</div><div class="imp-info"><strong style="color:var(--cb)">Colonne:</strong><div class="col-hdr"><div class="col-tag">NUMERO</div><div class="col-tag">LOCAZIONE</div><div class="col-tag">BANCALI</div><div class="col-tag">NOTE</div><div class="col-tag">DATA</div></div></div><div class="imp-note">&#x2139;&#xFE0F; DATA opzionale. BANCHINA, SMEZZI, FRESCO illimitate.</div><div style="margin-bottom:8px;"><button class="btn bgh" style="padding:6px 10px;font-size:12px;" onclick="scaricaTemplate()">&#x1F4CB; TEMPLATE</button></div><div class="fg"><div class="fl">File Excel</div><input type="file" id="imp-file" accept=".xlsx,.xls" style="background:var(--bg);border:1.5px solid var(--cy);border-radius:var(--rs);color:var(--tx);padding:8px;width:100%;font-size:13px;"></div><div id="imp-preview" style="display:none;margin-bottom:12px;"><div class="fl" style="margin-bottom:5px;">Anteprima:</div><div id="imp-preview-content" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:10px;font-size:12px;max-height:150px;overflow-y:auto;"></div></div><div id="imp-err" style="display:none;background:rgba(218,54,51,.1);border:1px solid var(--rd);border-radius:var(--rs);padding:8px 12px;color:var(--rb);font-size:12px;margin-bottom:10px;"></div><div class="btn-row"><button class="btn bcy" id="imp-btn" onclick="eseguiImport()" style="display:none;">&#x1F4E5; IMPORTA</button><button class="btn bgh" onclick="chiM('mo-imp')">&#x2716; Chiudi</button></div></div></div>
 <!-- MODAL MODIFICA ORDINE PROGRAMMAZIONE -->
-<div class="mo" id="mo-ordine"><div class="mdl" style="max-width:340px;"><div class="mha"></div><div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Ordine</div><div style="font-size:13px;color:var(--tx2);margin-bottom:12px;">Bilico <strong id="mo-ord-num" style="color:var(--bb);font-size:15px;"></strong></div><div class="edit-field"><div class="edit-label">Data</div><input class="edit-inp" id="mo-ord-data" type="date"></div><div class="edit-field"><div class="edit-label">Nota</div><input class="edit-inp" id="mo-ord-nota" type="text" placeholder="Nota opzionale..." autocomplete="off"></div><div class="btn-row" style="margin-top:10px;"><button class="btn bgn" onclick="salvaOrdine()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-ordine')">&#x2716; Annulla</button></div></div></div>
+<div class="mo" id="mo-ordine"><div class="mdl" style="max-width:340px;"><div class="mha"></div><div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Ordine</div><div style="font-size:13px;color:var(--tx2);margin-bottom:12px;">Bilico <strong id="mo-ord-num" style="color:var(--bb);font-size:15px;"></strong></div><div class="edit-field"><div class="edit-label">Data</div><input class="edit-inp" id="mo-ord-data" type="date"></div><div class="edit-field"><div class="edit-label">PLT pianificati</div><div class="crow"><button class="cbt" onclick="stp('mo-ord-plt',-1)">&#x2212;</button><input class="cvl" id="mo-ord-plt" type="number" min="0" inputmode="numeric" placeholder="0"><button class="cbt" onclick="stp('mo-ord-plt',1)">+</button></div></div><div class="edit-field"><div class="edit-label">Nota</div><input class="edit-inp" id="mo-ord-nota" type="text" placeholder="Nota opzionale..." autocomplete="off"></div><div class="btn-row" style="margin-top:10px;"><button class="btn bgn" onclick="salvaOrdine()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-ordine')">&#x2716; Annulla</button></div></div></div>
 
 <!-- MODAL TRASFERISCI (da cerca) -->
 <div class="mo" id="mo-trasf"><div class="mdl" style="max-width:340px;"><div class="mha"></div><div class="mtt" style="color:var(--cy);">&#x1F69B; Trasferisci Bilico</div><div style="font-size:13px;color:var(--tx2);margin-bottom:14px;">Bilico <strong id="mo-trasf-num" style="color:var(--cy);font-size:16px;"></strong><br><span style="font-size:12px;">Locazione attuale: <strong id="mo-trasf-loc-da" style="color:var(--tx);"></strong></span></div><div class="edit-field"><div class="edit-label">Nuova Locazione</div><div class="loc-wrap"><input class="edit-inp" id="trasf-loc" type="text" autocomplete="off" style="text-transform:uppercase;flex:1;border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;" placeholder="es. A1, BANCHINA..." oninput="this.value=this.value.toUpperCase()"><button class="qr-btn" onclick="apriQR('trasf-loc')">&#x1F4F7;</button></div></div><div class="btn-row" style="margin-top:12px;"><button class="btn bcy" onclick="confermaTrasferisci()">&#x1F4CD; TRASFERISCI</button><button class="btn bgh" onclick="chiM('mo-trasf')">&#x2716; Annulla</button></div></div></div>
@@ -615,7 +612,7 @@ function goP(n) {
   document.querySelectorAll('.sb-item').forEach(function(t) { t.classList.remove('active'); });
   var page = document.getElementById('page-' + n);
   if (page) { page.classList.add('active'); }
-  var mp = {home:'tbh', entrata:'tbe', uscita:'tbu', magazzino:'tbm', cerca:'tbc', programmazione:'tbprog', storico:'tbstor'};
+  var mp = {home:'tbh', entrata:'tbe', uscita:'tbu', magazzino:'tbm', programmazione:'tbprog', storico:'tbstor'};
   if (mp[n]) { var tb = document.getElementById(mp[n]); if (tb) { tb.classList.add('active'); } }
   if (n==='programmazione') { setTimeout(function(){renderCalendario();},80); }
   if (n==='storico') {
@@ -632,7 +629,7 @@ function goP(n) {
     if(sfTipo)sfTipo.value='';
     filtraStorico();
   }
-  var titles = {home:'Dashboard', entrata:'Entrata Bilico', uscita:'Uscita / Carico', magazzino:'Magazzino', cerca:'Cerca', programmazione:'Programmazione Uscite', storico:'Storico Movimenti'};
+  var titles = {home:'Dashboard', entrata:'Entrata Bilico', uscita:'Uscita / Carico', magazzino:'Magazzino', programmazione:'Programmazione Uscite', storico:'Storico Movimenti'};
   var tt = document.getElementById('topbar-title');
   if (tt) { tt.textContent = titles[n] || n; }
   aggiornaTopbarAzioni();
@@ -732,48 +729,67 @@ function eliminaBilico(num) {
   chiPin('elimBilico', num);
 }
 
+function contaOrdiniUnivoci(arr) {
+  var visti = {}, n = 0;
+  (arr||[]).forEach(function(p){ if(p.aggancioId){if(!visti[p.aggancioId]){visti[p.aggancioId]=true;n++;}}else{n++;} });
+  return n;
+}
+
 function renderProg() {
   var el = document.getElementById('prog-list');
   var badge = document.getElementById('prog-count');
   if (!el || !badge) { return; }
-  badge.textContent = PROG ? PROG.length : 0;
+  var cO = contaOrdiniUnivoci(PROG);
+  badge.textContent = cO;
   var sb = document.getElementById('sb-prog-badge');
-  if (sb) { sb.textContent = (PROG ? PROG.length : 0) + (PROG_DOMANI ? PROG_DOMANI.length : 0); }
+  if (sb) { sb.textContent = cO + contaOrdiniUnivoci(PROG_DOMANI); }
   if (!PROG || !PROG.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata</div>'; }
   else { var rAgg = {}; el.innerHTML = PROG.map(function(p) { return buildProgItem(p, false, rAgg); }).join(''); }
   var p2 = document.getElementById('prog-list2');
   var b2 = document.getElementById('prog-count2');
   if (p2) { p2.innerHTML = el.innerHTML; }
-  if (b2) { b2.textContent = PROG ? PROG.length : 0; }
+  if (b2) { b2.textContent = cO; }
 }
 
 function renderProgDomani() {
   var el = document.getElementById('prog-domani-list');
   var badge = document.getElementById('prog-domani-count');
   if (!el || !badge) { return; }
-  badge.textContent = PROG_DOMANI ? PROG_DOMANI.length : 0;
+  var cD = contaOrdiniUnivoci(PROG_DOMANI);
+  badge.textContent = cD;
   if (!PROG_DOMANI || !PROG_DOMANI.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata</div>'; }
   else { var rAggD = {}; el.innerHTML = PROG_DOMANI.map(function(p) { return buildProgItem(p, true, rAggD); }).join(''); }
   var p2 = document.getElementById('prog-domani-list2');
   var b2 = document.getElementById('prog-domani-count2');
   if (p2) { p2.innerHTML = el.innerHTML; }
-  if (b2) { b2.textContent = PROG_DOMANI ? PROG_DOMANI.length : 0; }
+  if (b2) { b2.textContent = cD; }
   var sb = document.getElementById('sb-prog-badge');
-  if (sb) { sb.textContent = (PROG ? PROG.length : 0) + (PROG_DOMANI ? PROG_DOMANI.length : 0); }
+  if (sb) { sb.textContent = contaOrdiniUnivoci(PROG) + cD; }
 }
 
 // ═══ TUTTI GLI ORDINI ═══
 function getAllOrdini() {
   var oggiD = new Date(); oggiD.setHours(0,0,0,0);
   var domaniD = new Date(oggiD.getTime() + 86400000);
-  var oggiStr = oggiD.toISOString().slice(0,10);
-  var domaniStr = domaniD.toISOString().slice(0,10);
+  var oggiStr = datLocale(oggiD);
+  var domaniStr = datLocale(domaniD);
   var lista = [];
-  (PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',data:oggiStr,fonte:'prog'});});
-  (PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',data:domaniStr,fonte:'prog_domani'});});
-  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',data:dt,fonte:'prog_calendario'});});});
+  (PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||oggiStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog'});});
+  (PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||domaniStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_domani'});});
+  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:dt,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_calendario'});});});
   lista.sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:(a.numero||0)-(b.numero||0);});
-  return lista;
+  // Merge coppie agganciate (stesso aggancioId) → un solo item con .partner
+  var seenAgg = {};
+  var merged = [];
+  lista.forEach(function(p) {
+    if (p.aggancioId) {
+      if (seenAgg[p.aggancioId]) return;
+      var partner = lista.find(function(x){ return x.aggancioId===p.aggancioId && x.id!==p.id; });
+      if (partner) { seenAgg[p.aggancioId]=true; merged.push(Object.assign({},p,{partner:partner})); return; }
+    }
+    merged.push(p);
+  });
+  return merged;
 }
 function aggTuttiOrdini() {
   var c = document.getElementById('tutti-ordini-count');
@@ -804,12 +820,21 @@ function renderTuttiOrdini() {
   html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Bilico</th>';
   html+='<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">PLT</th>';
   html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Nota</th>';
-  html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Data</th>';
+  html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Data Carico</th>';
+  html+='<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Data Creazione</th>';
   html+='<th style="padding:5px 8px;border-bottom:1px solid var(--bd);"></th>';
   html+='</tr></thead><tbody>';
   lista.forEach(function(p){
     var b=BL[p.numero];
-    var plt=b&&b.bancali!=null?b.bancali:'–';
+    var plt;
+    if(p.partner){
+      var bB=BL[p.partner.numero];
+      var pltA=p.bancaliProg||(b&&b.bancali!=null?b.bancali:0);
+      var pltB=p.partner.bancaliProg||(bB&&bB.bancali!=null?bB.bancali:0);
+      plt='<span style="color:var(--ob);font-weight:700;">'+(pltA+pltB)+'</span> <span style="color:var(--tx3);font-size:11px;">('+pltA+'+'+pltB+')</span>';
+    } else if(p.bancaliProg){
+      plt='<span style="color:var(--ob);font-weight:700;">'+p.bancaliProg+'</span>'+(b&&b.bancali!=null?' <span style="color:var(--tx3);font-size:11px;">/ '+b.bancali+'</span>':'');
+    } else {plt=(b&&b.bancali!=null)?b.bancali:'–';}
     var df=p.data?p.data.split('-').reverse().join('/'):'–';
     var badge=p.fonte==='prog'?'<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(218,54,51,.15);color:var(--rb);margin-left:4px;">Oggi</span>'
       :p.fonte==='prog_domani'?'<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(31,111,235,.15);color:var(--bb);margin-left:4px;">Domani</span>'
@@ -818,63 +843,79 @@ function renderTuttiOrdini() {
     var notaQ="'"+(p.nota||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"'";
     var fonteQ="'"+p.fonte+"'";
     html+='<tr style="border-bottom:1px solid rgba(48,54,61,.4);">';
-    html+='<td style="padding:6px 8px;white-space:nowrap;"><strong style="color:var(--bb);">#'+p.numero+'</strong>'+badge+'</td>';
+    var opTagTbl=p.operatore?'<span class="op-tag" style="margin-left:4px;font-size:9px;">&#x1F464; '+p.operatore+'</span>':'';
+    var numCell=p.partner
+      ?'<strong style="color:var(--bb);">#'+p.numero+'</strong> <span style="color:var(--pb);font-size:12px;">&#x1F517;</span> <strong style="color:var(--pb);">#'+p.partner.numero+'</strong>'
+      :'<strong style="color:var(--bb);">#'+p.numero+'</strong>';
+    html+='<td style="padding:6px 8px;white-space:nowrap;">'+numCell+badge+opTagTbl+'</td>';
     html+='<td style="padding:6px 8px;text-align:center;color:var(--tx);">'+plt+'</td>';
-    html+='<td style="padding:6px 8px;color:var(--tx2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(p.nota||'–')+'</td>';
+    var notaDisp = p.nota || (b&&b.note?b.note:'');
+    html+='<td style="padding:6px 8px;color:var(--tx2);">'+(notaDisp||'–')+'</td>';
     html+='<td style="padding:6px 8px;color:var(--tx2);white-space:nowrap;">'+df+'</td>';
+    var crea = p.ts ? fmtT(p.ts) : '<span style="color:var(--tx3);">—</span>';
+    html+='<td style="padding:6px 8px;color:var(--tx3);white-space:nowrap;font-size:11px;">'+crea+'</td>';
     html+='<td style="padding:6px 8px;white-space:nowrap;text-align:right;">';
-    html+='<button onclick="modificaOrdine('+fonteQ+','+idQ+','+p.numero+','+notaQ+',\''+p.data+'\')" style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--bb);padding:3px 8px;font-size:12px;cursor:pointer;margin-right:4px;">&#x270F;&#xFE0F;</button>';
-    html+='<button onclick="eliminaOrdine('+fonteQ+','+idQ+','+p.numero+')" style="background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 8px;font-size:12px;cursor:pointer;">&#x2715;</button>';
+    var btnEdit='background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--bb);padding:3px 8px;font-size:12px;cursor:pointer;margin-right:3px;';
+    var btnDel='background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 8px;font-size:12px;cursor:pointer;';
+    html+='<button onclick="modificaOrdine('+fonteQ+','+idQ+','+p.numero+','+notaQ+',\''+p.data+'\',' +(p.bancaliProg||0)+')" title="#'+p.numero+'" style="'+btnEdit+'">&#x270F;&#xFE0F;</button>';
+    if(p.partner){
+      var idQB="'"+(p.partner.id||'')+"'";
+      var notaQB="'"+(p.partner.nota||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"'";
+      var fonteQB="'"+p.partner.fonte+"'";
+      var dataB=p.partner.data||p.data;
+      html+='<button onclick="modificaOrdine('+fonteQB+','+idQB+','+p.partner.numero+','+notaQB+',\''+dataB+'\',' +(p.partner.bancaliProg||0)+')" title="#'+p.partner.numero+'" style="'+btnEdit+'color:var(--pb);">&#x270F;&#xFE0F;</button>';
+      html+='<button onclick="eliminaOrdineCoppia('+fonteQ+','+idQ+','+fonteQB+','+idQB+','+p.numero+','+p.partner.numero+')" style="'+btnDel+'">&#x2715;</button>';
+    } else {
+      html+='<button onclick="eliminaOrdine('+fonteQ+','+idQ+','+p.numero+')" style="'+btnDel+'">&#x2715;</button>';
+    }
     html+='</td></tr>';
   });
   html+='</tbody></table>';
   el.innerHTML=html;
 }
 var _editOrdine = null;
-function modificaOrdine(fonte,id,numero,notaAttuale,dataAttuale){
+function modificaOrdine(fonte,id,numero,notaAttuale,dataAttuale,bancaliProgAttuale){
   _editOrdine = {fonte:fonte, id:id, numero:numero};
   document.getElementById('mo-ord-num').textContent = '#'+numero;
   document.getElementById('mo-ord-data').value = dataAttuale || '';
   document.getElementById('mo-ord-nota').value = notaAttuale || '';
+  document.getElementById('mo-ord-plt').value = bancaliProgAttuale || 0;
   document.getElementById('mo-ordine').classList.add('open');
 }
 function salvaOrdine(){
   if(!_editOrdine) return;
   var nuovaData = document.getElementById('mo-ord-data').value;
   var nuovaNota = document.getElementById('mo-ord-nota').value.trim();
+  var nuovoPlt = parseInt(document.getElementById('mo-ord-plt').value) || 0;
   if(!nuovaData){ tst('Inserisci una data','er'); return; }
-  var oggiD=new Date(); oggiD.setHours(0,0,0,0);
-  var domaniD=new Date(oggiD.getTime()+86400000);
-  var oggiStr=oggiD.toISOString().slice(0,10);
-  var domaniStr=domaniD.toISOString().slice(0,10);
-  var nuovaFonte = nuovaData===oggiStr?'prog':nuovaData===domaniStr?'prog_domani':'prog_calendario';
-  var vecchiaFonte=_editOrdine.fonte, id=_editOrdine.id, numero=_editOrdine.numero;
-  var stessoGiorno = nuovaFonte===vecchiaFonte && !(vecchiaFonte==='prog_calendario');
+  var vecchiaFonte=_editOrdine.fonte, id=_editOrdine.id;
+  // Aggiorna sempre sul posto (stessa collection) — la data carico è solo un'etichetta,
+  // non ridistribuisce l'ordine tra i bucket oggi/domani/calendario
+  var upd={nota:nuovaNota, data:nuovaData, bancaliProg:nuovoPlt>0?nuovoPlt:0};
   if(UC&&fdb){
-    if(stessoGiorno){
-      // stessa collection non-calendario: solo nota
-      if(id) fdb.collection(vecchiaFonte).doc(id).update({nota:nuovaNota});
-    } else if(nuovaFonte==='prog_calendario'&&vecchiaFonte==='prog_calendario'){
-      // calendario→calendario: aggiorna data e nota
-      if(id) fdb.collection('prog_calendario').doc(id).update({nota:nuovaNota,data:nuovaData});
-    } else {
-      // cambio di collection: elimina da vecchia, aggiungi in nuova
-      if(id) fdb.collection(vecchiaFonte).doc(id).delete();
-      if(nuovaFonte==='prog_calendario') fdb.collection('prog_calendario').add({numero:numero,nota:nuovaNota,data:nuovaData,ts:Date.now()});
-      else fdb.collection(nuovaFonte).add({numero:numero,nota:nuovaNota,ts:Date.now()});
-    }
+    if(id) fdb.collection(vecchiaFonte).doc(id).update(upd);
   } else {
-    // modalita locale
-    if(vecchiaFonte==='prog'){PROG=PROG.filter(function(p){return p.id!==id;});salvaProg();renderProg();}
-    else if(vecchiaFonte==='prog_domani'){PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==id;});salvaProgDomani();renderProgDomani();}
-    else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=CAL_DATA[dt].filter(function(p){return p.id!==id;});});renderCalendario();}
-    var fake=Date.now().toString();
-    if(nuovaFonte==='prog'){PROG.push({id:fake,numero:numero,nota:nuovaNota,ts:Date.now()});salvaProg();renderProg();}
-    else if(nuovaFonte==='prog_domani'){PROG_DOMANI.push({id:fake,numero:numero,nota:nuovaNota,ts:Date.now()});salvaProgDomani();renderProgDomani();}
-    else{if(!CAL_DATA[nuovaData])CAL_DATA[nuovaData]=[];CAL_DATA[nuovaData].push({id:fake,numero:numero,nota:nuovaNota});renderCalendario();}
+    function aggUpd(arr){var it=arr.find(function(p){return p.id===id;});if(it){it.nota=nuovaNota;it.data=nuovaData;it.bancaliProg=nuovoPlt;}}
+    if(vecchiaFonte==='prog'){aggUpd(PROG);salvaProg();renderProg();}
+    else if(vecchiaFonte==='prog_domani'){aggUpd(PROG_DOMANI);salvaProgDomani();renderProgDomani();}
+    else{Object.keys(CAL_DATA).forEach(function(dt){aggUpd(CAL_DATA[dt]||[]);});renderCalendario();}
   }
   chiM('mo-ordine'); _editOrdine=null;
   tst('Ordine aggiornato','ok');
+  setTimeout(renderTuttiOrdini,300);
+}
+function eliminaOrdineCoppia(fonteA,idA,fonteB,idB,numA,numB){
+  if(!confirm('Rimuovere la coppia #'+numA+' + #'+numB+' dalla programmazione?'))return;
+  function delOne(fonte,id){
+    if(UC&&fdb&&id){fdb.collection(fonte).doc(id).delete();}
+    else{
+      if(fonte==='prog'){PROG=PROG.filter(function(p){return p.id!==id;});salvaProg();renderProg();}
+      else if(fonte==='prog_domani'){PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==id;});salvaProgDomani();renderProgDomani();}
+      else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=CAL_DATA[dt].filter(function(p){return p.id!==id;});});renderCalendario();}
+    }
+  }
+  delOne(fonteA,idA); delOne(fonteB,idB);
+  tst('Coppia #'+numA+' + #'+numB+' rimossa','ok');
   setTimeout(renderTuttiOrdini,300);
 }
 function eliminaOrdine(fonte,id,numero){
@@ -955,12 +996,12 @@ function buildProgItem(p, isDomani, renderedAggIds) {
   s += '<div class="prog-actions">';
   if (isPaired) {
     if (!isDomani && (inMag || bilB)) { s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x1F534; CARICA</button>'; }
-    s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(&quot;' + num + '&quot;)">&#x270F;&#xFE0F;</button>';
+    s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(\'' + docId + '\')">&#x270F;&#xFE0F;</button>';
     s += '<button class="prog-del-btn" style="border-color:var(--pb);color:var(--pb);" title="Sgancia" onclick="' + (isDomani ? 'sganciaProgDomani' : 'sganciaProg') + '(\'' + docId + '\')">&#x2702;</button>';
     if (isAdmin()) { s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'rimuoviProgDomaniById' : 'rimuoviProgById') + '(\'' + docId + '\')">&#x2716;</button>'; }
   } else {
     if (!isDomani && inMag) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + num + '&quot;)">&#x1F534; CARICA</button>'; }
-    s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(&quot;' + num + '&quot;)">&#x270F;&#xFE0F;</button>';
+    s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(\'' + docId + '\')">&#x270F;&#xFE0F;</button>';
     var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (selObj !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
     var aggTitle = isSelected ? 'Annulla selezione' : 'Aggancia';
     var aggFn = isDomani ? 'startAggancioDomani' : 'startAggancio';
@@ -985,47 +1026,58 @@ function setSM(m) {
 function cerca() {
   var inp = document.getElementById('s-in');
   var res = document.getElementById('s-res');
-  if (!inp || !res) { return; }
-  var q = inp.value.trim().toUpperCase();
-  if (!q) { res.innerHTML = ''; return; }
-  var tr = Object.values(BL).filter(function(b) {
+  var mc  = document.getElementById('mag-count');
+  if (!res) { return; }
+  var lst = Object.values(BL);
+  if (mc) { mc.textContent = lst.length; }
+  var q = inp ? inp.value.trim().toUpperCase() : '';
+  var tr = q ? lst.filter(function(b) {
     return SMM === 'b' ? b.numero.includes(q) : b.locazione.includes(q);
-  });
-  res.innerHTML = tr.length ? tr.map(function(b) { return crdB(b, true); }).join('') : '<div class="emp"><div class="ic">&#x1F50D;</div><p>Nessun risultato</p></div>';
+  }) : lst.sort(function(a,b){ return a.numero.localeCompare(b.numero); });
+  res.innerHTML = tr.length ? tr.map(function(b) { return crdB(b, true); }).join('') : '<div class="emp"><div class="ic">&#x1F50D;</div><p>' + (q ? 'Nessun risultato' : 'Nessun bilico in magazzino') + '</p></div>';
 }
 
 function uscV(n) { goP('uscita'); document.getElementById('out-n').value = n; trovB(); }
 
-function aggProgFromInput(inpId, notaId) {
+function aggProgFromInput(inpId, bancId, notaId) {
   var val = String(document.getElementById(inpId).value || '').trim().toUpperCase();
+  var bancProg = bancId ? (parseInt(document.getElementById(bancId).value) || 0) : 0;
   var nota = document.getElementById(notaId).value.trim();
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   // blocca solo se in domani o calendario (in oggi i duplicati sono permessi)
   var giaAltrove = (PROG_DOMANI && PROG_DOMANI.find(function(p){return p.numero===val;})) || (Object.keys(CAL_DATA||{}).some(function(dt){return !!(CAL_DATA[dt]||[]).find(function(x){return x.numero===val;});}));
   if (giaAltrove) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
+  if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) { fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG.push(dati); salvaProg(); renderProg(); }
   document.getElementById(inpId).value = '';
+  if (bancId) document.getElementById(bancId).value = '';
   document.getElementById(notaId).value = '';
   suonoSirena();
   tst('Bilico ' + val + ' aggiunto alle uscite di oggi', 'ok');
 }
 
-function aggProgDomaniFromInput(inpId, notaId) {
+function aggProgDomaniFromInput(inpId, bancId, notaId) {
   var val = String(document.getElementById(inpId).value || '').trim().toUpperCase();
+  var bancProg = bancId ? (parseInt(document.getElementById(bancId).value) || 0) : 0;
   var nota = document.getElementById(notaId).value.trim();
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   var gia = PROG_DOMANI.find(function(p) { return p.numero === val; });
   if (gia) { return tst('Bilico ' + val + ' gia programmato per domani', 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(new Date(_d0.getTime()+86400000))};
+  if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) { fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG_DOMANI.push(dati); salvaProgDomani(); renderProgDomani(); }
   document.getElementById(inpId).value = '';
+  if (bancId) document.getElementById(bancId).value = '';
   document.getElementById(notaId).value = '';
   suonoSirena();
   tst('Bilico ' + val + ' aggiunto per domani', 'ok');
 }
+
 
 function ui() {
   var lst = Object.values(BL);
@@ -1036,10 +1088,8 @@ function ui() {
   var s4 = document.getElementById('s4'); if (s4) { var movOggi=ST.filter(function(m){return new Date(m.ts).toDateString()===oggi;}); s4.textContent=movOggi.reduce(function(acc,m){if(m.tipo==='ENTRATA')return acc+(m.bancali||0);if(m.tipo==='USCITA')return acc+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali||0));return acc;},0); }
   var sbMag = document.getElementById('sb-mag-badge'); if (sbMag) { sbMag.textContent = lst.length; }
   aggiornaSidebarUtente();
-  // magazzino
-  var ml = document.getElementById('lst-magazzino'); var mc = document.getElementById('mag-count');
-  if (mc) { mc.textContent = lst.length; }
-  if (ml) { ml.innerHTML = lst.length ? lst.sort(function(a,b){return a.numero.localeCompare(b.numero);}).map(function(b){return crdB(b,true);}).join('') : '<div class="emp"><div class="ic">&#x1F69B;</div><p>Nessun bilico</p></div>'; }
+  // magazzino (aggiornato tramite cerca)
+  cerca();
   // log home - solo entrate e uscite
   var lh = document.getElementById('log-home');
   if (lh) { var mf = ST.filter(function(m){return m.tipo==='ENTRATA'||m.tipo==='USCITA';}).slice(0,8); lh.innerHTML = mf.length ? mf.map(lgRow).join('') : '<div class="emp"><p>Nessun movimento</p></div>'; }
@@ -1047,10 +1097,6 @@ function ui() {
   var li = document.getElementById('log-in'); if (li) { var ent = ST.filter(function(m){return m.tipo==='ENTRATA';}).slice(0,8); li.innerHTML = ent.length ? ent.map(lgRow).join('') : '<div class="emp"><p>Nessuna entrata</p></div>'; }
   // log uscita
   var lu = document.getElementById('log-ou'); if (lu) { var usc = ST.filter(function(m){return m.tipo==='USCITA';}).slice(0,8); lu.innerHTML = usc.length ? usc.map(lgRow).join('') : '<div class="emp"><p>Nessuna uscita</p></div>'; }
-  // locazioni
-  var locEl = document.getElementById('loc-lst');
-  if (locEl) { locEl.innerHTML = lst.length ? lst.sort(function(a,b){return a.locazione.localeCompare(b.locazione);}).map(function(b){return '<div class="lca"><div class="lch"><div class="lcn">&#x1F4CD; '+b.locazione+'</div><div class="lcs">OCCUPATA</div></div><div class="lci">&#x1F69B; Bilico: <strong>#'+b.numero+'</strong> &nbsp;|&nbsp; &#x1F4E6; Bancali: <strong>'+b.bancali+'</strong>'+(b.note?'<br>'+b.note:'')+'</div></div>';}).join('') : '<div class="emp"><div class="ic">&#x1F4CD;</div><p>Nessuna locazione</p></div>'; }
-  cerca();
   renderProg();
   renderProgDomani();
   aggiornaUltimiEntrati();
@@ -1444,7 +1490,8 @@ function aggProg() {
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   var giaAltrove = (PROG_DOMANI && PROG_DOMANI.find(function(p){return p.numero===val;})) || (Object.keys(CAL_DATA||{}).some(function(dt){return !!(CAL_DATA[dt]||[]).find(function(x){return x.numero===val;});}));
   if (giaAltrove) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
   if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) {
     fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
@@ -1460,10 +1507,10 @@ function aggProg() {
   tst('Bilico ' + val + ' aggiunto alle uscite di oggi', 'ok');
 }
 
-function modificaNotaProg(num) {
-  var item = PROG.find(function(p) { return p.numero === num; });
+function modificaNotaProg(docId) {
+  var item = PROG.find(function(p) { return p.id === docId; });
   if (!item) { return; }
-  var nuovaNota = prompt('Modifica nota per bilico #' + num + ':', item.nota || '');
+  var nuovaNota = prompt('Modifica nota per bilico #' + item.numero + ':', item.nota || '');
   if (nuovaNota === null) { return; }
   nuovaNota = nuovaNota.trim();
   if (UC && fdb && item.id) {
@@ -1597,7 +1644,8 @@ function agganciaEsterno() {
   aggancioSel = null;
   var extR = document.getElementById('prog-agg-ext-row');
   if (extR) { extR.style.display = 'none'; document.getElementById('prog-agg-ext-n').value = ''; document.getElementById('prog-agg-ext-plt').value = ''; }
-  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId, operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
   if (UC && fdb) {
     fdb.collection('prog').add(dati).then(function() {
       fdb.collection('prog').doc(docId1).update({aggancioId: aggId}).catch(function(){});
@@ -1693,7 +1741,8 @@ function agganciaEsternoDomani() {
   aggancioSelD = null;
   var extR = document.getElementById('prog-domani-agg-ext-row');
   if (extR) { extR.style.display = 'none'; document.getElementById('prog-domani-agg-ext-n').value = ''; document.getElementById('prog-domani-agg-ext-plt').value = ''; }
-  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId, operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(new Date(_d0.getTime()+86400000))};
   if (UC && fdb) {
     fdb.collection('prog_domani').add(dati).then(function() {
       fdb.collection('prog_domani').doc(docId1).update({aggancioId: aggId}).catch(function(){});
@@ -1990,6 +2039,7 @@ function caricaProgDomani() {
     renderProgDomani();
     aggiornaBadgeMag();
     aggTuttiOrdini();
+    controllaGiorno();
   });
   fdb.collection('prog_calendario').orderBy('data', 'asc').onSnapshot(function(snap) {
     CAL_DATA = {};
@@ -2028,7 +2078,8 @@ function aggProgDomani() {
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   var gia = PROG_DOMANI.find(function(p) { return p.numero === val; });
   if (gia) { return tst('Bilico ' + val + ' gia programmato per domani', 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(new Date(_d0.getTime()+86400000))};
   if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) {
     fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
@@ -2058,10 +2109,10 @@ function rimuoviProgDomani(num) {
   }
 }
 
-function modificaNotaProgDomani(num) {
-  var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
+function modificaNotaProgDomani(docId) {
+  var item = PROG_DOMANI.find(function(p) { return p.id === docId; });
   if (!item) { return; }
-  var nuovaNota = prompt('Modifica nota bilico #' + num + ':', item.nota || '');
+  var nuovaNota = prompt('Modifica nota bilico #' + item.numero + ':', item.nota || '');
   if (nuovaNota === null) { return; }
   nuovaNota = nuovaNota.trim();
   if (UC && fdb && item.id) {
@@ -2082,28 +2133,50 @@ function controllaGiorno() {
   // Calcola il timestamp dell'inizio di oggi (mezzanotte locale)
   var mezzanotte = new Date(); mezzanotte.setHours(0, 0, 0, 0);
   var tsOggi = mezzanotte.getTime();
+  var oggiStr = datLocale(mezzanotte);
   if (!PROG_DOMANI || !PROG_DOMANI.length) return;
-  // Gli item con ts < inizio di oggi erano destinati a ieri (o prima): vanno spostati
-  var daSposta = PROG_DOMANI.filter(function(p) { return (p.ts || 0) < tsOggi; });
+  // Sposta tutto ciò la cui data carico <= oggi (usa data stored; fallback su ts per doc vecchi)
+  var daSposta = PROG_DOMANI.filter(function(p) { return p.data ? p.data <= oggiStr : (p.ts||0) < tsOggi; });
   if (!daSposta.length) return;
   if (UC && fdb) {
     var aggiunti = 0;
+    var chain = Promise.resolve();
     daSposta.forEach(function(p) {
-      if (!PROG.find(function(x) { return x.numero === p.numero; })) {
-        fdb.collection('prog').add({numero: p.numero, nota: p.nota || '', ts: Date.now()});
-        aggiunti++;
-      }
-      if (p.id) fdb.collection('prog_domani').doc(p.id).delete();
+      if (!p.id) return;
+      var domaniRef = fdb.collection('prog_domani').doc(p.id);
+      var nuovoRef  = fdb.collection('prog').doc();
+      var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
+      if (p.data)        dati.data        = p.data;
+      if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
+      if (p.aggancioId)  dati.aggancioId  = p.aggancioId;
+      if (p.operatore)   dati.operatore   = p.operatore;
+      chain = chain.then(function() {
+        return fdb.runTransaction(function(t) {
+          return t.get(domaniRef).then(function(doc) {
+            if (!doc.exists) return; // già migrato da un'altra istanza/device
+            t.delete(domaniRef);
+            t.set(nuovoRef, dati);
+            aggiunti++;
+          });
+        }).catch(function() {});
+      });
     });
-    if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 800);
+    chain.then(function() {
+      if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 400);
+    });
   } else {
     var aggiunti = 0;
     daSposta.forEach(function(p) {
       if (!PROG.find(function(x) { return x.numero === p.numero; })) {
-        PROG.push({numero: p.numero, nota: p.nota || '', ts: Date.now()}); aggiunti++;
+        var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
+        if (p.data)        dati.data        = p.data;
+        if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
+        if (p.aggancioId)  dati.aggancioId  = p.aggancioId;
+        if (p.operatore)   dati.operatore   = p.operatore;
+        PROG.push(dati); aggiunti++;
       }
     });
-    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return (p.ts || 0) >= tsOggi; });
+    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return p.data ? p.data > oggiStr : (p.ts||0) >= tsOggi; });
     try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI)); } catch(x) {}
     renderProg(); renderProgDomani();
     if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 500);
@@ -2229,6 +2302,7 @@ function stp(id, d) {
   var el = document.getElementById(id);
   el.value = Math.max(0, (parseInt(el.value) || 0) + d);
 }
+function datLocale(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function tst(msg, tp) {
   var t = document.getElementById('tst');
   t.textContent = msg;
@@ -2577,6 +2651,31 @@ function expExcel() {
   tst('Excel esportato!', 'ok');
 }
 
+function expOrdini() {
+  var fn = (document.getElementById('to-fn').value||'').trim();
+  var fd = (document.getElementById('to-fd').value||'').trim();
+  var lista = getAllOrdini();
+  if (fn) lista = lista.filter(function(p){return String(p.numero).indexOf(fn)!==-1;});
+  if (fd) lista = lista.filter(function(p){return p.data===fd;});
+  if (!lista.length) { tst('Nessun ordine da esportare','er'); return; }
+  var rows = [['N° BILICO','PLT PIANIFICATI','PLT MAGAZZINO','NOTA','DATA CARICO','DATA CREAZIONE','OPERATORE','FONTE']];
+  lista.forEach(function(p){
+    var b = BL[p.numero];
+    var pltMag = (b&&b.bancali!=null) ? b.bancali : '';
+    var df = p.data ? p.data.split('-').reverse().join('/') : '';
+    var crea = p.ts ? new Date(p.ts).toLocaleString('it-IT') : '';
+    var fonte = p.fonte==='prog'?'Oggi':p.fonte==='prog_domani'?'Domani':'Calendario';
+    rows.push([p.numero, p.bancaliProg||'', pltMag, p.nota||'', df, crea, p.operatore||'', fonte]);
+  });
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:12},{wch:14},{wch:14},{wch:28},{wch:14},{wch:20},{wch:14},{wch:12}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Ordini');
+  var dt = new Date().toLocaleDateString('it-IT').split('/').join('-');
+  XLSX.writeFile(wb, 'Ordini_' + dt + '.xlsx');
+  tst('Ordini esportati — ' + lista.length + ' righe', 'ok');
+}
+
 function fmtT(ts) {
   if (!ts) { return '-'; }
   var d = new Date(ts);
@@ -2709,8 +2808,8 @@ function toggleProgDesk(bodyId, chevId) {
 }
 
 function controllaCalendarioGiorno() {
-  var oggi = new Date().toISOString().slice(0,10);
-  var domani = new Date(Date.now()+86400000).toISOString().slice(0,10);
+  var oggi = datLocale(new Date());
+  var domani = datLocale(new Date(Date.now()+86400000));
   [oggi, domani].forEach(function(data) {
     var items = CAL_DATA[data];
     if (!items || !items.length) return;
@@ -2750,7 +2849,7 @@ function renderCalendario() {
   var primo = new Date(anno,mesN,1).getDay();
   primo = primo===0 ? 6 : primo-1;
   var ultimo = new Date(anno,mesN+1,0).getDate();
-  var oggiStr = oggi.toISOString().slice(0,10);
+  var oggiStr = datLocale(oggi);
   for (var i=0;i<primo;i++) html+='<div class="cal-day cal-empty"></div>';
   for (var g=1;g<=ultimo;g++) {
     var mm=String(mesN+1).padStart(2,'0'), dd=String(g).padStart(2,'0');
@@ -2831,7 +2930,7 @@ function calAggiungi() {
   var bancProg = parseInt(document.getElementById('cal-add-plt').value) || 0;
   if (!num || !CAL_GIORNO_SEL) { return tst('Inserisci il numero bilico', 'er'); }
   if (isPrenotato(num)) { return tst('Bilico #' + num + ' gia prenotato ' + infoPrenotazione(num), 'er'); }
-  var dati = {numero: num, nota: nota, data: CAL_GIORNO_SEL, ts: Date.now()};
+  var dati = {numero: num, nota: nota, data: CAL_GIORNO_SEL, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : ''};
   if (bancProg > 0) dati.bancaliProg = bancProg;
   function clearCalForm() {
     document.getElementById('cal-add-num').value = '';
@@ -2947,7 +3046,7 @@ function agganciaEsternoCal() {
   aggancioSelC = null;
   var extR = document.getElementById('cal-agg-ext-row');
   if (extR) { extR.style.display = 'none'; document.getElementById('cal-agg-ext-n').value = ''; document.getElementById('cal-agg-ext-plt').value = ''; }
-  var dati = {numero: num, nota: '', bancaliProg: plt, data: CAL_GIORNO_SEL, ts: Date.now(), aggancioId: aggId};
+  var dati = {numero: num, nota: '', bancaliProg: plt, data: CAL_GIORNO_SEL, ts: Date.now(), aggancioId: aggId, operatore: CURR_USER ? CURR_USER.username : ''};
   if (UC && fdb) {
     fdb.collection('prog_calendario').add(dati).then(function(){
       fdb.collection('prog_calendario').doc(id1).update({aggancioId: aggId}).catch(function(){});

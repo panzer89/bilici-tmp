@@ -611,6 +611,7 @@ function suonoSirena() {
 }
 
 // ═══ UTILS ═══
+function datLocale(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function tst(msg, tp) {
   var t = document.getElementById('tst');
   t.textContent = msg; t.className = 'tst ' + (tp || '');
@@ -720,6 +721,7 @@ window.onload = function() {
     fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s) {
       PROG_DOMANI = []; s.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
       renderProgDomani();
+      controllaGiorno();
     });
     setTimeout(controllaGiorno, 2000);
   } catch(e) {
@@ -742,27 +744,50 @@ function caricaProgLocale() { ldLoc(); renderProg(); renderProgDomani(); }
 function controllaGiorno() {
   var mezzanotte = new Date(); mezzanotte.setHours(0, 0, 0, 0);
   var tsOggi = mezzanotte.getTime();
+  var oggiStr = datLocale(mezzanotte);
   if (!PROG_DOMANI || !PROG_DOMANI.length) return;
-  var daSposta = PROG_DOMANI.filter(function(p) { return (p.ts || 0) < tsOggi; });
+  // Usa data stored; fallback su ts per doc vecchi senza campo data
+  var daSposta = PROG_DOMANI.filter(function(p) { return p.data ? p.data <= oggiStr : (p.ts||0) < tsOggi; });
   if (!daSposta.length) return;
   if (UC && fdb) {
     var aggiunti = 0;
+    var chain = Promise.resolve();
     daSposta.forEach(function(p) {
-      if (!PROG.find(function(x) { return x.numero === p.numero; })) {
-        fdb.collection('prog').add({numero: p.numero, nota: p.nota || '', ts: Date.now()});
-        aggiunti++;
-      }
-      if (p.id) fdb.collection('prog_domani').doc(p.id).delete();
+      if (!p.id) return;
+      var domaniRef = fdb.collection('prog_domani').doc(p.id);
+      var nuovoRef  = fdb.collection('prog').doc();
+      var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
+      if (p.data)        dati.data        = p.data;
+      if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
+      if (p.aggancioId)  dati.aggancioId  = p.aggancioId;
+      if (p.operatore)   dati.operatore   = p.operatore;
+      chain = chain.then(function() {
+        return fdb.runTransaction(function(t) {
+          return t.get(domaniRef).then(function(doc) {
+            if (!doc.exists) return; // già migrato da un'altra istanza/device
+            t.delete(domaniRef);
+            t.set(nuovoRef, dati);
+            aggiunti++;
+          });
+        }).catch(function() {});
+      });
     });
-    if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 800);
+    chain.then(function() {
+      if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 400);
+    });
   } else {
     var aggiunti = 0;
     daSposta.forEach(function(p) {
       if (!PROG.find(function(x) { return x.numero === p.numero; })) {
-        PROG.push({numero: p.numero, nota: p.nota || '', ts: Date.now()}); aggiunti++;
+        var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
+        if (p.data)        dati.data        = p.data;
+        if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
+        if (p.aggancioId)  dati.aggancioId  = p.aggancioId;
+        if (p.operatore)   dati.operatore   = p.operatore;
+        PROG.push(dati); aggiunti++;
       }
     });
-    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return (p.ts || 0) >= tsOggi; });
+    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return p.data ? p.data > oggiStr : (p.ts||0) >= tsOggi; });
     try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI)); } catch(x) {}
     renderProg(); renderProgDomani();
     if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 500);
@@ -1002,7 +1027,8 @@ function aggProg() {
   var bancProg = parseInt(document.getElementById('prog-banc-inp').value) || 0;
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   if (isPrenotato(val)) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
   if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) { fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG.push(dati); salvaProg(); renderProg(); }
@@ -1018,7 +1044,8 @@ function aggProgDomani() {
   var bancProg = parseInt(document.getElementById('prog-domani-banc-inp').value) || 0;
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   if (PROG_DOMANI.find(function(p) { return p.numero === val; })) { return tst('Bilico ' + val + ' gia in lista', 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(new Date(_d0.getTime()+86400000))};
   if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) { fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG_DOMANI.push(dati); salvaProgDomani(); renderProgDomani(); }
@@ -1276,7 +1303,8 @@ function agganciaEsterno() {
   aggancioSel = null;
   var extR = document.getElementById('prog-agg-ext-row');
   if (extR) { extR.style.display = 'none'; document.getElementById('prog-agg-ext-n').value = ''; document.getElementById('prog-agg-ext-plt').value = ''; }
-  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId, operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
   if (UC && fdb) {
     fdb.collection('prog').add(dati).then(function() {
       fdb.collection('prog').doc(docId1).update({aggancioId: aggId}).catch(function(){});
@@ -1347,7 +1375,8 @@ function agganciaEsternoDomani() {
   aggancioSelD = null;
   var extR = document.getElementById('prog-domani-agg-ext-row');
   if (extR) { extR.style.display = 'none'; document.getElementById('prog-domani-agg-ext-n').value = ''; document.getElementById('prog-domani-agg-ext-plt').value = ''; }
-  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId, operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(new Date(_d0.getTime()+86400000))};
   if (UC && fdb) {
     fdb.collection('prog_domani').add(dati).then(function(){
       fdb.collection('prog_domani').doc(docId1).update({aggancioId: aggId}).catch(function(){});
@@ -1559,7 +1588,8 @@ function crdMag(b) {
   return s;
 }
 function addToProg(num) {
-  var dati = {numero: num, nota: '', ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: num, nota: '', ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
   if (UC && fdb) { fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); }); }
   else { PROG.push(dati); salvaProg(); renderProg(); }
   suonoSirena();

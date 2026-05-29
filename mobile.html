@@ -421,6 +421,34 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     </div>
   </div>
 
+  <!-- TUTTI GLI ORDINI -->
+  <div style="background:var(--sf);border:1.5px solid var(--pu);border-radius:var(--r);margin-bottom:12px;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(110,64,201,.08);cursor:pointer;user-select:none;" onclick="toggleTuttiOrdiniMob()">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">&#x1F4CB;</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--pb);letter-spacing:.5px;">TUTTI GLI ORDINI</span>
+        <span style="background:var(--pu);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;" id="tutti-ord-mob-count">0</span>
+      </div>
+      <div style="font-size:18px;color:var(--tx2);transition:transform .2s;line-height:1;" id="tutti-ord-mob-chev">&#x2304;</div>
+    </div>
+    <div id="tutti-ord-mob-body" style="display:none;border-top:1px solid rgba(110,64,201,.25);">
+      <!-- Form aggiunta -->
+      <div style="padding:10px 12px;background:rgba(110,64,201,.05);border-bottom:1px solid rgba(110,64,201,.15);">
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input type="number" id="to-mob-num" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" style="flex:2;height:42px;background:var(--bg);border:1.5px solid var(--pu);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;padding:0 10px;outline:none;">
+          <input type="number" id="to-mob-plt" placeholder="PLT" min="0" inputmode="numeric" autocomplete="off" style="width:78px;height:42px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;padding:0 8px;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input type="date" id="to-mob-data" style="flex:1;height:38px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:0 10px;outline:none;">
+          <input type="text" id="to-mob-nota" placeholder="Nota opzionale..." autocomplete="off" style="flex:2;height:38px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:0 10px;outline:none;">
+        </div>
+        <button onclick="aggiungiOrdineMob()" style="width:100%;height:42px;background:var(--pu);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px;">&#x2795; AGGIUNGI ORDINE</button>
+      </div>
+      <!-- Lista -->
+      <div id="tutti-ord-mob-list" style="padding:6px 12px 10px;"></div>
+    </div>
+  </div>
+
   <div id="supbox" style="display:none">
     <div class="sup">
       <div class="sut">&#x2699;&#xFE0F; MODALITA LOCALE</div>
@@ -1144,6 +1172,7 @@ function caricaProg() {
     snap.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
     renderProg();
     aggiornaBadgeMag();
+    aggTuttiOrdiniMob();
   });
 }
 
@@ -1168,7 +1197,8 @@ function aggProg() {
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   var giaAltrove = (PROG_DOMANI && PROG_DOMANI.find(function(p){return p.numero===val;})) || (Object.keys(CAL_DATA||{}).some(function(dt){return !!(CAL_DATA[dt]||[]).find(function(x){return x.numero===val;});}));
   if (giaAltrove) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
   if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) {
     fdb.collection('prog').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
@@ -1318,7 +1348,8 @@ function agganciaEsterno() {
   aggancioSel = null;
   var extR = document.getElementById('prog-agg-ext-row');
   if (extR) { extR.style.display = 'none'; document.getElementById('prog-agg-ext-n').value = ''; document.getElementById('prog-agg-ext-plt').value = ''; }
-  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId, operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(_d0)};
   if (UC && fdb) {
     fdb.collection('prog').add(dati).then(function() {
       fdb.collection('prog').doc(docId1).update({aggancioId: aggId}).catch(function(){});
@@ -1409,7 +1440,8 @@ function agganciaEsternoDomani() {
   aggancioSelD = null;
   var extR = document.getElementById('prog-domani-agg-ext-row');
   if (extR) { extR.style.display = 'none'; document.getElementById('prog-domani-agg-ext-n').value = ''; document.getElementById('prog-domani-agg-ext-plt').value = ''; }
-  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: num, nota: '', bancaliProg: plt, ts: Date.now(), aggancioId: aggId, operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(new Date(_d0.getTime()+86400000))};
   if (UC && fdb) {
     fdb.collection('prog_domani').add(dati).then(function(){
       fdb.collection('prog_domani').doc(docId1).update({aggancioId: aggId}).catch(function(){});
@@ -1535,10 +1567,15 @@ function confUscitaCoppia() {
   _coppiaA=null; _coppiaB=null;
 }
 
+function contaOrdiniUnivoci(arr) {
+  var visti = {}, n = 0;
+  (arr||[]).forEach(function(p){ if(p.aggancioId){if(!visti[p.aggancioId]){visti[p.aggancioId]=true;n++;}}else{n++;} });
+  return n;
+}
 function renderProg() {
   var el = document.getElementById('prog-list');
   var badge = document.getElementById('prog-count');
-  badge.textContent = PROG.length;
+  badge.textContent = contaOrdiniUnivoci(PROG);
   if (!PROG.length) {
     el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per oggi</div>';
     return;
@@ -1754,6 +1791,17 @@ function caricaProgDomani() {
     PROG_DOMANI = [];
     snap.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
     renderProgDomani();
+    aggTuttiOrdiniMob();
+    controllaGiorno();
+  });
+  fdb.collection('prog_calendario').onSnapshot(function(snap) {
+    CAL_DATA = {};
+    snap.forEach(function(d) {
+      var item = Object.assign({id: d.id}, d.data());
+      var dt = item.data;
+      if (dt) { if (!CAL_DATA[dt]) CAL_DATA[dt] = []; CAL_DATA[dt].push(item); }
+    });
+    aggTuttiOrdiniMob();
   });
 }
 
@@ -1761,6 +1809,151 @@ function salvaProgDomani() {
   if (!UC) {
     try { localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI)); } catch(x) {}
   }
+}
+
+// ═══ TUTTI GLI ORDINI (mobile) ═══
+function getAllOrdiniMob() {
+  var oggiD = new Date(); oggiD.setHours(0,0,0,0);
+  var domaniD = new Date(oggiD.getTime() + 86400000);
+  var oggiStr = datLocale(oggiD);
+  var domaniStr = datLocale(domaniD);
+  var lista = [];
+  (PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||oggiStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog'});});
+  (PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||domaniStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_domani'});});
+  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:dt,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_calendario'});});});
+  lista.sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:0;});
+  // Merge coppie agganciate → un solo item con .partner
+  var seenAgg = {};
+  var merged = [];
+  lista.forEach(function(p) {
+    if (p.aggancioId) {
+      if (seenAgg[p.aggancioId]) return;
+      var partner = lista.find(function(x){ return x.aggancioId===p.aggancioId && x.id!==p.id; });
+      if (partner) { seenAgg[p.aggancioId]=true; merged.push(Object.assign({},p,{partner:partner})); return; }
+    }
+    merged.push(p);
+  });
+  return merged;
+}
+function aggTuttiOrdiniMob() {
+  var c = document.getElementById('tutti-ord-mob-count');
+  if (c) c.textContent = getAllOrdiniMob().length;
+  var body = document.getElementById('tutti-ord-mob-body');
+  if (body && body.style.display !== 'none') renderTuttiOrdiniMob();
+}
+function toggleTuttiOrdiniMob() {
+  var body = document.getElementById('tutti-ord-mob-body');
+  var chev = document.getElementById('tutti-ord-mob-chev');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+  if (!open) {
+    renderTuttiOrdiniMob();
+    // precompila la data di oggi
+    var inp = document.getElementById('to-mob-data');
+    if (inp && !inp.value) inp.value = datLocale(new Date());
+  }
+}
+function renderTuttiOrdiniMob() {
+  var el = document.getElementById('tutti-ord-mob-list');
+  if (!el) return;
+  var lista = getAllOrdiniMob();
+  if (!lista.length) { el.innerHTML='<div style="text-align:center;padding:14px;color:var(--tx2);font-size:13px;">Nessun ordine</div>'; return; }
+  var html = '';
+  lista.forEach(function(p){
+    var df = p.data ? p.data.split('-').reverse().join('/') : '—';
+    function mkBadge(f){ return f==='prog'?'<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(218,54,51,.15);color:var(--rb);font-weight:700;">Oggi</span>':f==='prog_domani'?'<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(31,111,235,.15);color:var(--bb);font-weight:700;">Domani</span>':'<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(46,160,67,.15);color:var(--gb);font-weight:700;">Cal</span>'; }
+    var opTag = p.operatore ? '<span class="op-tag" style="font-size:9px;">&#x1F464; '+p.operatore+'</span>' : '';
+    var idQ="'"+(p.id||'')+"'";
+    var fonteQ="'"+p.fonte+"'";
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);'+(p.partner?'border-left:3px solid rgba(163,113,247,.5);padding-left:8px;':'')+ '">';
+    html+='<div style="flex:1;min-width:0;">';
+    if (p.partner) {
+      // Coppia agganciata
+      var pltA = p.bancaliProg||0, pltB = p.partner.bancaliProg||0;
+      var pltTot = (pltA||pltB) ? '<span style="color:var(--ob);font-weight:700;">'+(pltA+pltB)+' PLT</span><span style="color:var(--tx3);font-size:11px;"> ('+pltA+'+'+pltB+')</span>' : '';
+      var opTagB = p.partner.operatore && p.partner.operatore!==p.operatore ? '<span class="op-tag" style="font-size:9px;">&#x1F464; '+p.partner.operatore+'</span>' : '';
+      html+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">';
+      html+='<strong style="color:var(--bb);font-size:15px;">#'+p.numero+'</strong>';
+      html+='<span style="color:var(--pb);font-size:13px;">&#x1F517;</span>';
+      html+='<strong style="color:var(--pb);font-size:15px;">#'+p.partner.numero+'</strong>';
+      html+=mkBadge(p.fonte)+opTag+opTagB;
+      html+='</div>';
+      var sub = [pltTot, df?'&#x1F4C5; '+df:''].filter(Boolean).join(' &nbsp;');
+      var nota = [p.nota,p.partner.nota].filter(Boolean).join(' / ');
+      if (sub||nota) html+='<div style="font-size:12px;color:var(--tx2);margin-top:2px;">'+sub+(nota?' &nbsp;'+nota:'')+'</div>';
+    } else {
+      var pltTxt = p.bancaliProg ? '<span style="color:var(--ob);font-weight:700;">'+p.bancaliProg+' PLT</span>' : '';
+      var sub = [pltTxt, df?'&#x1F4C5; '+df:''].filter(Boolean).join(' &nbsp;');
+      html+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;"><strong style="color:var(--bb);font-size:15px;">#'+p.numero+'</strong>'+mkBadge(p.fonte)+opTag+'</div>';
+      if (sub||p.nota) html+='<div style="font-size:12px;color:var(--tx2);margin-top:2px;">'+sub+(p.nota?' &nbsp;'+p.nota:'')+'</div>';
+    }
+    html+='</div>';
+    if (p.partner) {
+      var idQB="'"+(p.partner.id||'')+"'";
+      var fonteQB="'"+p.partner.fonte+"'";
+      html+='<button onclick="eliminaOrdineCoppiaMob('+fonteQ+','+idQ+','+fonteQB+','+idQB+','+p.numero+','+p.partner.numero+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2715;</button>';
+    } else {
+      html+='<button onclick="eliminaOrdineMob('+fonteQ+','+idQ+','+p.numero+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2715;</button>';
+    }
+    html+='</div>';
+  });
+  el.innerHTML = html;
+}
+function aggiungiOrdineMob() {
+  var num = String(document.getElementById('to-mob-num').value||'').trim().toUpperCase();
+  var plt = parseInt(document.getElementById('to-mob-plt').value)||0;
+  var data = document.getElementById('to-mob-data').value;
+  var nota = document.getElementById('to-mob-nota').value.trim();
+  if (!num) { return tst('Inserisci il numero bilico','er'); }
+  if (!data) { return tst('Inserisci la data carico','er'); }
+  var oggiD=new Date(); oggiD.setHours(0,0,0,0);
+  var domaniD=new Date(oggiD.getTime()+86400000);
+  var oggiStr=datLocale(oggiD);
+  var domaniStr=datLocale(domaniD);
+  var fonte = data===oggiStr?'prog':data===domaniStr?'prog_domani':'prog_calendario';
+  if (isPrenotato(num)) { return tst('Bilico #'+num+' già prenotato '+infoPrenotazione(num),'er'); }
+  var dati = {numero:num, nota:nota, ts:Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data:data};
+  if (plt>0) dati.bancaliProg=plt;
+  if (UC&&fdb) {
+    fdb.collection(fonte).add(dati).then(function(){ tst('Ordine #'+num+' aggiunto — '+data,'ok'); }).catch(function(e){tst('Errore: '+e.message,'er');});
+  } else {
+    dati.id='local_'+Date.now();
+    if(fonte==='prog'){PROG.push(dati);salvaProg();renderProg();}
+    else if(fonte==='prog_domani'){PROG_DOMANI.push(dati);salvaProgDomani();renderProgDomani();}
+    else{if(!CAL_DATA[data])CAL_DATA[data]=[];CAL_DATA[data].push(dati);}
+    tst('Ordine #'+num+' aggiunto','ok');
+  }
+  document.getElementById('to-mob-num').value='';
+  document.getElementById('to-mob-plt').value='';
+  document.getElementById('to-mob-nota').value='';
+}
+function eliminaOrdineMob(fonte, id, numero) {
+  if (!confirm('Rimuovere bilico #'+numero+' dalla programmazione?')) return;
+  if (UC&&fdb&&id) {
+    fdb.collection(fonte).doc(id).delete().catch(function(e){tst('Errore: '+e.message,'er');});
+  } else {
+    if(fonte==='prog'){PROG=PROG.filter(function(p){return p.id!==id;});salvaProg();renderProg();}
+    else if(fonte==='prog_domani'){PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==id;});salvaProgDomani();renderProgDomani();}
+    else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=CAL_DATA[dt].filter(function(p){return p.id!==id;});});}
+    aggTuttiOrdiniMob();
+  }
+  tst('Bilico #'+numero+' rimosso','ok');
+}
+function eliminaOrdineCoppiaMob(fonteA,idA,fonteB,idB,numA,numB){
+  if(!confirm('Rimuovere la coppia #'+numA+' + #'+numB+' dalla programmazione?'))return;
+  function delOne(fonte,id){
+    if(UC&&fdb&&id){fdb.collection(fonte).doc(id).delete();}
+    else{
+      if(fonte==='prog'){PROG=PROG.filter(function(p){return p.id!==id;});salvaProg();renderProg();}
+      else if(fonte==='prog_domani'){PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==id;});salvaProgDomani();renderProgDomani();}
+      else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=CAL_DATA[dt].filter(function(p){return p.id!==id;});});}
+    }
+  }
+  delOne(fonteA,idA); delOne(fonteB,idB);
+  tst('Coppia #'+numA+' + #'+numB+' rimossa','ok');
+  setTimeout(aggTuttiOrdiniMob,300);
 }
 
 function toggleProgDomani() {
@@ -1777,7 +1970,8 @@ function aggProgDomani() {
   var bancProg = parseInt(document.getElementById('prog-domani-banc-inp').value) || 0;
   if (!val) { return tst('Inserisci il numero bilico', 'er'); }
   if (isPrenotato(val)) { return tst('Bilico #' + val + ' gia prenotato ' + infoPrenotazione(val), 'er'); }
-  var dati = {numero: val, nota: nota, ts: Date.now()};
+  var _d0=new Date();_d0.setHours(0,0,0,0);
+  var dati = {numero: val, nota: nota, ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : '', data: datLocale(new Date(_d0.getTime()+86400000))};
   if (bancProg > 0) dati.bancaliProg = bancProg;
   if (UC && fdb) {
     fdb.collection('prog_domani').add(dati).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
@@ -1827,7 +2021,7 @@ function renderProgDomani() {
   var el = document.getElementById('prog-domani-list');
   var badge = document.getElementById('prog-domani-count');
   if (!el || !badge) { return; }
-  badge.textContent = PROG_DOMANI.length;
+  badge.textContent = contaOrdiniUnivoci(PROG_DOMANI);
   if (!PROG_DOMANI.length) {
     el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per domani</div>';
     return;
@@ -1912,27 +2106,49 @@ function renderProgDomani() {
 function controllaGiorno() {
   var mezzanotte = new Date(); mezzanotte.setHours(0, 0, 0, 0);
   var tsOggi = mezzanotte.getTime();
+  var oggiStr = datLocale(mezzanotte);
   if (!PROG_DOMANI || !PROG_DOMANI.length) return;
-  var daSposta = PROG_DOMANI.filter(function(p) { return (p.ts || 0) < tsOggi; });
+  var daSposta = PROG_DOMANI.filter(function(p) { return p.data ? p.data <= oggiStr : (p.ts||0) < tsOggi; });
   if (!daSposta.length) return;
   if (UC && fdb) {
     var aggiunti = 0;
+    var chain = Promise.resolve();
     daSposta.forEach(function(p) {
-      if (!PROG.find(function(x) { return x.numero === p.numero; })) {
-        fdb.collection('prog').add({numero: p.numero, nota: p.nota || '', ts: Date.now()});
-        aggiunti++;
-      }
-      if (p.id) fdb.collection('prog_domani').doc(p.id).delete();
+      if (!p.id) return;
+      var domaniRef = fdb.collection('prog_domani').doc(p.id);
+      var nuovoRef  = fdb.collection('prog').doc();
+      var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
+      if (p.data)        dati.data        = p.data;
+      if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
+      if (p.aggancioId)  dati.aggancioId  = p.aggancioId;
+      if (p.operatore)   dati.operatore   = p.operatore;
+      chain = chain.then(function() {
+        return fdb.runTransaction(function(t) {
+          return t.get(domaniRef).then(function(doc) {
+            if (!doc.exists) return; // già migrato da un'altra istanza/device
+            t.delete(domaniRef);
+            t.set(nuovoRef, dati);
+            aggiunti++;
+          });
+        }).catch(function() {});
+      });
     });
-    if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 800);
+    chain.then(function() {
+      if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 400);
+    });
   } else {
     var aggiunti = 0;
     daSposta.forEach(function(p) {
       if (!PROG.find(function(x) { return x.numero === p.numero; })) {
-        PROG.push({numero: p.numero, nota: p.nota || '', ts: Date.now()}); aggiunti++;
+        var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
+        if (p.data)        dati.data        = p.data;
+        if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
+        if (p.aggancioId)  dati.aggancioId  = p.aggancioId;
+        if (p.operatore)   dati.operatore   = p.operatore;
+        PROG.push(dati); aggiunti++;
       }
     });
-    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return (p.ts || 0) >= tsOggi; });
+    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return p.data ? p.data > oggiStr : (p.ts||0) >= tsOggi; });
     try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); localStorage.setItem('PROG_DOMANI_v1', JSON.stringify(PROG_DOMANI)); } catch(x) {}
     renderProg(); renderProgDomani();
     if (aggiunti > 0) setTimeout(function() { tst(aggiunti + ' bilici spostati da domani a oggi!', 'ok'); }, 500);
@@ -2065,6 +2281,7 @@ function stp(id, d) {
   var el = document.getElementById(id);
   el.value = Math.max(0, (parseInt(el.value) || 0) + d);
 }
+function datLocale(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function tst(msg, tp) {
   var t = document.getElementById('tst');
   t.textContent = msg;

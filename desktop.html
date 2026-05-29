@@ -32,9 +32,11 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'Barlow',
 .shell{display:flex;height:100vh;overflow:hidden;}
 /* SIDEBAR */
 .sidebar{width:var(--sb);background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;}
-.sb-logo{padding:16px 18px 12px;border-bottom:1px solid var(--bd);}
+.sb-logo{padding:16px 18px 12px;border-bottom:1px solid var(--bd);position:relative;overflow:hidden;}
 .sb-logo-title{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;}
 .sb-logo-title span{color:var(--bb);}
+.sb-logo-truck{position:absolute;bottom:0px;left:0;font-size:14px;line-height:1;pointer-events:none;animation:sb-truck-ride 30s linear 1 forwards;}
+@keyframes sb-truck-ride{from{transform:translateX(0px) scaleX(-1)}to{transform:translateX(calc(var(--sb) + 8px)) scaleX(-1)}}
 .sb-cloud{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:11px;color:var(--tx2);}
 .sb-cloud .dot{width:7px;height:7px;border-radius:50%;background:var(--rb);animation:pulse 2s infinite;flex-shrink:0;}
 .sb-cloud.on .dot{background:var(--gb);}
@@ -374,6 +376,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
   <div class="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-title">&#x1F69B; <span>BILICI</span> TMP</div>
+      <span class="sb-logo-truck">&#x1F69B;</span>
       <div class="sb-cloud" id="cbg"><span class="dot"></span><span id="cbl">Locale</span></div>
     </div>
     <nav class="sb-nav">

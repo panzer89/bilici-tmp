@@ -756,6 +756,21 @@ body[data-lvl="1"] .prog-add{display:none!important;}
 
 <div class="tst" id="tst"></div>
 
+<!-- MODAL PROMEMORIA MENSILE FOTO (solo avviso) -->
+<div class="mo" id="mo-foto-reminder-mob">
+  <div class="mdl">
+    <div class="mha"></div>
+    <div class="mtt" style="color:var(--ob);">&#x1F4F7; Promemoria Foto</div>
+    <div style="text-align:center;color:var(--tx2);font-size:14px;line-height:1.8;margin-bottom:18px;">
+      Ricorda di aprire il <strong style="color:var(--tx);">Desktop</strong> per scaricare<br>le foto dei carichi e liberare spazio.
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn bgn" onclick="rispondiFotoReminderMob(true)" style="flex:1;margin-bottom:0;font-size:16px;padding:13px;">&#x2705; OK</button>
+      <button class="btn bgh" onclick="rispondiFotoReminderMob(false)" style="flex:1;margin-bottom:0;font-size:16px;padding:13px;">&#x23F0; Rimanda</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FOTO CARICO -->
 <div class="mo" id="mo-foto-uscita">
   <div class="mdl">
@@ -936,6 +951,7 @@ function doLogin() {
     document.getElementById('login-screen').style.display = 'none';
     applicaLivello(usr.livello);
     tst('Benvenuto ' + usr.username + '!', 'ok');
+    checkFotoReminderMob();
   });
 }
 
@@ -3040,6 +3056,31 @@ function sistemaArrivo(numero) {
     b.locazione = nuovaPos; svLoc();
     suonoEntrata(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
   }
+}
+
+// ═══ PROMEMORIA MENSILE FOTO (solo avviso mobile) ════════════
+function checkFotoReminderMob() {
+  var isLeo  = CURR_USER && CURR_USER.username.toLowerCase() === 'leo';
+  var isPlus = CURR_USER && CURR_USER.livello === 2;
+  if (!isLeo && !isPlus) { return; }
+  var oggi = new Date();
+  if (oggi.getDate() !== 1) { return; }
+  var chiave = 'FOTO_REM_MOB_' + oggi.getFullYear() + '_' + (oggi.getMonth() + 1);
+  try { if (localStorage.getItem(chiave)) { return; } } catch(x) {}
+  setTimeout(function() {
+    document.getElementById('mo-foto-reminder-mob').classList.add('open');
+  }, 1800);
+}
+
+function rispondiFotoReminderMob(ok) {
+  chiM('mo-foto-reminder-mob');
+  if (ok) {
+    // OK: segna il mese come già visto, non riappare
+    var oggi = new Date();
+    var chiave = 'FOTO_REM_MOB_' + oggi.getFullYear() + '_' + (oggi.getMonth() + 1);
+    try { localStorage.setItem(chiave, '1'); } catch(x) {}
+  }
+  // Rimanda: non salva nulla → riappare al prossimo accesso
 }
 </script>
 

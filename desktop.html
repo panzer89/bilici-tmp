@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0d1117">
 <title>Bilici TMP — Desktop</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
@@ -385,6 +386,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
       <button class="sb-item" id="tbstor" onclick="goP('storico')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Storico</button>
       <button class="sb-item-stor" id="tb-excel" onclick="expExcel()" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Esporta Excel</button>
       <button class="sb-item-stor" id="tb-importa" onclick="apriImport()" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Importa</button>
+      <button class="sb-item-stor" id="tb-scarica-foto" onclick="scaricaTutteFoto(false)" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Scarica foto</button>
     </nav>
     <div class="sb-footer">
       <div class="sb-user">
@@ -604,6 +606,22 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 <input type="file" id="qr-input-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
 <div class="tst" id="tst"></div>
 
+<!-- MODAL PROMEMORIA MENSILE FOTO -->
+<div class="mo" id="mo-foto-reminder">
+  <div class="mdl" style="max-width:380px;">
+    <div class="mha"></div>
+    <div class="mtt" style="color:var(--ob);">&#x1F4F7; Download Periodico Foto</div>
+    <div style="text-align:center;color:var(--tx2);font-size:14px;line-height:1.7;margin-bottom:18px;">
+      Sono presenti <strong id="mo-foto-reminder-count" style="color:var(--tx);font-size:17px;">0</strong> foto carichi salvate.<br>
+      Vuoi scaricarle tutte in un file ZIP<br>e liberare spazio su Firestore?
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn bgn" onclick="rispondiFotoReminder(true)" style="flex:1;margin-bottom:0;font-size:15px;padding:12px;">&#x2B07;&#xFE0F; SCARICA E CANCELLA</button>
+      <button class="btn bgh" onclick="rispondiFotoReminder(false)" style="flex:1;margin-bottom:0;font-size:15px;padding:12px;">&#x274C; Dopo</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FOTO CARICO -->
 <div class="mo" id="mo-foto-uscita">
   <div class="mdl">
@@ -704,6 +722,9 @@ function applicaLivello(lvl) {
   if (pianifSect) pianifSect.style.display = showPlanif ? '' : 'none';
   if (pianifBtn)  pianifBtn.style.display  = showPlanif ? '' : 'none';
   if (settBtn)    settBtn.style.display    = showPlanif ? '' : 'none';
+  // bottone scarica foto: visibile solo per Leo (lvl 0) e Plus (lvl 2)
+  var sfBtn = document.getElementById('tb-scarica-foto');
+  if (sfBtn) sfBtn.style.display = (lvl === 0 || lvl === 2) ? '' : 'none';
   renderProg();
   renderProgDomani();
   goP('home');
@@ -1264,6 +1285,7 @@ function doLogin() {
     document.getElementById('login-screen').style.display = 'none';
     applicaLivello(usr.livello);
     tst('Benvenuto ' + usr.username + '!', 'ok');
+    checkFotoReminder();
   });
 }
 
@@ -3515,6 +3537,73 @@ function sistemaArrivo(numero) {
     b.locazione = nuovaPos; svLoc();
     suonoEntrata(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
   }
+}
+
+// ═══ FOTO: SCARICA ZIP + CANCELLA ═══════════════════════════
+function scaricaTutteFoto(deleteAfter) {
+  if (!UC || !fdb) { tst('Connessione cloud necessaria', 'er'); return; }
+  tst('Caricamento foto in corso...', '');
+  fdb.collection('foto_uscite').get().then(function(snap) {
+    if (snap.empty) { tst('Nessuna foto salvata', ''); return; }
+    var zip = new JSZip();
+    var n = 0;
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      if (d.base64) {
+        var b64 = d.base64.replace(/^data:image\/\w+;base64,/, '');
+        var data = d.ts ? new Date(d.ts).toLocaleDateString('it-IT').replace(/\//g, '-') : doc.id.slice(-8);
+        zip.file('carico_' + doc.id.slice(-8) + '_' + data + '.jpg', b64, { base64: true });
+        n++;
+      }
+    });
+    if (n === 0) { tst('Nessuna foto disponibile', ''); return; }
+    zip.generateAsync({ type: 'blob' }).then(function(blob) {
+      var dt = new Date().toLocaleDateString('it-IT').replace(/\//g, '-');
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Foto_Carichi_' + dt + '.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      tst('ZIP scaricato: ' + n + ' foto ✅', 'ok');
+      if (deleteAfter) {
+        var batch = fdb.batch();
+        snap.forEach(function(doc) { batch.delete(doc.ref); });
+        batch.commit()
+          .then(function() { tst('Foto cancellate da Firestore ✓', 'ok'); })
+          .catch(function(e) { tst('Errore cancellazione: ' + e.message, 'er'); });
+      }
+    }).catch(function(e) { tst('Errore ZIP: ' + e.message, 'er'); });
+  }).catch(function(e) { tst('Errore lettura: ' + e.message, 'er'); });
+}
+
+// ═══ PROMEMORIA MENSILE ══════════════════════════════════════
+function checkFotoReminder() {
+  if (!UC || !fdb) { return; }
+  var isLeo  = CURR_USER && CURR_USER.username.toLowerCase() === 'leo';
+  var isPlus = CURR_USER && CURR_USER.livello === 2;
+  if (!isLeo && !isPlus) { return; }
+  var oggi = new Date();
+  if (oggi.getDate() !== 1) { return; }
+  var chiave = 'FOTO_REMINDER_' + oggi.getFullYear() + '_' + (oggi.getMonth() + 1);
+  try { if (localStorage.getItem(chiave)) { return; } } catch(x) {}
+  setTimeout(function() {
+    if (!fdb) { return; }
+    fdb.collection('foto_uscite').get().then(function(snap) {
+      var n = snap.size;
+      if (n === 0) { return; } // nessuna foto, non disturbare
+      var cnt = document.getElementById('mo-foto-reminder-count');
+      if (cnt) { cnt.textContent = n; }
+      document.getElementById('mo-foto-reminder').classList.add('open');
+      try { localStorage.setItem(chiave, '1'); } catch(x) {}
+    });
+  }, 1800);
+}
+
+function rispondiFotoReminder(si) {
+  chiM('mo-foto-reminder');
+  if (si) { scaricaTutteFoto(true); }
 }
 </script>
 

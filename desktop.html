@@ -604,6 +604,19 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 <input type="file" id="qr-input-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
 <div class="tst" id="tst"></div>
 
+<!-- MODAL FOTO CARICO -->
+<div class="mo" id="mo-foto-uscita">
+  <div class="mdl">
+    <div class="mha"></div>
+    <div class="mtt">&#x1F4F7; Foto Carico</div>
+    <div style="text-align:center;margin:10px 0 14px;">
+      <img id="foto-uscita-img" src="" alt="" style="max-width:100%;max-height:55vh;border-radius:10px;display:none;">
+      <div id="foto-uscita-vuota" style="color:var(--tx2);font-size:14px;padding:28px 0;">Nessuna foto disponibile per questo carico</div>
+    </div>
+    <button class="btn bgh" onclick="chiM('mo-foto-uscita')" style="margin-bottom:0;">&#x2716; Chiudi</button>
+  </div>
+</div>
+
 <!-- overlay accesso negato livello 1 -->
 <div id="overlay-no-access" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:none;align-items:center;justify-content:center;">
   <div style="background:#1e1e2e;border-radius:16px;padding:36px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.6);">
@@ -2726,6 +2739,24 @@ function fmtH(ts) {
 
 
 
+function vediFoto(caricoId) {
+  if (!caricoId || !UC || !fdb) { tst('Connessione cloud necessaria', 'er'); return; }
+  var imgEl = document.getElementById('foto-uscita-img');
+  var vuotaEl = document.getElementById('foto-uscita-vuota');
+  imgEl.style.display = 'none'; imgEl.src = '';
+  vuotaEl.style.display = 'block'; vuotaEl.textContent = 'Caricamento...';
+  document.getElementById('mo-foto-uscita').classList.add('open');
+  fdb.collection('foto_uscite').doc(caricoId).get().then(function(doc) {
+    if (doc.exists && doc.data().base64) {
+      imgEl.src = doc.data().base64;
+      imgEl.style.display = 'block';
+      vuotaEl.style.display = 'none';
+    } else {
+      vuotaEl.textContent = 'Nessuna foto disponibile per questo carico';
+    }
+  }).catch(function() { vuotaEl.textContent = 'Errore caricamento foto'; });
+}
+
 function lgRow(m) {
   var isIn=m.tipo==='ENTRATA', isMod=m.tipo==='MODIFICA', isTr=m.tipo==='TRASFERIMENTO';
   var dotCls=isIn?'in':(isMod?'mod':(isTr?'tr':'ou'));
@@ -2738,8 +2769,9 @@ function lgRow(m) {
   else det='Usciti: '+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali!=null?m.bancali:'-'))+', Rimasti: '+(m.bancaliRimasti!=null?m.bancaliRimasti:'-');
   var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
   var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
+  var fotoBtn=(m.fotoSalvata&&m.caricoId)?'<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:15px;padding:0 3px;vertical-align:middle;" title="Vedi foto">&#x1F4F7;</button>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
-  s += '<div class="lm">' + ico + ' Bilico <strong>#' + m.numero + '</strong> - ' + label + caricoTag + opTag + '</div>';
+  s += '<div class="lm">' + ico + ' Bilico <strong>#' + m.numero + '</strong> - ' + label + caricoTag + opTag + fotoBtn + '</div>';
   if(!isMod) s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? ' - ' + m.note : '') + '</div>';
   if(isMod && m.diff && m.diff.length) { s += '<div class="diff-box">'; m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">&rarr;</span><span class="diff-new">'+d.a+'</span></div>';}); s+='</div>'; }
   else if(isMod) s += '<div class="ls">' + det + (m.note ? ' - ' + m.note : '') + '</div>';

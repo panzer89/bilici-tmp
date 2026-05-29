@@ -43,11 +43,11 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .pages{flex:1;overflow:hidden;position:relative;}
 .page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 80px;display:none;}
 .page.active{display:block;}
-.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
-.sc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;text-align:center;}
-.sc .v{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;line-height:1;}
-.sc .lb{font-size:11px;color:var(--tx2);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
-.sc.bl .v{color:var(--bb);}.sc.gn .v{color:var(--gb);}.sc.og .v{color:var(--ob);}.sc.rd .v{color:var(--rb);}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.sc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 6px;text-align:center;}
+.sc .v{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;}
+.sc .lb{font-size:9px;color:var(--tx2);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;line-height:1.2;}
+.sc.bl .v{color:var(--bb);}.sc.gn .v{color:var(--gb);}.sc.og .v{color:var(--ob);}.sc.rd .v{color:var(--rb);}.sc.cy .v{color:var(--cb);}.sc.pu .v{color:var(--pb);}
 .stl{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin:14px 0 10px;display:flex;align-items:center;gap:8px;}
 .stl::before,.stl::after{content:'';flex:1;height:1px;background:var(--bd);}
 .fc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;}
@@ -353,9 +353,15 @@ body[data-lvl="1"] .prog-add{display:none!important;}
 <!-- HOME -->
 <div class="page active" id="page-home">
   <div class="sg">
-    <div class="sc bl"><div class="v" id="s1">0</div><div class="lb">&#x1F69B; Bilici</div></div>
-    <div class="sc og"><div class="v" id="s2">0</div><div class="lb">&#x1F4E6; Bancali</div></div>
-    <div class="sc rd"><div class="v" id="s4">0</div><div class="lb">&#x1F4E6; Bancali oggi</div></div>
+    <!-- secco sx | fresco dx -->
+    <div class="sc og"><div class="v" id="s-stock-secco">0</div><div class="lb">📦 Stock Secco</div></div>
+    <div class="sc cy"><div class="v" id="s-stock-fresco">0</div><div class="lb">❄️ Stock Fresco</div></div>
+    <div class="sc og"><div class="v" id="s-posti-disp-secco">—</div><div class="lb">📦 Disp. Secco</div></div>
+    <div class="sc cy"><div class="v" id="s-posti-disp-fresco">—</div><div class="lb">❄️ Disp. Fresco</div></div>
+    <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Bilici Secco</div></div>
+    <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">—</div><div class="lb">❄️ Bilici Fresco</div></div>
+    <div class="sc gn"><div class="v" id="s-plt-in">0</div><div class="lb">⬆ PLT entrati</div></div>
+    <div class="sc rd"><div class="v" id="s-plt-out">0</div><div class="lb">⬇ PLT usciti</div></div>
   </div>
 
   <!-- USCITE IN PROGRAMMA OGGI -->
@@ -882,6 +888,19 @@ window.onload = function() {
       ST = [];
       s.forEach(function(d) { ST.push(Object.assign({id: d.id}, d.data())); });
       ui();
+    });
+    // sincronizza struttura magazzino dal desktop
+    fdb.collection('settings').doc('struttura').onSnapshot(function(doc) {
+      if (doc.exists) {
+        var d = doc.data();
+        try {
+          if (d.postiPlt      != null) localStorage.setItem('MAG_POSTI_PLT',          d.postiPlt);
+          if (d.postiFresc    != null) localStorage.setItem('MAG_POSTI_FRESCO',        d.postiFresc);
+          if (d.pltBilico     != null) localStorage.setItem('MAG_PLT_BILICO',          d.pltBilico);
+          if (d.pltBilicoFresc != null) localStorage.setItem('MAG_PLT_BILICO_FRESCO',  d.pltBilicoFresc);
+        } catch(x) {}
+        ui();
+      }
     });
     // ascolta uscite programmate in realtime
     caricaProg();
@@ -2829,11 +2848,36 @@ function lgDel(m) {
 
 function ui() {
   var lst = Object.values(BL);
-  var tot = lst.reduce(function(s, b) { return s + (b.bancali || 0); }, 0);
+  // stock secco = tutti i bilici ESCLUSI FRESCO e PARTENZE
+  var stockSecco = lst.reduce(function(s, b) {
+    var loc = (b.locazione || '').toUpperCase();
+    return (loc === 'FRESCO' || loc === 'PARTENZE') ? s : s + (b.bancali || 0);
+  }, 0);
+  // stock fresco = bilici in locazione FRESCO
+  var stockFresco = lst.reduce(function(s, b) {
+    return (b.locazione || '').toUpperCase() === 'FRESCO' ? s + (b.bancali || 0) : s;
+  }, 0);
   var oggi = new Date().toDateString();
-  document.getElementById('s1').textContent = lst.length;
-  document.getElementById('s2').textContent = tot;
-  var movOggi=ST.filter(function(m){return new Date(m.ts).toDateString()===oggi;}); document.getElementById('s4').textContent=movOggi.reduce(function(acc,m){if(m.tipo==='ENTRATA')return acc+(m.bancali||0);if(m.tipo==='USCITA')return acc+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali||0));return acc;},0);
+  var movOggi = ST.filter(function(m) { return new Date(m.ts).toDateString() === oggi; });
+  var pltIn  = movOggi.reduce(function(a,m){ return m.tipo==='ENTRATA' ? a+(m.bancali||0) : a; }, 0);
+  var pltOut = movOggi.reduce(function(a,m){ return m.tipo==='USCITA' ? a+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali||0)) : a; }, 0);
+  var postiSecco     = parseInt(localStorage.getItem('MAG_POSTI_PLT')          || '0') || 0;
+  var postiFresc     = parseInt(localStorage.getItem('MAG_POSTI_FRESCO')        || '0') || 0;
+  var pltBilico      = parseInt(localStorage.getItem('MAG_PLT_BILICO')          || '0') || 0;
+  var pltBilicoFresc = parseInt(localStorage.getItem('MAG_PLT_BILICO_FRESCO')   || '0') || 0;
+  var postiDispSecco  = postiSecco > 0 ? postiSecco - stockSecco  : null;
+  var postiDispFresc  = postiFresc > 0 ? postiFresc - stockFresco : null;
+  var biliciDispSecco = (postiSecco > 0 && pltBilico      > 0) ? Math.floor((postiSecco - stockSecco)  / pltBilico)      : null;
+  var biliciDispFresc = (postiFresc > 0 && pltBilicoFresc > 0) ? Math.floor((postiFresc - stockFresco) / pltBilicoFresc) : null;
+  function _s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val !== null ? val : '—'; }
+  _s('s-stock-secco',        stockSecco);
+  _s('s-stock-fresco',       stockFresco);
+  _s('s-posti-disp-secco',   postiDispSecco);
+  _s('s-posti-disp-fresco',  postiDispFresc);
+  _s('s-bilici-disp-secco',  biliciDispSecco);
+  _s('s-bilici-disp-fresco', biliciDispFresc);
+  _s('s-plt-in',             pltIn);
+  _s('s-plt-out',            pltOut);
 
   // aggiorna contatore nel bottone home
   var cntEl = document.getElementById('cnt-mag');

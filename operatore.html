@@ -543,6 +543,45 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
   </div>
 </div>
 
+<!-- MODAL USCITA COPPIA -->
+<div class="mo" id="mo-coppia-uscita">
+  <div class="mdl">
+    <div class="mha"></div>
+    <div class="mtt rd">&#x1F517; Uscita Coppia</div>
+    <div id="mcu-info" style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:14px;line-height:1.7;"></div>
+    <!-- Bilico A -->
+    <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--bb);margin-bottom:8px;">Bilico <span id="mcu-numA">#—</span></div>
+      <div id="mcu-notaA" style="display:none;font-size:12px;color:var(--tx2);background:var(--bg);border-left:3px solid var(--bb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;"></div>
+      <div class="fg" style="margin-bottom:8px;">
+        <div class="fl">Bancali uscita</div>
+        <div class="crow"><button class="cbt" onclick="stp('mcu-bancA',-1)">&#x2212;</button><input class="cvl" id="mcu-bancA" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancA',1)">+</button></div>
+      </div>
+      <div class="fg" style="margin-bottom:0;">
+        <div class="fl">Note uscita</div>
+        <input class="fi" id="mcu-ntA" type="text" placeholder="Destinazione..." autocomplete="off" style="padding:10px 12px;">
+      </div>
+    </div>
+    <!-- Bilico B -->
+    <div style="background:var(--sf2);border:1px solid rgba(110,64,201,.35);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--pb);margin-bottom:8px;">Bilico <span id="mcu-numB">#—</span></div>
+      <div id="mcu-notaB" style="display:none;font-size:12px;color:var(--tx2);background:var(--bg);border-left:3px solid var(--pb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;"></div>
+      <div class="fg" style="margin-bottom:8px;">
+        <div class="fl">Bancali uscita</div>
+        <div class="crow"><button class="cbt" onclick="stp('mcu-bancB',-1)">&#x2212;</button><input class="cvl" id="mcu-bancB" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancB',1)">+</button></div>
+      </div>
+      <div class="fg" style="margin-bottom:0;">
+        <div class="fl">Note uscita</div>
+        <input class="fi" id="mcu-ntB" type="text" placeholder="Destinazione..." autocomplete="off" style="padding:10px 12px;">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn bgn" onclick="confUscitaCoppia()" style="flex:1;margin-bottom:0;">&#x2705; CONFERMA USCITA</button>
+      <button class="btn bgh" onclick="chiM('mo-coppia-uscita')" style="flex:1;margin-bottom:0;">&#x274C; ANNULLA</button>
+    </div>
+  </div>
+</div>
+
 <!-- QR INPUT -->
 <input type="file" id="qr-input-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
 <div class="tst" id="tst"></div>
@@ -567,7 +606,8 @@ var CURR_USER = null;
 var pageStack = ['home'];
 var currentCat = 'secco'; // 'secco' o 'fresco'
 var pendConf = null;
-var pendCoppia = null; // {itemA, bilA, itemB, bilB} per uscita coppia agganciata
+var _coppiaA = null; // {item, bilico} per uscita coppia agganciata
+var _coppiaB = null;
 var aggancioSel = null;  // {docId, numero} — aggancio oggi
 var aggancioSelD = null; // {docId, numero} — aggancio domani
 var qrTargetId = null;
@@ -1226,18 +1266,67 @@ function apriUscitaCoppia(docId) {
   var itemB = PROG.find(function(p){return p.aggancioId===itemA.aggancioId && p.id!==docId;});
   if (!itemB) { caricaVeloce(itemA.numero); return; }
   var bilA = BL[itemA.numero], bilB = BL[itemB.numero];
-  pendCoppia = {itemA:itemA, bilA:bilA, itemB:itemB, bilB:bilB};
-  var rigaA = bilA ? ('&#x1F4CD; ' + bilA.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + bilA.bancali + ' bancali') : 'Non in magazzino';
-  var rigaB = bilB ? ('&#x1F4CD; ' + bilB.locazione + ' &nbsp;|&nbsp; &#x1F4E6; ' + bilB.bancali + ' bancali') : 'Non in magazzino';
-  var notaTagA = itemA.nota ? '<br><span style="font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--bb);display:block;padding:4px 8px;margin-top:4px;border-radius:3px;">&#x1F4DD; ' + itemA.nota + '</span>' : '';
-  var notaTagB = itemB.nota ? '<br><span style="font-size:12px;color:var(--tx2);background:var(--sf2);border-left:3px solid var(--pb);display:block;padding:4px 8px;margin-top:4px;border-radius:3px;">&#x1F4DD; ' + itemB.nota + '</span>' : '';
-  document.getElementById('mo-conf-tx').innerHTML =
-    'Confermi l\'uscita coppia?<br><br>' +
-    '<strong style="color:var(--bb)">Bilico #' + itemA.numero + '</strong><br>' + rigaA + notaTagA + '<br><br>' +
-    '<strong style="color:var(--pb)">Bilico #' + itemB.numero + '</strong><br>' + rigaB + notaTagB;
-  document.getElementById('mo-conf-banc-wrap').style.display = 'none';
-  pendConf = 'carica-coppia';
-  document.getElementById('mo-conf').classList.add('open');
+  _coppiaA = {item:itemA, bilico:bilA};
+  _coppiaB = {item:itemB, bilico:bilB};
+  document.getElementById('mcu-numA').textContent = '#'+itemA.numero;
+  document.getElementById('mcu-numB').textContent = '#'+itemB.numero;
+  document.getElementById('mcu-bancA').value = (itemA.bancaliProg && bilA && itemA.bancaliProg <= bilA.bancali) ? itemA.bancaliProg : (bilA ? bilA.bancali : 0);
+  document.getElementById('mcu-bancB').value = (itemB.bancaliProg && bilB && itemB.bancaliProg <= bilB.bancali) ? itemB.bancaliProg : (bilB ? bilB.bancali : 0);
+  document.getElementById('mcu-ntA').value = '';
+  document.getElementById('mcu-ntB').value = '';
+  var elNotaA = document.getElementById('mcu-notaA');
+  if (itemA.nota) { elNotaA.textContent = '📝 ' + itemA.nota; elNotaA.style.display = 'block'; }
+  else { elNotaA.style.display = 'none'; }
+  var elNotaB = document.getElementById('mcu-notaB');
+  if (itemB.nota) { elNotaB.textContent = '📝 ' + itemB.nota; elNotaB.style.display = 'block'; }
+  else { elNotaB.style.display = 'none'; }
+  var infoA = bilA ? (bilA.locazione + ' — ' + bilA.bancali + ' bancali') : 'Non in magazzino';
+  var infoB = bilB ? (bilB.locazione + ' — ' + bilB.bancali + ' bancali') : 'Non in magazzino';
+  document.getElementById('mcu-info').innerHTML =
+    '<strong style="color:var(--bb)">#'+itemA.numero+'</strong>: '+infoA+'<br>'+
+    '<strong style="color:var(--pb)">#'+itemB.numero+'</strong>: '+infoB;
+  document.getElementById('mo-coppia-uscita').classList.add('open');
+}
+function confUscitaCoppia() {
+  if (!_coppiaA || !_coppiaB) return;
+  var buA = parseInt(document.getElementById('mcu-bancA').value) || 0;
+  var buB = parseInt(document.getElementById('mcu-bancB').value) || 0;
+  var ntA = document.getElementById('mcu-ntA').value.trim();
+  var ntB = document.getElementById('mcu-ntB').value.trim();
+  var itemA=_coppiaA.item, bilA=_coppiaA.bilico;
+  var itemB=_coppiaB.item, bilB=_coppiaB.bilico;
+  if (bilA && buA <= 0) { return tst('Inserisci bancali per bilico #'+itemA.numero,'er'); }
+  if (bilB && buB <= 0) { return tst('Inserisci bancali per bilico #'+itemB.numero,'er'); }
+  if (bilA && buA > bilA.bancali) { return tst('Bancali #'+itemA.numero+': supera i presenti ('+bilA.bancali+')','er'); }
+  if (bilB && buB > bilB.bancali) { return tst('Bancali #'+itemB.numero+': supera i presenti ('+bilB.bancali+')','er'); }
+  chiM('mo-coppia-uscita');
+  var caricoId = 'C'+Date.now();
+  var ts = new Date().toISOString();
+  var rimA = 0, rimB = 0;
+  if (bilA) {
+    rimA = bilA.bancali - buA;
+    if (rimA===0) { dbDB(itemA.numero); }
+    else { var lA=bilA.locazione.toUpperCase(); dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'}); }
+    dbAS({tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId});
+  }
+  if (bilB) {
+    rimB = bilB.bancali - buB;
+    if (rimB===0) { dbDB(itemB.numero); }
+    else { var lB=bilB.locazione.toUpperCase(); dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'}); }
+    dbAS({tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId});
+  }
+  if (UC&&fdb) {
+    if(itemA.id) fdb.collection('prog').doc(itemA.id).delete().catch(function(){});
+    if(itemB.id) fdb.collection('prog').doc(itemB.id).delete().catch(function(){});
+  } else {
+    PROG=PROG.filter(function(p){return p.id!==itemA.id&&p.id!==itemB.id;});
+    salvaProg(); renderProg();
+  }
+  rimuoviPrenotazioneNum(itemA.numero);
+  rimuoviPrenotazioneNum(itemB.numero);
+  suonoOk();
+  tst('Uscita coppia: #'+itemA.numero+' + #'+itemB.numero+' confermata!','ok');
+  _coppiaA=null; _coppiaB=null;
 }
 
 function startAggancio(docId, numero) {
@@ -1429,32 +1518,7 @@ function caricaVeloce(num) {
 }
 function eseguiConf() {
   chiM('mo-conf');
-  if (pendConf === 'carica-coppia' && pendCoppia) {
-    var caricoId = 'C' + Date.now();
-    var ts = new Date().toISOString();
-    var iA = pendCoppia.itemA, bA = pendCoppia.bilA;
-    var iB = pendCoppia.itemB, bB = pendCoppia.bilB;
-    if (bA) {
-      dbDB(iA.numero);
-      dbAS({tipo:'USCITA', numero:iA.numero, locazione:bA.locazione, bancaliUsciti:bA.bancali, bancaliRimasti:0, note:'', ts:ts, caricoId:caricoId});
-    }
-    if (bB) {
-      dbDB(iB.numero);
-      dbAS({tipo:'USCITA', numero:iB.numero, locazione:bB.locazione, bancaliUsciti:bB.bancali, bancaliRimasti:0, note:'', ts:new Date(Date.now()+1).toISOString(), caricoId:caricoId});
-    }
-    if (UC && fdb) {
-      if (iA.id) fdb.collection('prog').doc(iA.id).delete().catch(function(){});
-      if (iB.id) fdb.collection('prog').doc(iB.id).delete().catch(function(){});
-    } else {
-      PROG = PROG.filter(function(p){return p.id!==iA.id && p.id!==iB.id;});
-      salvaProg(); renderProg();
-    }
-    rimuoviPrenotazioneNum(iA.numero);
-    rimuoviPrenotazioneNum(iB.numero);
-    suonoOk();
-    tst('Coppia #' + iA.numero + ' + #' + iB.numero + ' — uscita confermata!', 'ok');
-    pendCoppia = null;
-  } else if (pendConf === 'carica' && pendCarica) {
+  if (pendConf === 'carica' && pendCarica) {
     var num = pendCarica.num, b = pendCarica.b;
     var bu = parseInt(document.getElementById('mo-conf-banc').value) || b.bancali;
     bu = Math.max(1, Math.min(bu, b.bancali));

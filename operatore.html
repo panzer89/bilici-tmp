@@ -755,7 +755,7 @@ function controllaGiorno() {
     daSposta.forEach(function(p) {
       if (!p.id) return;
       var domaniRef = fdb.collection('prog_domani').doc(p.id);
-      var nuovoRef  = fdb.collection('prog').doc();
+      var nuovoRef  = fdb.collection('prog').doc(p.id);
       var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
       if (p.data)        dati.data        = p.data;
       if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
@@ -941,12 +941,12 @@ function confEntrata() {
   var dati = {numero: num, locazione: post, bancali: ban, note: note, ts: ts};
   if (UC && fdb) {
     fdb.collection('bilici').doc(num).set(dati).then(function() {
-      fdb.collection('storico').add({tipo:'ENTRATA', numero:num, locazione:post, bancali:ban, note:note, ts:ts});
+      dbAS({tipo:'ENTRATA', numero:num, locazione:post, bancali:ban, note:note, ts:ts});
     });
   } else {
     BL[num] = dati;
-    ST.unshift({tipo:'ENTRATA', numero:num, locazione:post, bancali:ban, note:note, ts:ts, id:'L'+Date.now()});
     svLoc();
+    dbAS({tipo:'ENTRATA', numero:num, locazione:post, bancali:ban, note:note, ts:ts});
   }
   suonoOk();
   // Mostra success e prepara prossimo
@@ -1076,11 +1076,17 @@ function modificaNotaProgDomani(num) {
   tst('Nota aggiornata', 'ok');
 }
 
+function contaOrdiniUnivoci(arr) {
+  var visti = {}, n = 0;
+  (arr||[]).forEach(function(p){ if(p.aggancioId){if(!visti[p.aggancioId]){visti[p.aggancioId]=true;n++;}}else{n++;} });
+  return n;
+}
+
 function renderProg() {
   var el = document.getElementById('prog-list');
   var badge = document.getElementById('prog-count');
   if (!el || !badge) return;
-  badge.textContent = PROG.length;
+  badge.textContent = contaOrdiniUnivoci(PROG);
   if (!PROG.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per oggi</div>'; return; }
   var rAgg = {};
   var rows = [];
@@ -1148,7 +1154,7 @@ function renderProgDomani() {
   var el = document.getElementById('prog-domani-list');
   var badge = document.getElementById('prog-domani-count');
   if (!el || !badge) return;
-  badge.textContent = PROG_DOMANI.length;
+  badge.textContent = contaOrdiniUnivoci(PROG_DOMANI);
   if (!PROG_DOMANI.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata per domani</div>'; return; }
   var rAgg = {}, rows = [];
   for (var i = 0; i < PROG_DOMANI.length; i++) {
@@ -1649,7 +1655,7 @@ function leggiQRdaFoto(input) {
 function aggiornaBadgeUscita() {
   var badge = document.getElementById('badge-uscita-oggi');
   if (!badge) return;
-  var n = PROG ? PROG.length : 0;
+  var n = contaOrdiniUnivoci(PROG);
   if (n > 0) {
     badge.textContent = n;
     badge.classList.add('visible');

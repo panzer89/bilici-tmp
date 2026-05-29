@@ -1466,6 +1466,9 @@ function caricaProg() {
     renderProg();
     aggTuttiOrdini();
     setTimeout(function(){cerca();},50); // aggiorna badge prenotato
+    renderCalendario();
+    var moC = document.getElementById('mo-cal');
+    if (CAL_GIORNO_SEL && moC && moC.classList.contains('open')) renderCalModalList();
   });
 }
 
@@ -2040,13 +2043,17 @@ function caricaProgDomani() {
     aggiornaBadgeMag();
     aggTuttiOrdini();
     controllaGiorno();
+    renderCalendario();
+    var moC = document.getElementById('mo-cal');
+    if (CAL_GIORNO_SEL && moC && moC.classList.contains('open')) renderCalModalList();
   });
   fdb.collection('prog_calendario').orderBy('data', 'asc').onSnapshot(function(snap) {
     CAL_DATA = {};
     snap.forEach(function(doc) {
-      var d = doc.data();
-      if (!CAL_DATA[d.data]) CAL_DATA[d.data] = [];
-      CAL_DATA[d.data].push({numero: d.numero, nota: d.nota || '', id: doc.id});
+      var item = Object.assign({id: doc.id}, doc.data());
+      if (!item.data) return;
+      if (!CAL_DATA[item.data]) CAL_DATA[item.data] = [];
+      CAL_DATA[item.data].push(item);
     });
     renderCalendario();
     aggTuttiOrdini();
@@ -2095,20 +2102,6 @@ function aggProgDomani() {
   tst('Bilico ' + val + ' aggiunto per domani', 'ok');
 }
 
-function rimuoviProgDomani(num) {
-  if (!confirm('Rimuovere bilico #' + num + ' dalle uscite di domani?')) { return; }
-  if (UC && fdb) {
-    var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
-    if (item && item.id) {
-      fdb.collection('prog_domani').doc(item.id).delete().catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-    }
-  } else {
-    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return p.numero !== num; });
-    salvaProgDomani();
-    renderProgDomani();
-  }
-}
-
 function modificaNotaProgDomani(docId) {
   var item = PROG_DOMANI.find(function(p) { return p.id === docId; });
   if (!item) { return; }
@@ -2144,7 +2137,7 @@ function controllaGiorno() {
     daSposta.forEach(function(p) {
       if (!p.id) return;
       var domaniRef = fdb.collection('prog_domani').doc(p.id);
-      var nuovoRef  = fdb.collection('prog').doc();
+      var nuovoRef  = fdb.collection('prog').doc(p.id);
       var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
       if (p.data)        dati.data        = p.data;
       if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;
@@ -2797,6 +2790,31 @@ function aggiornaUltimiEntrati() {
 var CAL_MESE = 0;
 var CAL_GIORNO_SEL = null;
 
+function calItemsGiorno(ds) {
+  var oggi = datLocale(new Date());
+  var domani = datLocale(new Date(Date.now()+86400000));
+  var result = [], seenIds = {};
+  if (ds === oggi) {
+    (PROG||[]).forEach(function(x){
+      if (x.id && seenIds[x.id]) return;
+      if (x.id) seenIds[x.id] = true;
+      result.push(Object.assign({}, x, {_attivo: true}));
+    });
+  } else if (ds === domani) {
+    (PROG_DOMANI||[]).forEach(function(x){
+      if (x.id && seenIds[x.id]) return;
+      if (x.id) seenIds[x.id] = true;
+      result.push(Object.assign({}, x, {_attivo: true}));
+    });
+  }
+  (CAL_DATA[ds]||[]).forEach(function(x){
+    if (x.id && seenIds[x.id]) return;
+    if (x.id) seenIds[x.id] = true;
+    result.push(x);
+  });
+  return result;
+}
+
 
 function toggleProgDesk(bodyId, chevId) {
   var body = document.getElementById(bodyId);
@@ -2817,9 +2835,13 @@ function controllaCalendarioGiorno() {
     var lista = data===oggi ? PROG : PROG_DOMANI;
     items.forEach(function(item) {
       var gia = lista.find(function(p){return p.numero===item.numero;});
-      if (!gia && UC && fdb) {
-        fdb.collection(coll).add({numero:item.numero, nota:item.nota||'', ts:Date.now()});
-        if (item.id) fdb.collection('prog_calendario').doc(item.id).delete();
+      if (!gia && UC && fdb && item.id) {
+        var dCal = {numero:item.numero, nota:item.nota||'', ts:Date.now(), data:data};
+        if (item.bancaliProg) dCal.bancaliProg = item.bancaliProg;
+        if (item.aggancioId)  dCal.aggancioId  = item.aggancioId;
+        if (item.operatore)   dCal.operatore   = item.operatore;
+        fdb.collection(coll).doc(item.id).set(dCal);
+        fdb.collection('prog_calendario').doc(item.id).delete();
       }
     });
   });
@@ -2855,7 +2877,7 @@ function renderCalendario() {
     var mm=String(mesN+1).padStart(2,'0'), dd=String(g).padStart(2,'0');
     var ds = anno+'-'+mm+'-'+dd;
     var isOggi=ds===oggiStr, isPast=ds<oggiStr;
-    var items=CAL_DATA[ds]||[];
+    var items=calItemsGiorno(ds);
     var cls='cal-day'+(isPast?' cal-past':'')+(isOggi?' cal-today':'')+(items.length&&!isPast?' cal-has':'');
     var badges=items.slice(0,3).map(function(x){return '<div class="cal-bg">#'+x.numero+'</div>';}).join('');
     if(items.length>3) badges+='<div class="cal-bg">+'+(items.length-3)+'</div>';
@@ -2879,7 +2901,7 @@ function calApriGiorno(dateStr) {
 function renderCalModalList() {
   var el = document.getElementById('cal-modal-list');
   if (!el || !CAL_GIORNO_SEL) return;
-  var items = CAL_DATA[CAL_GIORNO_SEL] || [];
+  var items = calItemsGiorno(CAL_GIORNO_SEL);
   if (!items.length) { el.innerHTML = '<div style="font-size:13px;color:var(--tx2);text-align:center;padding:8px 0;">Nessun bilico per questo giorno</div>'; return; }
   var rAgg = {}, html = '';
   items.forEach(function(item) {
@@ -2890,33 +2912,39 @@ function renderCalModalList() {
       if (partner) rAgg[item.aggancioId] = true;
     }
     var isPaired = !!partner;
-    var isSelC = aggancioSelC !== null && aggancioSelC.id === item.id;
+    var isSelC = !item._attivo && aggancioSelC !== null && aggancioSelC.id === item.id;
     var bA = BL[item.numero], bB = partner ? BL[partner.numero] : null;
     var border = isPaired ? 'border-left:3px solid var(--pb);' : (isSelC ? 'border-left:3px solid var(--cb);' : '');
     var s = '<div class="cal-mi" style="align-items:flex-start;' + border + '">';
     s += '<div style="flex:1;min-width:0;">';
     if (isPaired) {
-      s += '<div class="cal-mi-num">#' + item.numero + ' <span style="color:var(--pb);">&#x1F517;</span> #' + partner.numero + '</div>';
+      s += '<div class="cal-mi-num">#' + item.numero + ' <span style="color:var(--pb);">&#x1F517;</span> #' + partner.numero;
+      if (item._attivo) s += ' <span style="font-size:10px;color:var(--cb);font-weight:600;margin-left:4px;">&#x2705; uscita</span>';
+      s += '</div>';
       if (item.nota) s += '<div class="cal-mi-nota">' + item.nota + '</div>';
       if (bA) { var bndA = (item.bancaliProg && item.bancaliProg < bA.bancali) ? item.bancaliProg + ' / ' + bA.bancali : bA.bancali; s += '<div style="font-size:12px;color:var(--tx2);">&#x1F4CD; ' + bA.locazione + ' &nbsp;&#x1F4E6; ' + bndA + '</div>'; }
       s += '<div style="border-top:1px dashed rgba(163,113,247,.4);margin:4px 0;"></div>';
       if (bB) { var bndB = (partner.bancaliProg && partner.bancaliProg < bB.bancali) ? partner.bancaliProg + ' / ' + bB.bancali : bB.bancali; s += '<div style="font-size:12px;color:var(--pb);">&#x1F4CD; ' + bB.locazione + ' &nbsp;&#x1F4E6; ' + bndB + '</div>'; }
       if (partner.nota) s += '<div class="cal-mi-nota" style="border-color:var(--pb);color:var(--pb);">' + partner.nota + '</div>';
     } else {
-      s += '<div class="cal-mi-num">#' + item.numero + '</div>';
+      s += '<div class="cal-mi-num">#' + item.numero;
+      if (item._attivo) s += ' <span style="font-size:10px;color:var(--cb);font-weight:600;margin-left:4px;">&#x2705; uscita</span>';
+      s += '</div>';
       if (item.nota) s += '<div class="cal-mi-nota">' + item.nota + '</div>';
       if (bA) { var banDisp = (item.bancaliProg && item.bancaliProg < bA.bancali) ? item.bancaliProg + ' / ' + bA.bancali : bA.bancali; s += '<div style="font-size:12px;color:var(--tx2);">&#x1F4CD; ' + bA.locazione + ' &nbsp;&#x1F4E6; ' + banDisp + '</div>'; }
       if (isSelC) s += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato — tocca &#x1F517; su un altro bilico o usa il campo sotto</div>';
     }
     s += '</div>';
     s += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;margin-left:8px;">';
-    if (isPaired) {
-      s += '<button class="cal-mi-del" style="border-color:var(--pb);color:var(--pb);" onclick="sganciaProgCal(\'' + item.id + '\')">&#x2702;</button>';
-      if (isAdmin() && item.id) s += '<button class="cal-mi-del" onclick="calElimina(\'' + item.id + '\')">&#x2716;</button>';
-    } else {
-      var aggCStyle = isSelC ? 'border-color:var(--cb);color:var(--cb);' : (aggancioSelC !== null ? 'border-color:var(--gb);color:var(--gb);' : 'border-color:var(--pb);color:var(--pb);');
-      s += '<button class="cal-mi-del" style="' + aggCStyle + '" onclick="startAggancioCal(\'' + item.id + '\',\'' + item.numero + '\')">&#x1F517;</button>';
-      if (item.id) s += '<button class="cal-mi-del" onclick="calElimina(\'' + item.id + '\')">&#x2716;</button>';
+    if (!item._attivo) {
+      if (isPaired) {
+        s += '<button class="cal-mi-del" style="border-color:var(--pb);color:var(--pb);" onclick="sganciaProgCal(\'' + item.id + '\')">&#x2702;</button>';
+        if (isAdmin() && item.id) s += '<button class="cal-mi-del" onclick="calElimina(\'' + item.id + '\')">&#x2716;</button>';
+      } else {
+        var aggCStyle = isSelC ? 'border-color:var(--cb);color:var(--cb);' : (aggancioSelC !== null ? 'border-color:var(--gb);color:var(--gb);' : 'border-color:var(--pb);color:var(--pb);');
+        s += '<button class="cal-mi-del" style="' + aggCStyle + '" onclick="startAggancioCal(\'' + item.id + '\',\'' + item.numero + '\')">&#x1F517;</button>';
+        if (item.id) s += '<button class="cal-mi-del" onclick="calElimina(\'' + item.id + '\')">&#x2716;</button>';
+      }
     }
     s += '</div></div>';
     html += s;
@@ -2937,14 +2965,25 @@ function calAggiungi() {
     document.getElementById('cal-add-nota').value = '';
     document.getElementById('cal-add-plt').value = '';
   }
+  var _oggi = datLocale(new Date()), _domani = datLocale(new Date(Date.now()+86400000));
   if (UC && fdb) {
-    fdb.collection('prog_calendario').add(dati)
-      .then(function() { tst('Bilico #' + num + ' aggiunto al ' + CAL_GIORNO_SEL, 'ok'); clearCalForm(); })
+    var coll = CAL_GIORNO_SEL === _oggi ? 'prog' : (CAL_GIORNO_SEL === _domani ? 'prog_domani' : 'prog_calendario');
+    fdb.collection(coll).add(dati)
+      .then(function() { tst('Bilico #' + num + ' aggiunto', 'ok'); clearCalForm(); })
       .catch(function(e) { tst('Errore: ' + e.message, 'er'); });
   } else {
-    if (!CAL_DATA[CAL_GIORNO_SEL]) CAL_DATA[CAL_GIORNO_SEL] = [];
-    CAL_DATA[CAL_GIORNO_SEL].push({numero: num, nota: nota, bancaliProg: bancProg || undefined, id: null});
-    renderCalendario(); renderCalModalList();
+    if (CAL_GIORNO_SEL === _oggi) {
+      PROG.push(Object.assign({id:'local_'+Date.now()}, dati));
+      salvaProg(); renderProg();
+    } else if (CAL_GIORNO_SEL === _domani) {
+      PROG_DOMANI.push(Object.assign({id:'local_'+Date.now()}, dati));
+      salvaProgDomani(); renderProgDomani();
+    } else {
+      if (!CAL_DATA[CAL_GIORNO_SEL]) CAL_DATA[CAL_GIORNO_SEL] = [];
+      CAL_DATA[CAL_GIORNO_SEL].push({numero: num, nota: nota, bancaliProg: bancProg || undefined, id: null});
+      renderCalendario();
+    }
+    renderCalModalList();
     tst('Bilico #' + num + ' aggiunto', 'ok');
     clearCalForm();
   }
@@ -3114,9 +3153,6 @@ function aggiornaBadgeMag() {
   var lst=Object.values(BL);
   if(lst.length)ml.innerHTML=lst.sort(function(a,b){return a.numero.localeCompare(b.numero);}).map(function(b){return crdB(b,true);}).join('');
 }
-
-// ── STORICO AVANZATO ──
-function apriStorAvanzato() { goP('storico'); }
 
 function filtraStorico() {
   var num = (document.getElementById('sf-num').value || '').trim().toUpperCase();

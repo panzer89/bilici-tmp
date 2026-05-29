@@ -1987,20 +1987,6 @@ function aggProgDomani() {
   tst('Bilico ' + val + ' aggiunto per domani', 'ok');
 }
 
-function rimuoviProgDomani(num) {
-  if (!confirm('Rimuovere bilico #' + num + ' dalle uscite di domani?')) { return; }
-  if (UC && fdb) {
-    var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
-    if (item && item.id) {
-      fdb.collection('prog_domani').doc(item.id).delete().catch(function(e) { tst('Errore: ' + e.message, 'er'); });
-    }
-  } else {
-    PROG_DOMANI = PROG_DOMANI.filter(function(p) { return p.numero !== num; });
-    salvaProgDomani();
-    renderProgDomani();
-  }
-}
-
 function modificaNotaProgDomani(num) {
   var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
   if (!item) { return; }
@@ -2116,7 +2102,7 @@ function controllaGiorno() {
     daSposta.forEach(function(p) {
       if (!p.id) return;
       var domaniRef = fdb.collection('prog_domani').doc(p.id);
-      var nuovoRef  = fdb.collection('prog').doc();
+      var nuovoRef  = fdb.collection('prog').doc(p.id);
       var dati = {numero: p.numero, nota: p.nota || '', ts: Date.now()};
       if (p.data)        dati.data        = p.data;
       if (p.bancaliProg) dati.bancaliProg = p.bancaliProg;

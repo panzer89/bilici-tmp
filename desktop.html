@@ -415,14 +415,14 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
         <div class="sg">
           <!-- riga 1 -->
           <div class="sc og"><div class="v" id="s-stock-secco">0</div><div class="lb">📦 Stock Secco</div></div>
-          <div class="sc og"><div class="v" id="s-posti-disp-secco">—</div><div class="lb">📦 Posti disp. Secco</div></div>
+          <div class="sc og"><div class="v" id="s-posti-disp-secco">—</div><div class="lb">📦 Disp. PLT Secco</div></div>
           <div class="sc cy"><div class="v" id="s-stock-fresco">0</div><div class="lb">❄️ Stock Fresco</div></div>
-          <div class="sc cy"><div class="v" id="s-posti-disp-fresco">—</div><div class="lb">❄️ Posti disp. Fresco</div></div>
+          <div class="sc cy"><div class="v" id="s-posti-disp-fresco">—</div><div class="lb">❄️ Disp. PLT Fresco</div></div>
           <!-- riga 2 -->
-          <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Bilici disp. Secco</div></div>
+          <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Disp. Bilici Secco</div></div>
           <div class="sc gn"><div class="v" id="s-plt-in">0</div><div class="lb">⬆ PLT entrati oggi</div></div>
           <div class="sc rd"><div class="v" id="s-plt-out">0</div><div class="lb">⬇ PLT usciti oggi</div></div>
-          <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">—</div><div class="lb">❄️ Bilici disp. Fresco</div></div>
+          <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">—</div><div class="lb">❄️ Disp. Bilici Fresco</div></div>
         </div>
         <div id="supbox" style="display:none"><div class="sup"><div class="sut">&#x2699;&#xFE0F; MODALITA LOCALE</div><div class="sui">Per cloud: <a href="https://console.firebase.google.com" target="_blank">Firebase</a></div></div></div>
         <div class="two-col">
@@ -1290,6 +1290,19 @@ window.onload = function() {
       ST = [];
       s.forEach(function(d) { ST.push(Object.assign({id: d.id}, d.data())); });
       ui();
+    });
+    // sincronizza struttura magazzino da Firestore
+    fdb.collection('settings').doc('struttura').onSnapshot(function(doc) {
+      if (doc.exists) {
+        var d = doc.data();
+        try {
+          if (d.postiPlt       != null) localStorage.setItem('MAG_POSTI_PLT',          d.postiPlt);
+          if (d.postiFresc     != null) localStorage.setItem('MAG_POSTI_FRESCO',        d.postiFresc);
+          if (d.pltBilico      != null) localStorage.setItem('MAG_PLT_BILICO',          d.pltBilico);
+          if (d.pltBilicoFresc != null) localStorage.setItem('MAG_PLT_BILICO_FRESCO',   d.pltBilicoFresc);
+        } catch(x) {}
+        ui();
+      }
     });
     // ascolta uscite programmate in realtime
     caricaProg();

@@ -43,10 +43,10 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .pages{flex:1;overflow:hidden;position:relative;}
 .page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 80px;display:none;}
 .page.active{display:block;}
-.sg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
-.sc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 6px;text-align:center;}
-.sc .v{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;}
-.sc .lb{font-size:9px;color:var(--tx2);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;line-height:1.2;}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px;}
+.sc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:7px 4px;text-align:center;}
+.sc .v{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;line-height:1;}
+.sc .lb{font-size:8px;color:var(--tx2);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.2px;line-height:1.2;}
 .sc.bl .v{color:var(--bb);}.sc.gn .v{color:var(--gb);}.sc.og .v{color:var(--ob);}.sc.rd .v{color:var(--rb);}.sc.cy .v{color:var(--cb);}.sc.pu .v{color:var(--pb);}
 .stl{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin:14px 0 10px;display:flex;align-items:center;gap:8px;}
 .stl::before,.stl::after{content:'';flex:1;height:1px;background:var(--bd);}
@@ -353,15 +353,16 @@ body[data-lvl="1"] .prog-add{display:none!important;}
 <!-- HOME -->
 <div class="page active" id="page-home">
   <div class="sg">
-    <!-- secco sx | fresco dx -->
+    <!-- riga 1: stock + posti disp -->
     <div class="sc og"><div class="v" id="s-stock-secco">0</div><div class="lb">📦 Stock Secco</div></div>
+    <div class="sc og"><div class="v" id="s-posti-disp-secco">—</div><div class="lb">📦 Disp. PLT Secco</div></div>
     <div class="sc cy"><div class="v" id="s-stock-fresco">0</div><div class="lb">❄️ Stock Fresco</div></div>
-    <div class="sc og"><div class="v" id="s-posti-disp-secco">—</div><div class="lb">📦 Disp. Secco</div></div>
-    <div class="sc cy"><div class="v" id="s-posti-disp-fresco">—</div><div class="lb">❄️ Disp. Fresco</div></div>
-    <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Bilici Secco</div></div>
-    <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">—</div><div class="lb">❄️ Bilici Fresco</div></div>
-    <div class="sc gn"><div class="v" id="s-plt-in">0</div><div class="lb">⬆ PLT entrati</div></div>
-    <div class="sc rd"><div class="v" id="s-plt-out">0</div><div class="lb">⬇ PLT usciti</div></div>
+    <div class="sc cy"><div class="v" id="s-posti-disp-fresco">—</div><div class="lb">❄️ Disp. PLT Fresco</div></div>
+    <!-- riga 2: bilici disp + plt entrati/usciti -->
+    <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Disp. Bilici Secco</div></div>
+    <div class="sc gn"><div class="v" id="s-plt-in">0</div><div class="lb">⬆ PLT Entrati</div></div>
+    <div class="sc rd"><div class="v" id="s-plt-out">0</div><div class="lb">⬇ PLT Usciti</div></div>
+    <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">—</div><div class="lb">❄️ Disp. Bilici Fresco</div></div>
   </div>
 
   <!-- USCITE IN PROGRAMMA OGGI -->

@@ -72,6 +72,10 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color
 .mb-red{background:linear-gradient(135deg,#da3633,#b82d2a);color:#fff;}
 .mb-blue{background:linear-gradient(135deg,#1f6feb,#1657c9);color:#fff;}
 .mb-purple{background:linear-gradient(135deg,#6e40c9,#5a34a0);color:#fff;}
+.mb-orange{background:linear-gradient(135deg,#d29922,#b07a19);color:#111;}
+.prog-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:8px;}
+.car-tab-bar{display:flex;gap:8px;margin-bottom:14px;}
+.car-tab-bar .btn{flex:1;margin-bottom:0;font-size:14px;padding:12px;}
 
 /* ── CATEGORY CHOICE ── */
 .cat-grid{display:flex;flex-direction:column;gap:16px;margin-top:12px;}
@@ -265,7 +269,7 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
       <span>Ricordami</span>
     </label>
     <div class="login-err" id="log-err"></div>
-    <button class="btn bbl" onclick="doLogin()" style="font-size:17px;padding:15px;">ACCEDI</button>
+    <button class="btn bbl" id="login-btn" onclick="doLogin()" style="font-size:17px;padding:15px;">ACCEDI</button>
   </div>
 </div>
 
@@ -310,6 +314,13 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
           <span class="ic">&#x1F504;</span>
           <span class="lbl">Trasferimento</span>
         </button>
+        <div class="menu-btn-wrap">
+          <button class="menu-btn mb-orange" style="flex:1;" onclick="goPage('carrellista','CARRELLISTA')">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><line x1="1" y1="14" x2="10" y2="14"/><line x1="1" y1="17" x2="10" y2="17"/><line x1="10" y1="5" x2="10" y2="20"/><rect x="10" y="11" width="8" height="9" rx="1"/><line x1="10" y1="7" x2="18" y2="7"/><line x1="18" y1="7" x2="18" y2="11"/><rect x="18" y="15" width="4" height="5" rx="1"/><circle cx="12" cy="21.5" r="1.5"/><circle cx="20" cy="21.5" r="1.5"/></svg></span>
+            <span class="lbl">Carrellista</span>
+          </button>
+          <div class="prog-badge-home" id="badge-carrellista">0</div>
+        </div>
         <button class="menu-btn mb-purple" onclick="goPage('magazzino','CONSULTAZIONE')">
           <span class="ic">&#x1F4E6;</span>
           <span class="lbl">Consultazione<br>Magazzino</span>
@@ -519,6 +530,20 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
       <div id="mag-all"></div>
     </div>
 
+    <!-- CARRELLISTA -->
+    <div class="page" id="page-carrellista">
+      <div class="car-tab-bar">
+        <button id="tab-stoccare" class="btn bog" onclick="selCarrellistaTab('stoccare')">&#x1F4E6; DA STOCCARE</button>
+        <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')">&#x2705; DA PREPARARE</button>
+      </div>
+      <div id="car-stoccare-content">
+        <div id="car-stoccare-list"><div class="prog-empty">Caricamento...</div></div>
+      </div>
+      <div id="car-preparare-content" style="display:none;">
+        <div id="car-preparare-list"><div class="prog-empty">Caricamento...</div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -536,8 +561,14 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
         <button class="cbt" onclick="stp('mo-conf-banc',1)">+</button>
       </div>
     </div>
+    <!-- Sezione foto obbligatoria (visibile solo per uscite, non per transfer) -->
+    <div id="mo-conf-foto-section" style="display:none;margin:10px 0 4px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--rd);margin-bottom:8px;">&#x1F4F7; Foto obbligatoria</div>
+      <button id="mo-conf-foto-btn" onclick="apriCameraUscita()" style="width:100%;padding:14px;background:var(--sf2);border:2px dashed var(--ob);border-radius:var(--rs);color:var(--ob);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">&#x1F4F7; SCATTA FOTO</button>
+      <img id="mo-conf-foto-preview" src="" alt="" style="width:100%;max-height:130px;object-fit:cover;border-radius:8px;margin-top:8px;display:none;">
+    </div>
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn bgn" onclick="eseguiConf()" style="margin-bottom:0;">&#x2705; CONFERMA</button>
+      <button class="btn bgn" id="mo-conf-ok-btn" onclick="eseguiConf()" style="margin-bottom:0;">&#x2705; CONFERMA</button>
       <button class="btn bgh" onclick="chiM('mo-conf')" style="margin-bottom:0;">&#x274C; ANNULLA</button>
     </div>
   </div>
@@ -575,10 +606,32 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
         <input class="fi" id="mcu-ntB" type="text" placeholder="Destinazione..." autocomplete="off" style="padding:10px 12px;">
       </div>
     </div>
+    <!-- Foto obbligatoria -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--rd);margin-bottom:8px;">&#x1F4F7; Foto obbligatoria</div>
+      <button id="mo-coppia-foto-btn" onclick="apriCameraUscita()" style="width:100%;padding:14px;background:var(--sf2);border:2px dashed var(--ob);border-radius:var(--rs);color:var(--ob);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">&#x1F4F7; SCATTA FOTO</button>
+      <img id="mo-coppia-foto-preview" src="" alt="" style="width:100%;max-height:130px;object-fit:cover;border-radius:8px;margin-top:8px;display:none;">
+    </div>
     <div style="display:flex;gap:8px;margin-top:4px;">
-      <button class="btn bgn" onclick="confUscitaCoppia()" style="flex:1;margin-bottom:0;">&#x2705; CONFERMA USCITA</button>
+      <button class="btn bgn" id="mo-coppia-ok-btn" onclick="confUscitaCoppia()" style="flex:1;margin-bottom:0;" disabled>&#x2705; CONFERMA USCITA</button>
       <button class="btn bgh" onclick="chiM('mo-coppia-uscita')" style="flex:1;margin-bottom:0;">&#x274C; ANNULLA</button>
     </div>
+  </div>
+</div>
+
+<!-- CAMERA FOTO USCITA -->
+<input type="file" id="foto-carico-input" accept="image/*" capture="environment" style="display:none;" onchange="onFotoUscita(this)">
+
+<!-- MODAL VISUALIZZA FOTO -->
+<div class="mo" id="mo-foto-uscita">
+  <div class="mdl">
+    <div class="mha"></div>
+    <div class="mtt">&#x1F4F7; Foto Carico</div>
+    <div style="text-align:center;margin:10px 0 14px;">
+      <img id="foto-uscita-img" src="" alt="" style="max-width:100%;max-height:55vh;border-radius:10px;display:none;">
+      <div id="foto-uscita-vuota" style="color:var(--tx2);font-size:14px;padding:28px 0;">Nessuna foto disponibile per questo carico</div>
+    </div>
+    <button class="btn bgh" onclick="chiM('mo-foto-uscita')" style="margin-bottom:0;">&#x2716; Chiudi</button>
   </div>
 </div>
 
@@ -597,7 +650,7 @@ var FBC = {
   appId: "1:13697167946:web:e955abfe6d0ed11a3cecb3"
 };
 var ADMIN_DEFAULT = {username: 'Leo', password: 'ing', livello: 0};
-var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO'];
+var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO', 'ARRIVI', 'PARTENZE'];
 
 // ═══ STATO ═══
 var BL = {}, ST = [], PROG = [], PROG_DOMANI = [];
@@ -608,6 +661,9 @@ var currentCat = 'secco'; // 'secco' o 'fresco'
 var pendConf = null;
 var _coppiaA = null; // {item, bilico} per uscita coppia agganciata
 var _coppiaB = null;
+var PROG_PREPARATO = {}; // {docId: true} IDs dei PROG segnati come preparati dal carrellista
+var fotoUscitaSalvata = false;  // true se foto salvata con successo su Firestore
+var fotoCaricoIdPending = null; // caricoId in attesa di foto
 var aggancioSel = null;  // {docId, numero} — aggancio oggi
 var aggancioSelD = null; // {docId, numero} — aggancio domani
 var qrTargetId = null;
@@ -681,6 +737,7 @@ function goPage(pageId, title) {
   if (pageId === 'uscita') { aggiornaProg(); aggiornaLogUscite(); }
   if (pageId === 'trasferimento') { aggiornaLogTransfer(); }
   if (pageId === 'magazzino') { renderMagAll(); }
+  if (pageId === 'carrellista') { renderCarrellista(); }
 }
 function goBack() {
   pageStack.pop();
@@ -703,7 +760,7 @@ function goEntrata(cat) {
   calcolaProssimoBilico(cat);
   // Reset form
   document.getElementById('en-bancali').value = '0';
-  document.getElementById('en-postazione').value = '';
+  document.getElementById('en-postazione').value = cat === 'fresco' ? 'FRESCO' : 'ARRIVI';
   document.getElementById('en-note').value = '';
   document.getElementById('entrata-success').style.display = 'none';
   // Aggiorna log entrate
@@ -741,13 +798,18 @@ window.onload = function() {
   try {
     if (FBC.apiKey === 'INSERISCI_API_KEY') throw new Error('no cfg');
     if (!firebase.apps.length) firebase.initializeApp(FBC);
-    fdb = firebase.firestore(); UC = true;
+    fdb = firebase.firestore();
+    fdb.enablePersistence({synchronizeTabs: true}).catch(function(){});
+    UC = true;
     tentaAutoLogin();
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent = 'CLOUD';
     fdb.collection('bilici').onSnapshot(function(s) {
       BL = {}; s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
       aggiornaUI();
+      aggiornaBadgeCarrellista();
+      var cur = pageStack[pageStack.length-1];
+      if (cur === 'carrellista') renderCarrellista();
     });
     fdb.collection('storico').orderBy('ts','desc').limit(50).onSnapshot(function(s) {
       ST = []; s.forEach(function(d) { ST.push(Object.assign({id: d.id}, d.data())); });
@@ -757,6 +819,16 @@ window.onload = function() {
       PROG = []; s.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
       renderProg();
       aggiornaBadgeUscita();
+      aggiornaBadgeCarrellista();
+      var cur = pageStack[pageStack.length-1];
+      if (cur === 'carrellista') renderCarrellista();
+    });
+    fdb.collection('prog_preparato').onSnapshot(function(s) {
+      PROG_PREPARATO = {};
+      s.forEach(function(d) { PROG_PREPARATO[d.id] = true; });
+      aggiornaBadgeCarrellista();
+      var cur = pageStack[pageStack.length-1];
+      if (cur === 'carrellista') renderCarrellista();
     });
     fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s) {
       PROG_DOMANI = []; s.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
@@ -843,6 +915,7 @@ function aggiornaUI() {
   if (cur === 'trasferimento') { aggiornaLogTransfer(); }
   if (cur === 'entrata-form') { aggiornaLogEntrate(currentCat); }
   if (cur === 'magazzino') { renderMagAll(); cercaMag(); }
+  if (cur === 'carrellista') { renderCarrellista(); }
 }
 function caricaCredenziali() {
   try {
@@ -875,12 +948,21 @@ function doLogin() {
   var p = (document.getElementById('log-pass').value || '').trim();
   var ric = document.getElementById('log-ricorda').checked;
   if (!u || !p) { document.getElementById('log-err').textContent = 'Inserisci username e password'; return; }
+  var btn = document.getElementById('login-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ ACCEDO...'; }
+  document.getElementById('log-err').textContent = '';
   cercaUtente(u, p, function(usr) {
-    if (!usr) { document.getElementById('log-err').textContent = 'Credenziali non valide'; document.getElementById('log-pass').value = ''; return; }
+    if (!usr) {
+      document.getElementById('log-err').textContent = 'Credenziali non valide';
+      document.getElementById('log-pass').value = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'ACCEDI'; }
+      return;
+    }
     CURR_USER = usr;
     applicaLivelloOp(usr.livello);
     if (ric) { try { localStorage.setItem('RICORDA_OP_v1', JSON.stringify({u:u, p:p})); } catch(x) {} }
     else { try { localStorage.removeItem('RICORDA_OP_v1'); } catch(x) {} }
+    if (btn) { btn.disabled = false; btn.textContent = 'ACCEDI'; }
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('shell').style.display = 'flex';
     document.getElementById('usr-badge').textContent = usr.username.toUpperCase();
@@ -1000,7 +1082,7 @@ function confEntrata() {
     document.getElementById('en-bancali').value = '0';
     document.getElementById('en-note').value = '';
     if (currentCat === 'fresco') document.getElementById('en-postazione').value = 'FRESCO';
-    else document.getElementById('en-postazione').value = '';
+    else document.getElementById('en-postazione').value = 'ARRIVI';
     aggiornaLogEntrate(currentCat);
     setTimeout(function() { successBox.style.display = 'none'; }, 3000);
   }, 800);
@@ -1009,7 +1091,7 @@ function confEntrata() {
 function resetEntrata() {
   calcolaProssimoBilico(currentCat);
   document.getElementById('en-bancali').value = '0';
-  document.getElementById('en-postazione').value = currentCat === 'fresco' ? 'FRESCO' : '';
+  document.getElementById('en-postazione').value = currentCat === 'fresco' ? 'FRESCO' : 'ARRIVI';
   document.getElementById('en-note').value = '';
   document.getElementById('entrata-success').style.display = 'none';
 }
@@ -1054,8 +1136,9 @@ function aggiornaLogUscite() {
   if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessun carico effettuato</div>'; return; }
   el.innerHTML = lista.map(function(m) {
     var caricoTag = m.caricoId ? '<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>' : '';
-    var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
-    return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + caricoTag + opTag + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
+    var opTag = m.operatore ? '<span class="op-tag">&#x1F464; '+m.operatore+'</span>' : '';
+    var fotoBtn = (m.fotoSalvata && m.caricoId) ? '<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px;" title="Vedi foto">&#x1F4F7;</button>' : '';
+    return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + caricoTag + opTag + fotoBtn + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
   }).join('');
 }
 function salvaProg() { if (!UC) { try { localStorage.setItem('PROG_v1', JSON.stringify(PROG)); } catch(x) {} } }
@@ -1285,6 +1368,15 @@ function apriUscitaCoppia(docId) {
   document.getElementById('mcu-info').innerHTML =
     '<strong style="color:var(--bb)">#'+itemA.numero+'</strong>: '+infoA+'<br>'+
     '<strong style="color:var(--pb)">#'+itemB.numero+'</strong>: '+infoB;
+  // Setup foto obbligatoria
+  fotoCaricoIdPending = 'C' + Date.now();
+  fotoUscitaSalvata = false;
+  var btn2 = document.getElementById('mo-coppia-foto-btn');
+  var prev2 = document.getElementById('mo-coppia-foto-preview');
+  var okBtn2 = document.getElementById('mo-coppia-ok-btn');
+  if (btn2) btn2.textContent = '📷 SCATTA FOTO';
+  if (prev2) { prev2.src = ''; prev2.style.display = 'none'; }
+  if (okBtn2) { okBtn2.disabled = true; okBtn2.style.opacity = '.4'; }
   document.getElementById('mo-coppia-uscita').classList.add('open');
 }
 function confUscitaCoppia() {
@@ -1300,20 +1392,24 @@ function confUscitaCoppia() {
   if (bilA && buA > bilA.bancali) { return tst('Bancali #'+itemA.numero+': supera i presenti ('+bilA.bancali+')','er'); }
   if (bilB && buB > bilB.bancali) { return tst('Bancali #'+itemB.numero+': supera i presenti ('+bilB.bancali+')','er'); }
   chiM('mo-coppia-uscita');
-  var caricoId = 'C'+Date.now();
+  var caricoId = fotoCaricoIdPending || ('C'+Date.now());
   var ts = new Date().toISOString();
   var rimA = 0, rimB = 0;
   if (bilA) {
     rimA = bilA.bancali - buA;
     if (rimA===0) { dbDB(itemA.numero); }
     else { var lA=bilA.locazione.toUpperCase(); dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'}); }
-    dbAS({tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId});
+    var dA = {tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId};
+    if (fotoUscitaSalvata) dA.fotoSalvata = true;
+    dbAS(dA);
   }
   if (bilB) {
     rimB = bilB.bancali - buB;
     if (rimB===0) { dbDB(itemB.numero); }
     else { var lB=bilB.locazione.toUpperCase(); dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'}); }
-    dbAS({tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId});
+    var dB = {tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId};
+    if (fotoUscitaSalvata) dB.fotoSalvata = true;
+    dbAS(dB);
   }
   if (UC&&fdb) {
     if(itemA.id) fdb.collection('prog').doc(itemA.id).delete().catch(function(){});
@@ -1326,6 +1422,7 @@ function confUscitaCoppia() {
   rimuoviPrenotazioneNum(itemB.numero);
   suonoOk();
   tst('Uscita coppia: #'+itemA.numero+' + #'+itemB.numero+' confermata!','ok');
+  fotoUscitaSalvata = false; fotoCaricoIdPending = null;
   _coppiaA=null; _coppiaB=null;
 }
 
@@ -1513,6 +1610,17 @@ function caricaVeloce(num) {
   var initBanc = (progItem && progItem.bancaliProg && progItem.bancaliProg <= b.bancali) ? progItem.bancaliProg : b.bancali;
   document.getElementById('mo-conf-banc').value = initBanc;
   document.getElementById('mo-conf-banc-wrap').style.display = 'block';
+  // Setup foto obbligatoria
+  fotoCaricoIdPending = 'C' + Date.now();
+  fotoUscitaSalvata = false;
+  var fotoSec = document.getElementById('mo-conf-foto-section');
+  var fotoBtn = document.getElementById('mo-conf-foto-btn');
+  var fotoPrev = document.getElementById('mo-conf-foto-preview');
+  var okBtn = document.getElementById('mo-conf-ok-btn');
+  if (fotoSec) fotoSec.style.display = 'block';
+  if (fotoBtn) fotoBtn.textContent = '📷 SCATTA FOTO';
+  if (fotoPrev) { fotoPrev.src = ''; fotoPrev.style.display = 'none'; }
+  if (okBtn) { okBtn.disabled = true; okBtn.style.opacity = '.4'; }
   pendConf = 'carica';
   document.getElementById('mo-conf').classList.add('open');
 }
@@ -1523,6 +1631,7 @@ function eseguiConf() {
     var bu = parseInt(document.getElementById('mo-conf-banc').value) || b.bancali;
     bu = Math.max(1, Math.min(bu, b.bancali));
     var rim = b.bancali - bu;
+    var caricoId = fotoCaricoIdPending || ('C' + Date.now());
     var ts = new Date().toISOString();
     if (rim === 0) {
       dbDB(num);
@@ -1530,13 +1639,16 @@ function eseguiConf() {
       var loc = b.locazione.toUpperCase();
       dbUB(num, {bancali: rim, locazione: (loc==='SMEZZI'||loc==='FRESCO') ? b.locazione : 'SMEZZI'});
     }
-    dbAS({tipo:'USCITA', numero:num, locazione:b.locazione, bancaliUsciti:bu, bancaliRimasti:rim, note:'', ts:ts});
+    var stDoc = {tipo:'USCITA', numero:num, locazione:b.locazione, bancaliUsciti:bu, bancaliRimasti:rim, note:'', ts:ts, caricoId:caricoId};
+    if (fotoUscitaSalvata) stDoc.fotoSalvata = true;
+    dbAS(stDoc);
     document.getElementById('mo-conf-banc-wrap').style.display = 'none';
     // Rimuovi da prog
     rimuoviDaProg(num);
     rimuoviPrenotazioneNum(num);
     suonoOk();
     tst('Bilico #' + num + ' caricato — uscito', 'ok');
+    fotoUscitaSalvata = false; fotoCaricoIdPending = null;
     pendCarica = null;
   } else if (pendConf === 'transfer' && pendTransfer) {
     eseguiTransfer();
@@ -1591,6 +1703,11 @@ function confTransfer() {
   pendTransfer = {num: num, b: b, dest: dest};
   document.getElementById('mo-conf-tx').innerHTML = 'Trasferisci bilico <strong>#' + num + '</strong><br><br>Da: <strong>' + b.locazione + '</strong><br>A: <strong>' + dest + '</strong>';
   document.getElementById('mo-conf-banc-wrap').style.display = 'none';
+  // Nessuna foto per il transfer
+  var fotoSec = document.getElementById('mo-conf-foto-section');
+  var okBtn = document.getElementById('mo-conf-ok-btn');
+  if (fotoSec) fotoSec.style.display = 'none';
+  if (okBtn) { okBtn.disabled = false; okBtn.style.opacity = '1'; }
   pendConf = 'transfer';
   document.getElementById('mo-conf').classList.add('open');
 }
@@ -1726,6 +1843,204 @@ function aggiornaBadgeUscita() {
   } else {
     badge.classList.remove('visible');
   }
+}
+
+// ═══════════════════════════════════════
+// ═══ CARRELLISTA ═══════════════════════
+// ═══════════════════════════════════════
+var carrellistaTab = 'stoccare';
+
+function selCarrellistaTab(tab) {
+  carrellistaTab = tab;
+  document.getElementById('car-stoccare-content').style.display = tab === 'stoccare' ? 'block' : 'none';
+  document.getElementById('car-preparare-content').style.display = tab === 'preparare' ? 'block' : 'none';
+  document.getElementById('tab-stoccare').className = tab === 'stoccare' ? 'btn bog' : 'btn bgh';
+  document.getElementById('tab-preparare').className = tab === 'preparare' ? 'btn bog' : 'btn bgh';
+  renderCarrellista();
+}
+
+function renderCarrellista() {
+  renderCarrellistaStoccare();
+  renderCarrellistaPreparare();
+  aggiornaBadgeCarrellista();
+}
+
+function renderCarrellistaStoccare() {
+  var el = document.getElementById('car-stoccare-list');
+  if (!el) return;
+  var arrivi = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; });
+  if (!arrivi.length) { el.innerHTML = '<div class="prog-empty">Nessuna merce da stoccare 🎉</div>'; return; }
+  el.innerHTML = arrivi.map(function(b) {
+    return '<div class="prog-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;">' +
+      '<div style="flex:1;">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;">Bilico #' + b.numero + '</div>' +
+      '<div style="font-size:13px;color:var(--ob);margin-top:2px;">&#x1F4E6; ' + b.bancali + ' bancali &nbsp;&middot;&nbsp; &#x1F4CD; ARRIVI</div>' +
+      (b.note ? '<div style="font-size:11px;color:var(--tx2);margin-top:3px;">&#x1F4DD; ' + b.note + '</div>' : '') +
+      '</div>' +
+      '<button onclick="sistemaArrivo(\'' + b.numero + '\')" style="flex-shrink:0;width:52px;height:52px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-size:22px;cursor:pointer;">&#x2705;</button>' +
+      '</div>';
+  }).join('');
+}
+
+function renderCarrellistaPreparare() {
+  var el = document.getElementById('car-preparare-list');
+  if (!el) return;
+  if (!PROG.length) { el.innerHTML = '<div class="prog-empty">Nessun bilico da preparare oggi</div>'; return; }
+  el.innerHTML = PROG.map(function(p) {
+    var preparato = !!(p.id && PROG_PREPARATO[p.id]);
+    var b = BL[p.numero];
+    var bancNote = b ? ('&#x1F4E6; ' + b.bancali + (p.bancaliProg ? ' &middot; ord. ' + p.bancaliProg : '') + ' bancali &nbsp;&middot;&nbsp; &#x1F4CD; ' + b.locazione) : 'Non in magazzino';
+    return '<div class="prog-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;' + (preparato ? 'opacity:.45;' : '') + '">' +
+      '<div style="flex:1;">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;' + (preparato ? 'text-decoration:line-through;' : '') + '">Bilico #' + p.numero + '</div>' +
+      '<div style="font-size:13px;color:var(--ob);margin-top:2px;">' + bancNote + '</div>' +
+      (p.nota ? '<div style="font-size:11px;color:var(--tx2);margin-top:3px;">&#x1F4DD; ' + p.nota + '</div>' : '') +
+      '</div>' +
+      '<button onclick="segnaPreparato(\'' + (p.id||'') + '\',' + preparato + ')" style="flex-shrink:0;width:52px;height:52px;background:' + (preparato ? 'var(--bd)' : 'var(--gn)') + ';color:#fff;border:none;border-radius:var(--rs);font-size:22px;cursor:pointer;">' + (preparato ? '&#x21A9;' : '&#x2705;') + '</button>' +
+      '</div>';
+  }).join('');
+}
+
+function aggiornaBadgeCarrellista() {
+  var nStoccare = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; }).length;
+  var nPreparare = PROG.filter(function(p) { return p.id && !PROG_PREPARATO[p.id]; }).length;
+  var tot = nStoccare + nPreparare;
+  var badge = document.getElementById('badge-carrellista');
+  if (!badge) return;
+  badge.textContent = tot;
+  badge.classList.toggle('visible', tot > 0);
+}
+
+function segnaPreparato(docId, giaSegnato) {
+  if (!docId) { return tst('ID non disponibile', 'er'); }
+  if (!UC || !fdb) { return tst('Connessione cloud necessaria', 'er'); }
+  var progItem = PROG.find(function(p) { return p.id === docId; });
+  if (giaSegnato) {
+    fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});
+    tst('Preparazione annullata', 'ok');
+  } else {
+    fdb.collection('prog_preparato').doc(docId).set({ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : ''}).catch(function(){});
+    // Sposta bilico in PARTENZE
+    if (progItem) {
+      var bPar = BL[progItem.numero];
+      if (bPar) {
+        var vecchiaLoc = bPar.locazione;
+        fdb.collection('bilici').doc(progItem.numero).update({locazione: 'PARTENZE'}).then(function() {
+          dbAS({tipo:'TRASFERIMENTO', numero:progItem.numero, locazioneDa:vecchiaLoc, locazioneA:'PARTENZE', bancali:bPar.bancali, ts:new Date().toISOString()});
+        }).catch(function(e) { tst('Errore spostamento: ' + e.message, 'er'); });
+      }
+    }
+    suonoOk();
+    tst('Bilico segnato come preparato ✅', 'ok');
+  }
+}
+
+function sistemaArrivo(numero) {
+  var b = BL[numero];
+  if (!b) return;
+  var nuovaPos = prompt('Stocca bilico #' + numero + ' — inserisci la postazione definitiva:', '');
+  if (nuovaPos === null) return;
+  nuovaPos = nuovaPos.trim().toUpperCase();
+  if (!nuovaPos) return;
+  if (!isIllimitata(nuovaPos)) {
+    var occ = Object.values(BL).find(function(x) { return (x.locazione||'').toUpperCase() === nuovaPos && x.numero !== numero; });
+    if (occ) { return tst('Postazione ' + nuovaPos + ' occupata da bilico ' + occ.numero, 'er'); }
+  }
+  if (UC && fdb) {
+    fdb.collection('bilici').doc(numero).update({locazione: nuovaPos}).then(function() {
+      dbAS({tipo:'TRASFERIMENTO', numero:numero, locazioneDa:'ARRIVI', locazioneA:nuovaPos, bancali:b.bancali, ts:new Date().toISOString()});
+      suonoOk(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
+    }).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
+  } else {
+    b.locazione = nuovaPos; svLoc();
+    suonoOk(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
+  }
+}
+
+// ═══════════════════════════════════════
+// ═══ FOTO USCITA ════════════════════════
+// ═══════════════════════════════════════
+function apriCameraUscita() {
+  var inp = document.getElementById('foto-carico-input');
+  if (inp) { inp.value = ''; inp.click(); }
+}
+
+function onFotoUscita(input) {
+  if (!input.files || !input.files[0]) return;
+  if (!fotoCaricoIdPending) return;
+  var caricoId = fotoCaricoIdPending;
+  var file = input.files[0];
+  compressaFoto(file, function(base64, previewUrl) {
+    if (!UC || !fdb) { tst('Connessione cloud necessaria per la foto', 'er'); return; }
+    // Salvo in Firestore — doc max 1MB, base64 ~130KB per foto compressa
+    fdb.collection('foto_uscite').doc(caricoId).set({
+      base64: base64,
+      ts: Date.now(),
+      operatore: CURR_USER ? CURR_USER.username : ''
+    }).then(function() {
+      fotoUscitaSalvata = true;
+      // Mostra preview in entrambi i modali
+      ['mo-conf-foto-preview','mo-coppia-foto-preview'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.src = previewUrl; el.style.display = 'block'; }
+      });
+      // Aggiorna testo bottone foto
+      ['mo-conf-foto-btn','mo-coppia-foto-btn'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.textContent = '✅ Foto scattata'; el.style.borderColor = 'var(--gb)'; el.style.color = 'var(--gb)'; }
+      });
+      // Sblocca CONFERMA
+      ['mo-conf-ok-btn','mo-coppia-ok-btn'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.disabled = false; el.style.opacity = '1'; }
+      });
+      suonoOk();
+    }).catch(function(e) { tst('Errore salvataggio foto: ' + e.message, 'er'); });
+  });
+}
+
+function compressaFoto(file, callback) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var previewUrl = e.target.result;
+    var img = new Image();
+    img.onload = function() {
+      // Comprimo a max 700px per stare sotto il limite 1MB di Firestore
+      var maxS = 700, w = img.width, h = img.height;
+      if (w > maxS || h > maxS) { var r = Math.min(maxS/w, maxS/h); w = Math.round(w*r); h = Math.round(h*r); }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var base64 = canvas.toDataURL('image/jpeg', 0.60);
+      callback(base64, previewUrl);
+    };
+    img.src = previewUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function vediFoto(caricoId) {
+  if (!caricoId || !UC || !fdb) { tst('Connessione cloud necessaria', 'er'); return; }
+  var imgEl = document.getElementById('foto-uscita-img');
+  var vuotaEl = document.getElementById('foto-uscita-vuota');
+  imgEl.style.display = 'none';
+  vuotaEl.style.display = 'none';
+  vuotaEl.textContent = '⏳ Caricamento...';
+  vuotaEl.style.display = 'block';
+  document.getElementById('mo-foto-uscita').classList.add('open');
+  fdb.collection('foto_uscite').doc(caricoId).get().then(function(doc) {
+    if (doc.exists && doc.data().base64) {
+      imgEl.src = doc.data().base64;
+      imgEl.style.display = 'block';
+      vuotaEl.style.display = 'none';
+    } else {
+      vuotaEl.textContent = 'Nessuna foto disponibile per questo carico';
+      vuotaEl.style.display = 'block';
+    }
+  }).catch(function() {
+    vuotaEl.textContent = 'Errore caricamento foto';
+    vuotaEl.style.display = 'block';
+  });
 }
 
 var CAL_DATA = {};

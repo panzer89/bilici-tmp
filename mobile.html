@@ -271,6 +271,9 @@ body[data-lvl="1"] .prog-add{display:none!important;}
 .orient-btn{height:30px;padding:0 9px;background:none;border:1px solid var(--bd);border-radius:20px;color:var(--tx2);font-size:14px;cursor:pointer;display:flex;align-items:center;transition:border-color .2s,color .2s;}
 .orient-btn.locked{border-color:var(--bb);color:var(--bb);}
 .prog-agg-info{font-size:11px;color:var(--pb);font-weight:700;margin-top:3px;}
+.car-tab-bar{display:flex;gap:8px;margin-bottom:14px;}
+.car-tab-bar .btn{flex:1;margin-bottom:0;font-size:14px;padding:12px;}
+.prog-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -463,6 +466,11 @@ body[data-lvl="1"] .prog-add{display:none!important;}
       </div>
     </div>
   </div>
+  <div class="stl">Operatività</div>
+  <div style="position:relative;">
+    <button class="btn" style="width:100%;background:linear-gradient(135deg,#d29922,#b07a19);color:#111;font-size:18px;font-weight:800;padding:16px;margin-bottom:0;" onclick="goP('carrellista')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:6px;"><line x1="1" y1="14" x2="10" y2="14"/><line x1="1" y1="17" x2="10" y2="17"/><line x1="10" y1="5" x2="10" y2="20"/><rect x="10" y="11" width="8" height="9" rx="1"/><line x1="10" y1="7" x2="18" y2="7"/><line x1="18" y1="7" x2="18" y2="11"/><rect x="18" y="15" width="4" height="5" rx="1"/><circle cx="12" cy="21.5" r="1.5"/><circle cx="20" cy="21.5" r="1.5"/></svg>CARRELLISTA</button>
+    <div id="badge-carrellista" style="position:absolute;top:-5px;right:-5px;background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px;display:none;">0</div>
+  </div>
   <div class="stl">In Magazzino</div>
   <button class="btn bbl" onclick="goP('magazzino')"><span class="bi">&#x1F69B;</span>VEDI MAGAZZINO (<span id="cnt-mag">0</span> bilici)</button>
   <div class="stl">Gestione</div>
@@ -479,6 +487,13 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div class="fg">
       <div class="fl">Numero Bilico</div>
       <input class="fi fib" id="in-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off">
+    </div>
+    <div class="fg">
+      <div class="fl">Tipo merce</div>
+      <div class="brow">
+        <button class="btn bbl bsm" style="flex:1;" onclick="setTipoEntrata('ARRIVI')">&#x1F4E6; SECCO → ARRIVI</button>
+        <button class="btn bcy bsm" style="flex:1;" onclick="setTipoEntrata('FRESCO')">&#x2744;&#xFE0F; FRESCO</button>
+      </div>
     </div>
     <div class="fg">
       <div class="fl">Locazione</div>
@@ -567,6 +582,20 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);">Bilici presenti (<span id="mag-count">0</span>)</div>
   </div>
   <div class="blst" id="lst-magazzino"><div class="emp"><div class="ic">&#x1F69B;</div><p>Nessun bilico presente</p></div></div>
+</div>
+
+<!-- CARRELLISTA -->
+<div class="page" id="page-carrellista">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+    <button onclick="goP('home')" style="height:36px;padding:0 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);font-size:14px;font-weight:700;cursor:pointer;">&#x2190; HOME</button>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;"><line x1="1" y1="14" x2="10" y2="14"/><line x1="1" y1="17" x2="10" y2="17"/><line x1="10" y1="5" x2="10" y2="20"/><rect x="10" y="11" width="8" height="9" rx="1"/><line x1="10" y1="7" x2="18" y2="7"/><line x1="18" y1="7" x2="18" y2="11"/><rect x="18" y="15" width="4" height="5" rx="1"/><circle cx="12" cy="21.5" r="1.5"/><circle cx="20" cy="21.5" r="1.5"/></svg> CARRELLISTA</div>
+  </div>
+  <div class="car-tab-bar">
+    <button id="tab-stoccare" class="btn bog" onclick="selCarrellistaTab('stoccare')">&#x1F4E6; DA STOCCARE</button>
+    <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')">&#x2705; DA PREPARARE</button>
+  </div>
+  <div id="car-stoccare-content"><div id="car-stoccare-list"></div></div>
+  <div id="car-preparare-content" style="display:none;"><div id="car-preparare-list"></div></div>
 </div>
 
 
@@ -768,7 +797,7 @@ var FBC = {
 };
 
 // Locazioni illimitate (piu bilici nella stessa posizione)
-var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO'];
+var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO', 'ARRIVI', 'PARTENZE'];
 
 var BL = {}, ST = [], fdb = null, UC = false;
 var SMM = 'b', pend = null, pbuf = '', paz = null;
@@ -777,6 +806,7 @@ var impDati = [];
 var aggancioSel = null;  // {docId, numero} — aggancio oggi
 var aggancioSelD = null; // {docId, numero} — aggancio domani
 var _coppiaA = null, _coppiaB = null; // item accoppiati per il modal uscita coppia
+var PROG_PREPARATO = {};
 
 // ═══ BLOCCO ROTAZIONE ═══
 function toggleOrientLock() {
@@ -816,6 +846,9 @@ window.onload = function() {
       BL = {};
       s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
       ui();
+      aggiornaBadgeCarrellista();
+      var _cp = document.querySelector('.page.active');
+      if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
     });
     fdb.collection('storico').orderBy('ts', 'desc').onSnapshot(function(s) {
       ST = [];
@@ -825,6 +858,13 @@ window.onload = function() {
     // ascolta uscite programmate in realtime
     caricaProg();
     caricaProgDomani();
+    fdb.collection('prog_preparato').onSnapshot(function(s) {
+      PROG_PREPARATO = {};
+      s.forEach(function(d) { PROG_PREPARATO[d.id] = true; });
+      aggiornaBadgeCarrellista();
+      var _cp = document.querySelector('.page.active');
+      if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
+    });
     // controlla cambio giorno dopo 2 secondi (tempo per caricare i dati)
     setTimeout(controllaGiorno, 2000);
   } catch(e) {
@@ -1173,6 +1213,9 @@ function caricaProg() {
     renderProg();
     aggiornaBadgeMag();
     aggTuttiOrdiniMob();
+    aggiornaBadgeCarrellista();
+    var _cp = document.querySelector('.page.active');
+    if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
   });
 }
 
@@ -2259,7 +2302,9 @@ function goP(n) {
   document.querySelectorAll('.tb').forEach(function(t) { t.classList.remove('active'); });
   document.getElementById('page-' + n).classList.add('active');
   var mp = {home:'tbh', entrata:'tbe', uscita:'tbu', magazzino:'tbm', cerca:'tbc'};
-  document.getElementById(mp[n]).classList.add('active');
+  if (mp[n]) { document.getElementById(mp[n]).classList.add('active'); }
+  if (n === 'entrata') { var _li = document.getElementById('in-l'); if (_li && !_li.value) _li.value = 'ARRIVI'; }
+  if (n === 'carrellista') { renderCarrellista(); }
   ui();
 }
 function chiM(id) { document.getElementById(id).classList.remove('open'); }
@@ -2277,6 +2322,11 @@ function tst(msg, tp) {
   clearTimeout(t._t);
   t._t = setTimeout(function() { t.classList.remove('show'); }, 3200);
   if (tp === 'er') { suonoErrore(); }
+}
+
+function setTipoEntrata(loc) {
+  var el = document.getElementById('in-l');
+  if (el) { el.value = loc; }
 }
 
 function regE() {
@@ -2297,7 +2347,7 @@ function regE() {
   dbSB(n, {numero: n, locazione: l, bancali: b, note: nt, ts: ts});
   dbAS({tipo: 'ENTRATA', numero: n, locazione: l, bancali: b, note: nt, ts: ts});
   document.getElementById('in-n').value = '';
-  document.getElementById('in-l').value = '';
+  document.getElementById('in-l').value = 'ARRIVI';
   document.getElementById('in-b').value = '0';
   document.getElementById('in-nt').value = '';
   suonoEntrata();
@@ -2842,6 +2892,118 @@ function aggiornaBadgeMag() {
   if (lst.length) {
     ml.innerHTML = lst.sort(function(a,b){return a.numero.localeCompare(b.numero);})
       .map(function(b){return crdB(b, false);}).join('');
+  }
+}
+
+// ═══════════════════════════════════════════
+// ═══ CARRELLISTA ════════════════════════════
+// ═══════════════════════════════════════════
+var carrellistaTab = 'stoccare';
+
+function selCarrellistaTab(tab) {
+  carrellistaTab = tab;
+  document.getElementById('car-stoccare-content').style.display = tab === 'stoccare' ? 'block' : 'none';
+  document.getElementById('car-preparare-content').style.display = tab === 'preparare' ? 'block' : 'none';
+  document.getElementById('tab-stoccare').className = tab === 'stoccare' ? 'btn bog' : 'btn bgh';
+  document.getElementById('tab-preparare').className = tab === 'preparare' ? 'btn bog' : 'btn bgh';
+  renderCarrellista();
+}
+
+function renderCarrellista() {
+  renderCarrellistaStoccare();
+  renderCarrellistaPreparare();
+  aggiornaBadgeCarrellista();
+}
+
+function renderCarrellistaStoccare() {
+  var el = document.getElementById('car-stoccare-list');
+  if (!el) return;
+  var arrivi = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; });
+  if (!arrivi.length) { el.innerHTML = '<div class="prog-empty">Nessuna merce da stoccare &#x1F389;</div>'; return; }
+  el.innerHTML = arrivi.map(function(b) {
+    return '<div class="prog-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;">' +
+      '<div style="flex:1;">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;">Bilico #' + b.numero + '</div>' +
+      '<div style="font-size:13px;color:var(--ob);margin-top:2px;">&#x1F4E6; ' + b.bancali + ' bancali &nbsp;&middot;&nbsp; &#x1F4CD; ARRIVI</div>' +
+      (b.note ? '<div style="font-size:11px;color:var(--tx2);margin-top:3px;">&#x1F4DD; ' + b.note + '</div>' : '') +
+      '</div>' +
+      '<button onclick="sistemaArrivo(\'' + b.numero + '\')" style="flex-shrink:0;width:52px;height:52px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-size:22px;cursor:pointer;">&#x2705;</button>' +
+      '</div>';
+  }).join('');
+}
+
+function renderCarrellistaPreparare() {
+  var el = document.getElementById('car-preparare-list');
+  if (!el) return;
+  if (!PROG.length) { el.innerHTML = '<div class="prog-empty">Nessun bilico da preparare oggi</div>'; return; }
+  el.innerHTML = PROG.map(function(p) {
+    var preparato = !!(p.id && PROG_PREPARATO[p.id]);
+    var b = BL[p.numero];
+    var bancNote = b ? ('&#x1F4E6; ' + b.bancali + (p.bancaliProg ? ' &middot; ord. ' + p.bancaliProg : '') + ' bancali &nbsp;&middot;&nbsp; &#x1F4CD; ' + b.locazione) : 'Non in magazzino';
+    return '<div class="prog-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;' + (preparato ? 'opacity:.45;' : '') + '">' +
+      '<div style="flex:1;">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;' + (preparato ? 'text-decoration:line-through;' : '') + '">Bilico #' + p.numero + '</div>' +
+      '<div style="font-size:13px;color:var(--ob);margin-top:2px;">' + bancNote + '</div>' +
+      (p.nota ? '<div style="font-size:11px;color:var(--tx2);margin-top:3px;">&#x1F4DD; ' + p.nota + '</div>' : '') +
+      '</div>' +
+      '<button onclick="segnaPreparato(\'' + (p.id||'') + '\',' + preparato + ')" style="flex-shrink:0;width:52px;height:52px;background:' + (preparato ? 'var(--bd)' : 'var(--gn)') + ';color:#fff;border:none;border-radius:var(--rs);font-size:22px;cursor:pointer;">' + (preparato ? '&#x21A9;' : '&#x2705;') + '</button>' +
+      '</div>';
+  }).join('');
+}
+
+function aggiornaBadgeCarrellista() {
+  var nStoccare = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; }).length;
+  var nPreparare = PROG.filter(function(p) { return p.id && !PROG_PREPARATO[p.id]; }).length;
+  var tot = nStoccare + nPreparare;
+  var badge = document.getElementById('badge-carrellista');
+  if (!badge) return;
+  badge.textContent = tot;
+  badge.style.display = tot > 0 ? 'flex' : 'none';
+}
+
+function segnaPreparato(docId, giaSegnato) {
+  if (!docId) { return tst('ID non disponibile', 'er'); }
+  if (!UC || !fdb) { return tst('Connessione cloud necessaria', 'er'); }
+  var progItem = PROG.find(function(p) { return p.id === docId; });
+  if (giaSegnato) {
+    fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});
+    tst('Preparazione annullata', 'ok');
+  } else {
+    fdb.collection('prog_preparato').doc(docId).set({ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : ''}).catch(function(){});
+    // Sposta bilico in PARTENZE
+    if (progItem) {
+      var bPar = BL[progItem.numero];
+      if (bPar) {
+        var vecchiaLoc = bPar.locazione;
+        fdb.collection('bilici').doc(progItem.numero).update({locazione: 'PARTENZE'}).then(function() {
+          dbAS({tipo:'TRASFERIMENTO', numero:progItem.numero, locazioneDa:vecchiaLoc, locazioneA:'PARTENZE', bancali:bPar.bancali, ts:new Date().toISOString()});
+        }).catch(function(e) { tst('Errore spostamento: ' + e.message, 'er'); });
+      }
+    }
+    suonoEntrata();
+    tst('Bilico segnato come preparato &#x2705;', 'ok');
+  }
+}
+
+function sistemaArrivo(numero) {
+  var b = BL[numero];
+  if (!b) return;
+  var nuovaPos = prompt('Stocca bilico #' + numero + ' — inserisci la postazione definitiva:', '');
+  if (nuovaPos === null) return;
+  nuovaPos = nuovaPos.trim().toUpperCase();
+  if (!nuovaPos) return;
+  if (!isIllimitata(nuovaPos)) {
+    var occ = Object.values(BL).find(function(x) { return (x.locazione||'').toUpperCase() === nuovaPos && x.numero !== numero; });
+    if (occ) { return tst('Postazione ' + nuovaPos + ' occupata da bilico ' + occ.numero, 'er'); }
+  }
+  if (UC && fdb) {
+    fdb.collection('bilici').doc(numero).update({locazione: nuovaPos}).then(function() {
+      dbAS({tipo:'TRASFERIMENTO', numero:numero, locazioneDa:'ARRIVI', locazioneA:nuovaPos, bancali:b.bancali, ts:new Date().toISOString()});
+      suonoEntrata(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
+    }).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
+  } else {
+    b.locazione = nuovaPos; svLoc();
+    suonoEntrata(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
   }
 }
 </script>

@@ -377,6 +377,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
       <button class="sb-item" id="tbu" onclick="goP('uscita')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 16 12 8"/><polyline points="8 12 12 16 16 12"/></svg>Uscita / Carico</button>
       <div class="sb-sect">MAGAZZINO</div>
       <button class="sb-item" id="tbm" onclick="goP('magazzino')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Magazzino<span class="sb-badge" id="sb-mag-badge">0</span></button>
+      <button class="sb-item" id="tbcar" onclick="goP('carrellista')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="14" x2="10" y2="14"/><line x1="1" y1="17" x2="10" y2="17"/><line x1="10" y1="5" x2="10" y2="20"/><rect x="10" y="11" width="8" height="9" rx="1"/><line x1="10" y1="7" x2="18" y2="7"/><line x1="18" y1="7" x2="18" y2="11"/><rect x="18" y="15" width="4" height="5" rx="1"/><circle cx="12" cy="21.5" r="1.5"/><circle cx="20" cy="21.5" r="1.5"/></svg>Carrellista<span class="sb-badge" id="badge-carrellista" style="display:none;">0</span></button>
 
       <div class="sb-sect" id="sb-sect-pianif">PIANIFICAZIONE</div>
       <button class="sb-item" id="tbprog" onclick="goP('programmazione')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Programmazione<span class="sb-badge bl" id="sb-prog-badge">0</span></button>
@@ -451,6 +452,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
           </div>
           <div class="card"><div class="card-t">Registra Entrata</div>
             <div class="fg"><div class="fl">Numero Bilico</div><input class="fi fib" id="in-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off"></div>
+            <div class="fg"><div class="fl">Tipo merce</div><div style="display:flex;gap:8px;"><button class="btn bbl" style="flex:1;padding:7px 10px;font-size:12px;" onclick="setTipoEntrata('ARRIVI')">&#x1F4E6; SECCO → ARRIVI</button><button class="btn bcy" style="flex:1;padding:7px 10px;font-size:12px;" onclick="setTipoEntrata('FRESCO')">&#x2744; FRESCO</button></div></div>
             <div class="fg"><div class="fl">Locazione</div><div class="loc-wrap"><input class="fi" id="in-l" type="text" placeholder="es. A1, BANCHINA, FRESCO..." autocomplete="off" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"><button class="qr-btn" onclick="apriQR('in-l')">&#x1F4F7;</button></div></div>
             <div class="fg"><div class="fl">Bancali</div><div class="crow"><button class="cbt" onclick="stp('in-b',-1)">&#x2212;</button><input class="cvl" id="in-b" type="number" value="0" min="0" inputmode="numeric"><button class="cbt" onclick="stp('in-b',1)">+</button></div></div>
             <div class="fg"><div class="fl">Note</div><input class="fi" id="in-nt" type="text" placeholder="Merce, cliente..." autocomplete="off"></div>
@@ -565,6 +567,18 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
       </div>
 
 
+<!-- CARRELLISTA -->
+<div class="page" id="page-carrellista">
+  <div class="card" style="padding:16px;">
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button id="tab-stoccare" class="btn tog" onclick="selCarrellistaTab('stoccare')" style="flex:1;padding:10px;">&#x1F4E6; DA STOCCARE</button>
+      <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')" style="flex:1;padding:10px;">&#x2705; DA PREPARARE</button>
+    </div>
+    <div id="car-stoccare-content"><div id="car-stoccare-list"></div></div>
+    <div id="car-preparare-content" style="display:none;"><div id="car-preparare-list"></div></div>
+  </div>
+</div>
+
 <div class="page" id="page-storico"><div style="display:flex;flex-direction:column;gap:14px;"><div class="card" style="padding:14px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--tx);margin-bottom:12px;">&#x1F50D; Filtri</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;"><div><div class="stor-fi-label">Numero bilico</div><input class="stor-fi" id="sf-num" type="text" placeholder="es. 839" oninput="filtraStorico()"></div><div><div class="stor-fi-label">Locazione</div><input class="stor-fi" id="sf-loc" type="text" placeholder="es. 5-A-00" oninput="filtraStorico()"></div><div><div class="stor-fi-label">Tipo</div><select class="stor-fi" id="sf-tipo" onchange="filtraStorico()"><option value="">Tutti</option><option value="ENTRATA">&#x1F7E2; Entrata</option><option value="USCITA">&#x1F534; Uscita</option><option value="MODIFICA">&#x270F;&#xFE0F; Modifica</option><option value="TRASFERIMENTO">&#x1F504; Trasferimento</option></select></div></div><div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:flex-end;"><div><div class="stor-fi-label">Data da</div><input class="stor-fi" id="sf-da" type="date" oninput="filtraStorico()"></div><div><div class="stor-fi-label">Data a</div><input class="stor-fi" id="sf-a" type="date" oninput="filtraStorico()"></div><div style="display:flex;gap:6px;align-items:center;"><span id="sf-count" style="font-size:12px;color:var(--tx2);"></span><button onclick="resetFiltriStorico()" style="height:32px;padding:0 10px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);font-size:11px;cursor:pointer;">&#x21BA; Reset</button><button onclick="chiPin('svuota',null)" style="height:32px;padding:0 10px;background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);font-size:11px;cursor:pointer;">&#x1F5D1; Svuota</button></div></div></div><div class="card" style="padding:14px;"><div id="stor-av-list"><div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessun movimento</p></div></div></div></div></div>
 </div>
 
@@ -629,9 +643,11 @@ function goP(n) {
     if(sfTipo)sfTipo.value='';
     filtraStorico();
   }
-  var titles = {home:'Dashboard', entrata:'Entrata Bilico', uscita:'Uscita / Carico', magazzino:'Magazzino', programmazione:'Programmazione Uscite', storico:'Storico Movimenti'};
+  var titles = {home:'Dashboard', entrata:'Entrata Bilico', uscita:'Uscita / Carico', magazzino:'Magazzino', programmazione:'Programmazione Uscite', storico:'Storico Movimenti', carrellista:'Carrellista'};
   var tt = document.getElementById('topbar-title');
   if (tt) { tt.textContent = titles[n] || n; }
+  if (n === 'entrata') { var _li = document.getElementById('in-l'); if (_li && !_li.value) _li.value = 'ARRIVI'; }
+  if (n === 'carrellista') { renderCarrellista(); }
   aggiornaTopbarAzioni();
   ui();
 }
@@ -1132,7 +1148,7 @@ var FBC = {
 };
 
 // Locazioni illimitate (piu bilici nella stessa posizione)
-var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO'];
+var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO', 'ARRIVI', 'PARTENZE'];
 
 var BL = {}, ST = [], fdb = null, UC = false;
 var SMM = 'b', pend = null, pbuf = '', paz = null;
@@ -1142,6 +1158,7 @@ var aggancioSel = null;  // {docId, numero} — aggancio oggi
 var aggancioSelD = null; // {docId, numero} — aggancio domani
 var aggancioSelC = null; // {id, numero}   — aggancio calendario
 var _coppiaA = null, _coppiaB = null; // item accoppiati per il modal uscita coppia
+var PROG_PREPARATO = {};
 
 window.onload = function() {
   ldLoc();
@@ -1158,6 +1175,9 @@ window.onload = function() {
       BL = {};
       s.forEach(function(d) { BL[d.id] = Object.assign({id: d.id}, d.data()); });
       ui();
+      aggiornaBadgeCarrellista();
+      var _cp = document.querySelector('.page.active');
+      if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
     });
     fdb.collection('storico').orderBy('ts', 'desc').onSnapshot(function(s) {
       ST = [];
@@ -1167,6 +1187,13 @@ window.onload = function() {
     // ascolta uscite programmate in realtime
     caricaProg();
     caricaProgDomani();
+    fdb.collection('prog_preparato').onSnapshot(function(s) {
+      PROG_PREPARATO = {};
+      s.forEach(function(d) { PROG_PREPARATO[d.id] = true; });
+      aggiornaBadgeCarrellista();
+      var _cp = document.querySelector('.page.active');
+      if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
+    });
     // controlla cambio giorno dopo 2 secondi (tempo per caricare i dati)
     setTimeout(controllaGiorno, 2000);
   } catch(e) {
@@ -1467,6 +1494,9 @@ function caricaProg() {
     aggTuttiOrdini();
     setTimeout(function(){cerca();},50); // aggiorna badge prenotato
     renderCalendario();
+    aggiornaBadgeCarrellista();
+    var _cp = document.querySelector('.page.active');
+    if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
     var moC = document.getElementById('mo-cal');
     if (CAL_GIORNO_SEL && moC && moC.classList.contains('open')) renderCalModalList();
   });
@@ -2316,6 +2346,11 @@ function tst(msg, tp) {
   if (tp === 'er') { suonoErrore(); }
 }
 
+function setTipoEntrata(loc) {
+  var el = document.getElementById('in-l');
+  if (el) { el.value = loc; }
+}
+
 function regE() {
   var n = String(document.getElementById('in-n').value || '').trim().toUpperCase();
   var l = document.getElementById('in-l').value.trim().toUpperCase();
@@ -2334,7 +2369,7 @@ function regE() {
   dbSB(n, {numero: n, locazione: l, bancali: b, note: nt, ts: ts});
   dbAS({tipo: 'ENTRATA', numero: n, locazione: l, bancali: b, note: nt, ts: ts});
   document.getElementById('in-n').value = '';
-  document.getElementById('in-l').value = '';
+  document.getElementById('in-l').value = 'ARRIVI';
   document.getElementById('in-b').value = '0';
   document.getElementById('in-nt').value = '';
   suonoEntrata();
@@ -3239,6 +3274,8 @@ function apriImpostazioni() {
   document.getElementById('impost-panel').classList.add('open');
   var btnFix = document.getElementById('btn-fix-aggancio');
   if (btnFix) btnFix.style.display = isAdmin() ? 'block' : 'none';
+  var btnFoto = document.getElementById('btn-cancella-foto');
+  if (btnFoto) btnFoto.style.display = isAdmin() ? 'block' : 'none';
 }
 function chiudiImpostazioni() {
   document.getElementById('impost-panel').classList.remove('open');
@@ -3275,6 +3312,21 @@ function eseguiAzzeraDB() {
   }).catch(function(e) {
     tst('Errore durante azzeramento: ' + e.message, 'er');
   });
+}
+
+// ── CANCELLA FOTO IN MEMORIA ──
+function cancellaTutteLeFoto() {
+  if (!UC || !fdb) { return tst('Connessione Cloud necessaria', 'er'); }
+  if (!isAdmin()) { return tst('Accesso negato', 'er'); }
+  if (!confirm('Eliminare TUTTE le foto uscita dal database?\nL\'operazione non può essere annullata.')) return;
+  fdb.collection('foto_uscite').get().then(function(snap) {
+    if (snap.empty) { tst('Nessuna foto da eliminare', 'ok'); return; }
+    var batch = fdb.batch();
+    snap.forEach(function(doc) { batch.delete(doc.ref); });
+    return batch.commit();
+  }).then(function() {
+    tst('Tutte le foto eliminate', 'ok');
+  }).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
 }
 
 // ── PULIZIA AGGANCI ORFANI ──
@@ -3319,6 +3371,118 @@ function pulisciAggancioOrfani() {
   }).catch(function(e) {
     tst('Errore: ' + e.message, 'er');
   });
+}
+
+// ═══════════════════════════════════════════
+// ═══ CARRELLISTA ════════════════════════════
+// ═══════════════════════════════════════════
+var carrellistaTab = 'stoccare';
+
+function selCarrellistaTab(tab) {
+  carrellistaTab = tab;
+  document.getElementById('car-stoccare-content').style.display = tab === 'stoccare' ? 'block' : 'none';
+  document.getElementById('car-preparare-content').style.display = tab === 'preparare' ? 'block' : 'none';
+  document.getElementById('tab-stoccare').className = tab === 'stoccare' ? 'btn tog' : 'btn bgh';
+  document.getElementById('tab-preparare').className = tab === 'preparare' ? 'btn tog' : 'btn bgh';
+  renderCarrellista();
+}
+
+function renderCarrellista() {
+  renderCarrellistaStoccare();
+  renderCarrellistaPreparare();
+  aggiornaBadgeCarrellista();
+}
+
+function renderCarrellistaStoccare() {
+  var el = document.getElementById('car-stoccare-list');
+  if (!el) return;
+  var arrivi = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; });
+  if (!arrivi.length) { el.innerHTML = '<div class="emp"><div class="ic">&#x1F389;</div><p>Nessuna merce da stoccare</p></div>'; return; }
+  el.innerHTML = arrivi.map(function(b) {
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:8px;">' +
+      '<div style="flex:1;">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;">Bilico #' + b.numero + '</div>' +
+      '<div style="font-size:13px;color:var(--ob);margin-top:2px;">&#x1F4E6; ' + b.bancali + ' bancali &nbsp;&middot;&nbsp; &#x1F4CD; ARRIVI</div>' +
+      (b.note ? '<div style="font-size:11px;color:var(--tx2);margin-top:3px;">&#x1F4DD; ' + b.note + '</div>' : '') +
+      '</div>' +
+      '<button onclick="sistemaArrivo(\'' + b.numero + '\')" style="flex-shrink:0;padding:8px 16px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:800;cursor:pointer;">&#x2705; STOCCA</button>' +
+      '</div>';
+  }).join('');
+}
+
+function renderCarrellistaPreparare() {
+  var el = document.getElementById('car-preparare-list');
+  if (!el) return;
+  if (!PROG.length) { el.innerHTML = '<div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessun bilico da preparare oggi</p></div>'; return; }
+  el.innerHTML = PROG.map(function(p) {
+    var preparato = !!(p.id && PROG_PREPARATO[p.id]);
+    var b = BL[p.numero];
+    var bancNote = b ? ('&#x1F4E6; ' + b.bancali + (p.bancaliProg ? ' &middot; ord. ' + p.bancaliProg : '') + ' bancali &nbsp;&middot;&nbsp; &#x1F4CD; ' + b.locazione) : 'Non in magazzino';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:8px;' + (preparato ? 'opacity:.45;' : '') + '">' +
+      '<div style="flex:1;">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;' + (preparato ? 'text-decoration:line-through;' : '') + '">Bilico #' + p.numero + '</div>' +
+      '<div style="font-size:13px;color:var(--ob);margin-top:2px;">' + bancNote + '</div>' +
+      (p.nota ? '<div style="font-size:11px;color:var(--tx2);margin-top:3px;">&#x1F4DD; ' + p.nota + '</div>' : '') +
+      '</div>' +
+      '<button onclick="segnaPreparato(\'' + (p.id||'') + '\',' + preparato + ')" style="flex-shrink:0;padding:8px 16px;background:' + (preparato ? 'var(--bd)' : 'var(--gn)') + ';color:#fff;border:none;border-radius:var(--rs);font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:800;cursor:pointer;">' + (preparato ? '&#x21A9; ANNULLA' : '&#x2705; PRONTO') + '</button>' +
+      '</div>';
+  }).join('');
+}
+
+function aggiornaBadgeCarrellista() {
+  var nStoccare = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; }).length;
+  var nPreparare = PROG.filter(function(p) { return p.id && !PROG_PREPARATO[p.id]; }).length;
+  var tot = nStoccare + nPreparare;
+  var badge = document.getElementById('badge-carrellista');
+  if (!badge) return;
+  badge.textContent = tot;
+  badge.style.display = tot > 0 ? 'inline-flex' : 'none';
+}
+
+function segnaPreparato(docId, giaSegnato) {
+  if (!docId) { return tst('ID non disponibile', 'er'); }
+  if (!UC || !fdb) { return tst('Connessione cloud necessaria', 'er'); }
+  var progItem = PROG.find(function(p) { return p.id === docId; });
+  if (giaSegnato) {
+    fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});
+    tst('Preparazione annullata', 'ok');
+  } else {
+    fdb.collection('prog_preparato').doc(docId).set({ts: Date.now(), operatore: CURR_USER ? CURR_USER.username : ''}).catch(function(){});
+    // Sposta bilico in PARTENZE
+    if (progItem) {
+      var bPar = BL[progItem.numero];
+      if (bPar) {
+        var vecchiaLoc = bPar.locazione;
+        fdb.collection('bilici').doc(progItem.numero).update({locazione: 'PARTENZE'}).then(function() {
+          dbAS({tipo:'TRASFERIMENTO', numero:progItem.numero, locazioneDa:vecchiaLoc, locazioneA:'PARTENZE', bancali:bPar.bancali, ts:new Date().toISOString()});
+        }).catch(function(e) { tst('Errore spostamento: ' + e.message, 'er'); });
+      }
+    }
+    suonoEntrata();
+    tst('Bilico segnato come preparato &#x2705;', 'ok');
+  }
+}
+
+function sistemaArrivo(numero) {
+  var b = BL[numero];
+  if (!b) return;
+  var nuovaPos = prompt('Stocca bilico #' + numero + ' — inserisci la postazione definitiva:', '');
+  if (nuovaPos === null) return;
+  nuovaPos = nuovaPos.trim().toUpperCase();
+  if (!nuovaPos) return;
+  if (!isIllimitata(nuovaPos)) {
+    var occ = Object.values(BL).find(function(x) { return (x.locazione||'').toUpperCase() === nuovaPos && x.numero !== numero; });
+    if (occ) { return tst('Postazione ' + nuovaPos + ' occupata da bilico ' + occ.numero, 'er'); }
+  }
+  if (UC && fdb) {
+    fdb.collection('bilici').doc(numero).update({locazione: nuovaPos}).then(function() {
+      dbAS({tipo:'TRASFERIMENTO', numero:numero, locazioneDa:'ARRIVI', locazioneA:nuovaPos, bancali:b.bancali, ts:new Date().toISOString()});
+      suonoEntrata(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
+    }).catch(function(e) { tst('Errore: ' + e.message, 'er'); });
+  } else {
+    b.locazione = nuovaPos; svLoc();
+    suonoEntrata(); tst('Bilico #' + numero + ' → ' + nuovaPos, 'ok');
+  }
 }
 </script>
 
@@ -3398,6 +3562,9 @@ function pulisciAggancioOrfani() {
   </button>
   <button class="impost-btn" id="btn-fix-aggancio" onclick="pulisciAggancioOrfani()" style="display:none;background:var(--or,#f59e0b);color:#fff;">
     &#x1F527; Pulizia agganci orfani
+  </button>
+  <button class="impost-btn danger" id="btn-cancella-foto" onclick="cancellaTutteLeFoto()" style="display:none;">
+    &#x1F5F8; Cancella foto in memoria
   </button>
   <div style="margin-top:auto;font-size:11px;color:var(--tx2);text-align:center;padding-top:20px;">
     Solo dati operativi (bilici, storico, programmazione).<br>Utenti e configurazione non vengono toccati.

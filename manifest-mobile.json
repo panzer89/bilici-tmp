@@ -1,0 +1,11 @@
+{
+  "name": "Bilici MGR",
+  "short_name": "Bilici MGR",
+  "description": "App gestione magazzino bilici",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "start_url": "./mobile.html",
+  "scope": "./"
+}

@@ -418,14 +418,6 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
               <button class="prog-add-btn" onclick="aggProg()" style="background:var(--rd);">+ AGGIUNGI</button>
             </div>
             <input class="prog-nota-inp fi" type="text" id="prog-nota-inp" placeholder="Nota opzionale..." autocomplete="off">
-            <div id="prog-agg-ext-row" style="display:none;border-top:1px solid rgba(163,113,247,.3);padding-top:8px;margin-top:6px;">
-              <div style="font-size:11px;color:var(--pb);font-weight:700;margin-bottom:6px;">&#x1F517; Aggancia bilico non in lista:</div>
-              <div style="display:flex;gap:6px;">
-                <input type="number" id="prog-agg-ext-n" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" style="flex:1;height:38px;background:var(--bg);border:1.5px solid var(--pb);border-radius:var(--rs);color:var(--tx);font-size:14px;padding:0 10px;outline:none;">
-                <input type="number" id="prog-agg-ext-plt" placeholder="Plt" min="1" inputmode="numeric" autocomplete="off" style="width:72px;height:38px;background:var(--bg);border:1.5px solid var(--pb);border-radius:var(--rs);color:var(--tx);font-size:14px;padding:0 10px;outline:none;">
-                <button onclick="agganciaEsterno()" style="height:38px;padding:0 12px;background:var(--pu);color:#fff;border:none;border-radius:var(--rs);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">&#x1F517; OK</button>
-              </div>
-            </div>
           </div>
           <div class="prog-list" id="prog-list">
             <div class="prog-empty">Nessuna uscita programmata per oggi</div>
@@ -451,14 +443,6 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
               <button class="prog-add-btn" onclick="aggProgDomani()" style="background:var(--bl);">+ AGGIUNGI</button>
             </div>
             <input class="prog-nota-inp fi" type="text" id="prog-domani-nota-inp" placeholder="Nota opzionale..." autocomplete="off">
-            <div id="prog-domani-agg-ext-row" style="display:none;margin-top:8px;border-top:1px dashed rgba(163,113,247,.3);padding-top:8px;">
-              <div style="font-size:11px;color:var(--pb);font-weight:700;margin-bottom:6px;">&#x1F517; Aggancia bilico esterno (non in lista)</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <input type="number" id="prog-domani-agg-ext-n" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" style="flex:1;height:38px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;padding:0 10px;outline:none;">
-                <input type="number" id="prog-domani-agg-ext-plt" placeholder="Plt..." inputmode="numeric" min="1" autocomplete="off" style="width:70px;height:38px;background:var(--bg);border:1.5px solid rgba(163,113,247,.5);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;padding:0 8px;outline:none;">
-                <button onclick="agganciaEsternoDomani()" style="height:38px;padding:0 12px;background:rgba(163,113,247,.15);border:1.5px solid var(--pb);border-radius:var(--rs);color:var(--pb);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">&#x1F517;</button>
-              </div>
-            </div>
           </div>
           <div class="prog-list" id="prog-domani-list">
             <div class="prog-empty">Nessuna uscita programmata per domani</div>
@@ -635,6 +619,34 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
       <div id="foto-uscita-vuota" style="color:var(--tx2);font-size:14px;padding:28px 0;">Nessuna foto disponibile per questo carico</div>
     </div>
     <button class="btn bgh" onclick="chiM('mo-foto-uscita')" style="margin-bottom:0;">&#x2716; Chiudi</button>
+  </div>
+</div>
+
+<!-- MODALE AGGIUNGI NOTA -->
+<div class="mo" id="mo-aggiungi-nota">
+  <div class="mdl">
+    <div class="mha"></div>
+    <div class="mtt">&#x270F;&#xFE0F; Aggiungi Nota &mdash; Bilico <span id="an-bilico"></span></div>
+    <div id="an-nota-esistente-wrap" style="display:none;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--tx3);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Nota attuale</div>
+      <div id="an-nota-esistente" style="font-size:14px;color:var(--tx);line-height:1.5;white-space:pre-wrap;"></div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Aggiungi testo</div>
+    <textarea id="an-nuova" rows="3" placeholder="Scrivi qui la nuova nota da aggiungere..." style="width:100%;box-sizing:border-box;background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:16px;padding:10px 12px;outline:none;resize:vertical;" onkeydown="if(event.ctrlKey&&event.key==='Enter')salvaAggiungiNota()"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn bgh" onclick="chiM('mo-aggiungi-nota')" style="flex:1;margin-bottom:0;">Annulla</button>
+      <button class="btn bgn" onclick="salvaAggiungiNota()" style="flex:1;margin-bottom:0;">&#x2705; Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE LEGGI NOTA -->
+<div class="mo" id="mo-leggi-nota">
+  <div class="mdl">
+    <div class="mha"></div>
+    <div class="mtt">&#x1F4DD; Nota Completa</div>
+    <div id="mn-testo" style="font-size:16px;color:var(--tx);line-height:1.6;white-space:pre-wrap;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:14px 16px;min-height:60px;"></div>
+    <button class="btn bgh" onclick="chiM('mo-leggi-nota')" style="margin-top:14px;margin-bottom:0;">&#x2716; Chiudi</button>
   </div>
 </div>
 
@@ -1149,7 +1161,7 @@ function aggiornaLogUscite() {
   var el = document.getElementById('log-usc-list');
   if (!lista.length) { el.innerHTML = '<div class="log-empty">Nessun carico effettuato</div>'; return; }
   el.innerHTML = lista.map(function(m) {
-    var caricoTag = m.caricoId ? '<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>' : '';
+    var caricoTag = m.caricoId ? '<span style="font-size:10px;color:var(--tx3);font-weight:600;margin-left:5px;">&#x1F4CB; ID: '+m.caricoId.slice(-6)+'</span>' : '';
     var opTag = m.operatore ? '<span class="op-tag">&#x1F464; '+m.operatore+'</span>' : '';
     var fotoBtn = (m.fotoSalvata && m.caricoId) ? '<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px;" title="Vedi foto">&#x1F4F7;</button>' : '';
     return '<div class="li"><div class="ldot ou"></div><div class="ltx"><div class="lm">#' + m.numero + ' &larr; ' + m.locazione + caricoTag + opTag + fotoBtn + '</div><div class="ls">Usciti: ' + m.bancaliUsciti + ' &mdash; Rimasti: ' + m.bancaliRimasti + (m.note ? ' &mdash; ' + m.note : '') + '</div></div><div class="lti">' + fmtH(m.ts) + '</div></div>';
@@ -1192,25 +1204,44 @@ function aggProgDomani() {
   suonoSirena();
   tst('Bilico ' + val + ' aggiunto alle uscite di domani', 'ok');
 }
-function modificaNotaProg(num) {
-  var item = PROG.find(function(p) { return p.numero === num; });
-  if (!item) return;
-  var n = prompt('Modifica nota per bilico #' + num + ':', item.nota || '');
-  if (n === null) return;
-  n = n.trim();
-  if (UC && fdb && item.id) { fdb.collection('prog').doc(item.id).update({nota: n}).catch(function(e) { tst('Errore', 'er'); }); }
-  else { item.nota = n; salvaProg(); renderProg(); }
-  tst('Nota aggiornata', 'ok');
+var _aggNotaNum = null, _aggNotaColl = null;
+function apriAggiungiNota(num, coll) {
+  _aggNotaNum = num; _aggNotaColl = coll;
+  var lista = coll === 'prog' ? PROG : PROG_DOMANI;
+  var item = lista.find(function(p){ return p.numero === num; });
+  var notaEsistente = item ? (item.nota || '') : '';
+  var el = document.getElementById('mo-aggiungi-nota');
+  document.getElementById('an-bilico').textContent = '#' + num;
+  var wrap = document.getElementById('an-nota-esistente-wrap');
+  if (notaEsistente) {
+    document.getElementById('an-nota-esistente').textContent = notaEsistente;
+    wrap.style.display = 'block';
+  } else { wrap.style.display = 'none'; }
+  document.getElementById('an-nuova').value = '';
+  el.classList.add('open');
+  setTimeout(function(){ document.getElementById('an-nuova').focus(); }, 120);
 }
-function modificaNotaProgDomani(num) {
-  var item = PROG_DOMANI.find(function(p) { return p.numero === num; });
-  if (!item) return;
-  var n = prompt('Modifica nota per bilico #' + num + ':', item.nota || '');
-  if (n === null) return;
-  n = n.trim();
-  if (UC && fdb && item.id) { fdb.collection('prog_domani').doc(item.id).update({nota: n}).catch(function(e) { tst('Errore', 'er'); }); }
-  else { item.nota = n; salvaProgDomani(); renderProgDomani(); }
-  tst('Nota aggiornata', 'ok');
+function salvaAggiungiNota() {
+  var nuova = (document.getElementById('an-nuova').value || '').trim();
+  if (!nuova) { chiM('mo-aggiungi-nota'); return; }
+  var lista = _aggNotaColl === 'prog' ? PROG : PROG_DOMANI;
+  var item = lista.find(function(p){ return p.numero === _aggNotaNum; });
+  if (!item) { chiM('mo-aggiungi-nota'); return; }
+  var notaFin = item.nota ? item.nota + ' — ' + nuova : nuova;
+  if (UC && fdb && item.id) {
+    fdb.collection(_aggNotaColl).doc(item.id).update({nota: notaFin}).catch(function(){ tst('Errore salvataggio', 'er'); });
+    item.nota = notaFin;
+  } else {
+    item.nota = notaFin;
+    if (_aggNotaColl === 'prog') salvaProg(); else salvaProgDomani();
+  }
+  if (_aggNotaColl === 'prog') renderProg(); else renderProgDomani();
+  chiM('mo-aggiungi-nota');
+  tst('Nota aggiunta', 'ok');
+}
+function mostraNota(testo) {
+  document.getElementById('mn-testo').textContent = testo || '';
+  document.getElementById('mo-leggi-nota').classList.add('open');
 }
 
 function contaOrdiniUnivoci(arr) {
@@ -1233,12 +1264,11 @@ function renderProg() {
     var b = BL[p.numero];
     var inMag = !!b;
     var docId = p.id || '';
-    var isSelected = aggancioSel !== null && aggancioSel.docId === docId && docId !== '';
     var partner = p.aggancioId ? PROG.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;}) : null;
     var bilB = partner ? BL[partner.numero] : null;
     var isPaired = !!partner;
     if (isPaired) { rAgg[p.aggancioId] = true; }
-    var borderStyle = isPaired ? 'border-left:3px solid var(--pb);' : (isSelected ? 'border-left:3px solid var(--cb);' : '');
+    var borderStyle = isPaired ? 'border-left:3px solid var(--pb);' : '';
     var s = '<div class="prog-item" style="' + borderStyle + '">';
     s += '<div class="prog-num">';
     if (isPaired) {
@@ -1254,33 +1284,30 @@ function renderProg() {
         s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
         s += '<div class="prog-ban">&#x1F4E6; ' + bndA + ' bancali</div>';
       } else { s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>'; }
-      if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
+      if (p.nota) { s += '<div class="prog-note-txt" title="Clicca per leggere" style="cursor:pointer;" onclick="mostraNota(this.textContent)">' + p.nota + '</div>'; }
       s += '<div style="border-top:1px dashed rgba(163,113,247,.4);margin:5px 0;"></div>';
       if (bilB) {
         var bndB = (partner.bancaliProg && partner.bancaliProg < bilB.bancali) ? partner.bancaliProg + ' / ' + bilB.bancali : bilB.bancali;
         s += '<div class="prog-loc" style="color:var(--pb);">&#x1F4CD; ' + bilB.locazione + '</div>';
         s += '<div class="prog-ban" style="color:var(--pb);">&#x1F4E6; ' + bndB + ' bancali</div>';
       } else { s += '<div style="font-size:12px;color:var(--pb);">Non in magazzino</div>'; }
-      if (partner.nota) { s += '<div class="prog-note-txt" style="color:var(--pb);">' + partner.nota + '</div>'; }
+      if (partner.nota) { s += '<div class="prog-note-txt" style="color:var(--pb);cursor:pointer;" title="Clicca per leggere" onclick="mostraNota(this.textContent)">' + partner.nota + '</div>'; }
     } else {
       if (inMag) {
         var banDisp = (p.bancaliProg && p.bancaliProg < b.bancali) ? p.bancaliProg + ' / ' + b.bancali : b.bancali;
         s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
         s += '<div class="prog-ban">&#x1F4E6; ' + banDisp + ' bancali</div>';
       } else { s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>'; }
-      if (p.nota) { s += '<div class="prog-note-txt">' + p.nota + '</div>'; }
-      if (isSelected) { s += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato &mdash; tocca &#x1F517; su un altro bilico</div>'; }
+      if (p.nota) { s += '<div class="prog-note-txt" title="Clicca per leggere" style="cursor:pointer;" onclick="mostraNota(this.textContent)">' + p.nota + '</div>'; }
     }
     s += '</div><div class="prog-actions">';
     if (isPaired) {
       if (inMag || bilB) { s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(&quot;' + docId + '&quot;)">&#x1F534; CARICA</button>'; }
-      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProg(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" title="Aggiungi nota" onclick="apriAggiungiNota(' + p.numero + ',&quot;prog&quot;)">&#x270F;&#xFE0F;</button>';
       s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--pb);border-radius:var(--rs);color:var(--pb);cursor:pointer;font-size:14px;" title="Sgancia" onclick="sganciaProg(\'' + docId + '\')">&#x2702;</button>';
     } else {
       if (inMag) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + p.numero + '&quot;)">&#x1F534; CARICA</button>'; }
-      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProg(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
-      var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggancioSel !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
-      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);cursor:pointer;font-size:14px;' + aggSt + '" title="Aggancia" onclick="startAggancio(\'' + docId + '\',\'' + p.numero + '\')">&#x1F517;</button>';
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" title="Aggiungi nota" onclick="apriAggiungiNota(' + p.numero + ',&quot;prog&quot;)">&#x270F;&#xFE0F;</button>';
     }
     s += '</div></div>';
     rows.push(s);
@@ -1300,14 +1327,13 @@ function renderProgDomani() {
     var b = BL[p.numero];
     var inMag = !!b;
     var docId = p.id || '';
-    var isSelected = aggancioSelD !== null && aggancioSelD.docId === docId && docId !== '';
     var partner = null, bilB = null;
     if (p.aggancioId) {
       partner = PROG_DOMANI.find(function(x){return x.aggancioId===p.aggancioId && x.id!==p.id;});
       if (partner) { rAgg[p.aggancioId] = true; bilB = BL[partner.numero]; }
     }
     var isPaired = !!partner;
-    var borderSt = isPaired ? 'border-left:3px solid var(--pb);' : (isSelected ? 'border-left:3px solid var(--cb);' : '');
+    var borderSt = isPaired ? 'border-left:3px solid var(--pb);' : '';
     var s = '<div class="prog-item" style="' + borderSt + '">';
     s += '<div class="prog-num">';
     if (isPaired) {
@@ -1323,32 +1349,29 @@ function renderProgDomani() {
         s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
         s += '<div class="prog-ban">&#x1F4E6; ' + bndA + ' bancali</div>';
       } else { s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>'; }
-      if (p.nota) s += '<div class="prog-note-txt">' + p.nota + '</div>';
+      if (p.nota) s += '<div class="prog-note-txt" title="Clicca per leggere" style="cursor:pointer;" onclick="mostraNota(this.textContent)">' + p.nota + '</div>';
       s += '<div style="border-top:1px dashed rgba(163,113,247,.4);margin:5px 0;"></div>';
       if (bilB) {
         var bndB = (partner.bancaliProg && partner.bancaliProg < bilB.bancali) ? partner.bancaliProg + ' / ' + bilB.bancali : bilB.bancali;
         s += '<div class="prog-loc" style="color:var(--pb);">&#x1F4CD; ' + bilB.locazione + '</div>';
         s += '<div class="prog-ban" style="color:var(--pb);">&#x1F4E6; ' + bndB + ' bancali</div>';
       } else { s += '<div style="font-size:12px;color:var(--pb);">Non in magazzino</div>'; }
-      if (partner.nota) s += '<div class="prog-note-txt" style="border-color:var(--pb);color:var(--pb);">' + partner.nota + '</div>';
+      if (partner.nota) s += '<div class="prog-note-txt" style="border-color:var(--pb);color:var(--pb);cursor:pointer;" title="Clicca per leggere" onclick="mostraNota(this.textContent)">' + partner.nota + '</div>';
     } else {
       if (inMag) {
         var banDisp = (p.bancaliProg && p.bancaliProg < b.bancali) ? p.bancaliProg + ' / ' + b.bancali : b.bancali;
         s += '<div class="prog-loc">&#x1F4CD; ' + b.locazione + '</div>';
         s += '<div class="prog-ban">&#x1F4E6; ' + banDisp + ' bancali</div>';
       } else { s += '<div style="font-size:12px;color:var(--tx2);">Non in magazzino</div>'; }
-      if (p.nota) s += '<div class="prog-note-txt">' + p.nota + '</div>';
-      if (isSelected) s += '<div style="font-size:11px;color:var(--cb);font-weight:700;margin-top:3px;">&#x2B55; Selezionato — tocca &#x1F517; su un altro bilico o usa il campo sotto</div>';
+      if (p.nota) s += '<div class="prog-note-txt" title="Clicca per leggere" style="cursor:pointer;" onclick="mostraNota(this.textContent)">' + p.nota + '</div>';
     }
     s += '</div>';
     s += '<div class="prog-actions">';
     if (isPaired) {
-      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProgDomani(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" title="Aggiungi nota" onclick="apriAggiungiNota(' + p.numero + ',&quot;prog_domani&quot;)">&#x270F;&#xFE0F;</button>';
       s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--pb);border-radius:var(--rs);color:var(--pb);cursor:pointer;font-size:14px;" title="Sgancia" onclick="sganciaProgDomani(\'' + docId + '\')">&#x2702;</button>';
     } else {
-      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" onclick="modificaNotaProgDomani(&quot;' + p.numero + '&quot;)">&#x270F;&#xFE0F;</button>';
-      var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggancioSelD !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
-      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);cursor:pointer;font-size:14px;' + aggSt + '" title="Aggancia" onclick="startAggancioDomani(\'' + docId + '\',\'' + p.numero + '\')">&#x1F517;</button>';
+      s += '<button class="prog-del-btn" style="height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:14px;" title="Aggiungi nota" onclick="apriAggiungiNota(' + p.numero + ',&quot;prog_domani&quot;)">&#x270F;&#xFE0F;</button>';
     }
     s += '</div></div>';
     rows.push(s);

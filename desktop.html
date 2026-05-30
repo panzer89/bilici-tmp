@@ -699,6 +699,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 // ═══ FUNZIONI SPECIFICHE DESKTOP ═══
 
 var CAL_DATA = {};
+var aggTOSel = null; // {docId, numero, fonte} — selezione pendente aggancio in tutti-ordini
 
 function isAdmin() { return CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2); }
 
@@ -710,6 +711,7 @@ function goP(n) {
   var mp = {home:'tbh', entrata:'tbe', uscita:'tbu', magazzino:'tbm', programmazione:'tbprog', storico:'tbstor'};
   if (mp[n]) { var tb = document.getElementById(mp[n]); if (tb) { tb.classList.add('active'); } }
   if (n==='programmazione') { setTimeout(function(){renderCalendario();},80); }
+  if (n!=='programmazione') { aggTOSel = null; }
   if (n==='storico') {
     // reset filtri e mostra tutto
     var sfNum=document.getElementById('sf-num');
@@ -942,7 +944,9 @@ function renderTuttiOrdini() {
     var idQ="'"+( p.id||'')+"'";
     var notaQ="'"+(p.nota||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"'";
     var fonteQ="'"+p.fonte+"'";
-    html+='<tr style="border-bottom:1px solid rgba(48,54,61,.4);">';
+    var isSelTO = aggTOSel && aggTOSel.docId === p.id;
+    var rowBg = isSelTO ? 'background:rgba(13,148,136,.08);' : '';
+    html+='<tr style="border-bottom:1px solid rgba(48,54,61,.4);'+rowBg+'">';
     var opTagTbl=p.operatore?'<span class="op-tag" style="margin-left:4px;font-size:9px;">&#x1F464; '+p.operatore+'</span>':'';
     var numCell=p.partner
       ?'<strong style="color:var(--bb);">#'+p.numero+'</strong> <span style="color:var(--pb);font-size:12px;">&#x1F517;</span> <strong style="color:var(--pb);">#'+p.partner.numero+'</strong>'
@@ -957,6 +961,11 @@ function renderTuttiOrdini() {
     html+='<td style="padding:6px 8px;white-space:nowrap;text-align:right;">';
     var btnEdit='background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--bb);padding:3px 8px;font-size:12px;cursor:pointer;margin-right:3px;';
     var btnDel='background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 8px;font-size:12px;cursor:pointer;';
+    // bottone aggancio — solo admin, solo prog/prog_domani, solo se non già in coppia
+    if(isAdmin() && !p.partner && (p.fonte==='prog'||p.fonte==='prog_domani') && p.id){
+      var aggTOSt = isSelTO ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggTOSel?'border-color:var(--gb);color:var(--gb);':'');
+      html+='<button onclick="startAggancioTO('+idQ+','+p.numero+','+fonteQ+')" title="'+(isSelTO?'Annulla selezione':'Aggancia bilico')+'" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);padding:3px 7px;font-size:13px;cursor:pointer;margin-right:3px;'+aggTOSt+'">&#x1F517;</button>';
+    }
     html+='<button onclick="modificaOrdine('+fonteQ+','+idQ+','+p.numero+','+notaQ+',\''+p.data+'\',' +(p.bancaliProg||0)+')" title="#'+p.numero+'" style="'+btnEdit+'">&#x270F;&#xFE0F;</button>';
     if(p.partner){
       var idQB="'"+(p.partner.id||'')+"'";
@@ -1025,6 +1034,58 @@ function eliminaOrdine(fonte,id,numero){
   else if(fonte==='prog_calendario'){if(UC&&fdb&&id)fdb.collection('prog_calendario').doc(id).delete();else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=CAL_DATA[dt].filter(function(p){return p.id!==id;});});renderCalendario();}}
   tst('Bilico #'+numero+' rimosso','ok');
   setTimeout(renderTuttiOrdini,300);
+}
+
+// ─── AGGANCIO DA "TUTTI GLI ORDINI" ───
+function startAggancioTO(docId, numero, fonte) {
+  if (!docId) { tst('Funzione disponibile solo con connessione cloud', 'er'); return; }
+  if (aggTOSel && aggTOSel.docId === docId) {
+    aggTOSel = null; renderTuttiOrdini(); tst('Selezione annullata', 'ok'); return;
+  }
+  var srcList = fonte === 'prog' ? PROG : PROG_DOMANI;
+  var target = srcList.find(function(p){ return p.id === docId; });
+  if (!target) { tst('Ordine non trovato', 'er'); return; }
+  if (target.aggancioId) { tst('Bilico #' + numero + ' è già agganciato', 'er'); return; }
+  if (aggTOSel === null) {
+    aggTOSel = {docId: docId, numero: numero, fonte: fonte};
+    renderTuttiOrdini();
+    tst('Bilico #' + numero + ' selezionato — tocca 🔗 su un altro bilico per agganciarlo', 'ok');
+  } else {
+    var selList = aggTOSel.fonte === 'prog' ? PROG : PROG_DOMANI;
+    var selItem = selList.find(function(p){ return p.id === aggTOSel.docId; });
+    if (!selItem) { aggTOSel = null; tst('Bilico non più disponibile', 'er'); renderTuttiOrdini(); return; }
+    if (selItem.aggancioId) { tst('Bilico #' + aggTOSel.numero + ' è già agganciato', 'er'); aggTOSel = null; renderTuttiOrdini(); return; }
+    // Blocco se date diverse — non ha senso abbinare bilici di giorni diversi
+    if (selItem.data !== target.data) {
+      var d1 = selItem.data ? selItem.data.split('-').reverse().join('/') : '—';
+      var d2 = target.data ? target.data.split('-').reverse().join('/') : '—';
+      tst('Abbinamento non consentito: #' + aggTOSel.numero + ' e #' + numero + ' hanno date diverse (' + d1 + ' · ' + d2 + '). Per abbinarli devono essere programmati nello stesso giorno.', 'er');
+      return;
+    }
+    completaAggancioTO(docId, numero, fonte);
+  }
+}
+function completaAggancioTO(docId2, numero2, fonte2) {
+  var aggId = 'AG' + Date.now();
+  var docId1 = aggTOSel.docId, numero1 = aggTOSel.numero, fonte1 = aggTOSel.fonte;
+  aggTOSel = null;
+  var list1 = fonte1 === 'prog' ? PROG : PROG_DOMANI;
+  var list2 = fonte2 === 'prog' ? PROG : PROG_DOMANI;
+  if (UC && fdb) {
+    fdb.collection(fonte1).doc(docId1).update({aggancioId: aggId}).catch(function(){});
+    fdb.collection(fonte2).doc(docId2).update({aggancioId: aggId}).catch(function(){});
+  } else {
+    var p1 = list1.find(function(p){return p.id===docId1;});
+    var p2 = list2.find(function(p){return p.id===docId2;});
+    if (p1) p1.aggancioId = aggId;
+    if (p2) p2.aggancioId = aggId;
+    if (fonte1==='prog') salvaProg(); else salvaProgDomani();
+    if (fonte2==='prog' && fonte1!=='prog') salvaProg();
+    else if (fonte2==='prog_domani' && fonte1!=='prog_domani') salvaProgDomani();
+    renderProg(); renderProgDomani();
+  }
+  tst('Bilici #' + numero1 + ' e #' + numero2 + ' agganciati!', 'ok');
+  setTimeout(renderTuttiOrdini, 250);
 }
 
 function buildProgItem(p, isDomani, renderedAggIds) {
@@ -2796,16 +2857,16 @@ function expExcel() {
   var ws1 = XLSX.utils.aoa_to_sheet(r1);
   ws1['!cols'] = [{wch:12},{wch:14},{wch:10},{wch:25},{wch:20}];
   XLSX.utils.book_append_sheet(wb, ws1, 'Bilici Presenti');
-  var r2 = [['TIPO','NUMERO','LOCAZIONE','BANCALI','USCITI','RIMASTI','NOTE','DATA']];
+  var r2 = [['TIPO','NUMERO','LOCAZIONE','BANCALI','USCITI','RIMASTI','NOTE','ID INTERNO','DATA']];
   ST.forEach(function(m) {
     r2.push([m.tipo, m.numero, m.locazione,
       m.tipo === 'ENTRATA' ? m.bancali : '',
       m.tipo === 'USCITA' ? m.bancaliUsciti : '',
       m.tipo === 'USCITA' ? m.bancaliRimasti : '',
-      m.note || '', new Date(m.ts).toLocaleString('it-IT')]);
+      m.note || '', m.caricoId || '', new Date(m.ts).toLocaleString('it-IT')]);
   });
   var ws2 = XLSX.utils.aoa_to_sheet(r2);
-  ws2['!cols'] = [{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:22},{wch:20}];
+  ws2['!cols'] = [{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:22},{wch:20},{wch:20}];
   XLSX.utils.book_append_sheet(wb, ws2, 'Storico Movimenti');
   var dt = new Date().toLocaleDateString('it-IT').split('/').join('-');
   XLSX.writeFile(wb, 'Bilici_' + dt + '.xlsx');
@@ -2878,7 +2939,7 @@ function lgRow(m) {
   else if(isIn) det=(m.bancali!=null?m.bancali+' bancali':'-');
   else if(isMod) det=(m.bancali||'-')+' bancali';
   else det='Usciti: '+(m.bancaliUsciti!=null?m.bancaliUsciti:(m.bancali!=null?m.bancali:'-'))+', Rimasti: '+(m.bancaliRimasti!=null?m.bancaliRimasti:'-');
-  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
+  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--tx3);font-weight:600;margin-left:5px;">&#x1F4CB; ID: '+m.caricoId.slice(-6)+'</span>':'';
   var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
   var fotoBtn=(m.fotoSalvata&&m.caricoId)?'<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:15px;padding:0 3px;vertical-align:middle;" title="Vedi foto">&#x1F4F7;</button>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
@@ -2900,7 +2961,7 @@ function lgDel(m) {
   else if(isIn) det=(m.bancali!=null?m.bancali+' bancali':'-');
   else if(isMod) det=(m.bancali||'-')+' bancali';
   else det='Usciti: '+(m.bancaliUsciti||'-')+', Rimasti: '+(m.bancaliRimasti||'-');
-  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--pb);font-weight:700;margin-left:5px;">&#x1F517; '+m.caricoId.slice(-6)+'</span>':'';
+  var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--tx3);font-weight:600;margin-left:5px;">&#x1F4CB; ID: '+m.caricoId.slice(-6)+'</span>':'';
   var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
   s += '<div class="lm">' + ico + ' <strong>#' + m.numero + '</strong> - ' + label + caricoTag + opTag + '</div>';

@@ -366,7 +366,7 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Disp. Bilici Secco</div></div>
     <div class="sc gn"><div class="v" id="s-plt-in">0</div><div class="lb">⬆ PLT Entrati</div></div>
     <div class="sc rd"><div class="v" id="s-plt-out">0</div><div class="lb">⬇ PLT Usciti</div></div>
-    <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">—</div><div class="lb">❄️ Disp. Bilici Fresco</div></div>
+    <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">0</div><div class="lb">🏭 MARCHESI</div></div>
   </div>
 
   <!-- USCITE IN PROGRAMMA OGGI -->
@@ -487,6 +487,7 @@ body[data-lvl="1"] .prog-add{display:none!important;}
   <div class="stl">Gestione</div>
   <button class="btn bpu" id="btn-utenti" onclick="apriUtenti()" style="display:none;"><span class="bi">&#x1F465;</span>GESTIONE UTENTI</button>
   <button class="btn bog" onclick="apriStor()"><span class="bi">&#x1F4CB;</span>STORICO MOVIMENTI</button>
+  <button class="btn" id="btn-missioni" onclick="apriMissioniMob()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);color:var(--pb);display:none;"><span class="bi">&#x1F4E6;</span>MISSIONI <span id="badge-miss-mob" style="background:var(--pb);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:4px;display:none;">0</span></button>
   <button class="btn bpu" id="btn-export" onclick="expExcel()"><span class="bi">&#x1F4CA;</span>ESPORTA EXCEL</button>
   <button class="btn bcy" id="btn-import" onclick="apriImport()"><span class="bi">&#x1F4E5;</span>IMPORTA DA EXCEL</button>
 </div>
@@ -497,7 +498,13 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div class="stl">Registra Entrata</div>
     <div class="fg">
       <div class="fl">Numero Bilico</div>
-      <input class="fi fib" id="in-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off">
+      <div style="display:flex;gap:6px;align-items:stretch;">
+        <input id="in-n-pfx" type="text" maxlength="1" placeholder="A"
+          style="width:50px;text-align:center;text-transform:uppercase;font-size:30px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);padding:0;outline:none;font-family:'Barlow Condensed',sans-serif;cursor:text;-webkit-appearance:none;"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');"
+          onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('in-n').focus();}">
+        <input class="fi fib" id="in-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0;">
+      </div>
     </div>
     <div class="fg">
       <div class="fl">Tipo merce</div>
@@ -537,7 +544,13 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div class="stl">Registra Uscita</div>
     <div class="fg">
       <div class="fl">Numero Bilico</div>
-      <input class="fi fib" id="out-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" oninput="trovB()">
+      <div style="display:flex;gap:6px;align-items:stretch;">
+        <input id="out-n-pfx" type="text" maxlength="1" placeholder="A"
+          style="width:50px;text-align:center;text-transform:uppercase;font-size:30px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);padding:0;outline:none;font-family:'Barlow Condensed',sans-serif;cursor:text;-webkit-appearance:none;"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');trovB();"
+          onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('out-n').focus();}">
+        <input class="fi fib" id="out-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" oninput="trovB()" style="flex:1;min-width:0;">
+      </div>
     </div>
     <div class="trv" id="trvbox">
       <div class="trv-t">&#x2705; Bilico trovato</div>
@@ -839,6 +852,7 @@ var FBC = {
 var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO', 'ARRIVI', 'PARTENZE'];
 
 var BL = {}, ST = [], fdb = null, UC = false;
+var MISSIONI = [];
 var SMM = 'b', pend = null, pbuf = '', paz = null;
 var PIN = '4114';
 var impDati = [];
@@ -889,6 +903,11 @@ window.onload = function() {
       aggiornaBadgeCarrellista();
       var _cp = document.querySelector('.page.active');
       if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
+    });
+    fdb.collection('missioni').onSnapshot(function(s) {
+      MISSIONI = [];
+      s.forEach(function(d) { MISSIONI.push(Object.assign({id: d.id}, d.data())); });
+      aggiornaBadgeMissioniMob();
     });
     fdb.collection('storico').orderBy('ts', 'desc').onSnapshot(function(s) {
       ST = [];
@@ -1063,6 +1082,7 @@ function applicaLivello(lvl) {
   var isAdmin=(lvl===0||lvl===2);
   document.getElementById('btn-utenti').style.display = isAdmin ? 'flex' : 'none';
   document.getElementById('btn-export').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('btn-missioni').style.display = isAdmin ? 'flex' : 'none';
   document.getElementById('btn-import').style.display = isAdmin ? 'flex' : 'none';
   // campo locazione: solo QR per livello 1
   var locInp = document.getElementById('in-l');
@@ -1346,7 +1366,10 @@ function rimuoviProg(num) {
 
 function caricaVeloce(num) {
   goP('uscita');
-  document.getElementById('out-n').value = num;
+  var _sv = String(num).trim().toUpperCase();
+  var _mv = _sv.match(/^([A-Za-z]?)(\d+)$/);
+  document.getElementById('out-n-pfx').value = _mv ? _mv[1] : '';
+  document.getElementById('out-n').value = _mv ? _mv[2] : _sv;
   trovB();
   var progItem = PROG.find(function(p){ return p.numero === String(num); });
   var elNota = document.getElementById('out-prog-nota');
@@ -1991,6 +2014,7 @@ function renderTuttiOrdiniMob() {
     if (p.partner) {
       var idQB="'"+(p.partner.id||'')+"'";
       var fonteQB="'"+p.partner.fonte+"'";
+      html+='<button onclick="sganciaTOMob('+idQ+','+fonteQ+')" title="Sgancia" style="background:none;border:1px solid var(--pb);border-radius:4px;color:var(--pb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;margin-right:4px;">&#x2702;</button>';
       html+='<button onclick="eliminaOrdineCoppiaMob('+fonteQ+','+idQ+','+fonteQB+','+idQB+','+p.numero+','+p.partner.numero+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2715;</button>';
     } else {
       if (isAdmTO && p.id) {
@@ -2003,6 +2027,24 @@ function renderTuttiOrdiniMob() {
     html+='</div>';
   });
   el.innerHTML = html;
+}
+function sganciaTOMob(docId, fonte) {
+  if (!docId) return;
+  var item = trovaDaTOMob(docId, fonte);
+  if (!item || !item.aggancioId) return;
+  var aggId = item.aggancioId;
+  var partner = null, partnerFonte = null;
+  var colls = [{arr:PROG,fonte:'prog'},{arr:PROG_DOMANI,fonte:'prog_domani'}];
+  Object.keys(CAL_DATA||{}).forEach(function(dt){ colls.push({arr:CAL_DATA[dt]||[],fonte:'prog_calendario'}); });
+  colls.forEach(function(c){ if(!partner){ var f=c.arr.find(function(x){return x.aggancioId===aggId&&x.id!==docId;}); if(f){partner=f;partnerFonte=c.fonte;} } });
+  if (UC && fdb) {
+    fdb.collection(fonte).doc(docId).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+    if (partner && partner.id) fdb.collection(partnerFonte).doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+  }
+  delete item.aggancioId;
+  if (partner) delete partner.aggancioId;
+  tst('Bilici sganciati', 'ok');
+  setTimeout(renderTuttiOrdiniMob, 200);
 }
 function trovaDaTOMob(docId, fonte) {
   if (fonte === 'prog') return PROG.find(function(p){ return p.id === docId; });
@@ -2443,7 +2485,8 @@ function setTipoEntrata(loc) {
 }
 
 function regE() {
-  var n = String(document.getElementById('in-n').value || '').trim().toUpperCase();
+  var _pfx = String(document.getElementById('in-n-pfx').value || '').trim().toUpperCase();
+  var n = _pfx + String(document.getElementById('in-n').value || '').trim().toUpperCase();
   var l = document.getElementById('in-l').value.trim().toUpperCase();
   var b = parseInt(document.getElementById('in-b').value) || 0;
   var nt = document.getElementById('in-nt').value.trim();
@@ -2459,6 +2502,7 @@ function regE() {
   var ts = new Date().toISOString();
   dbSB(n, {numero: n, locazione: l, bancali: b, note: nt, ts: ts});
   dbAS({tipo: 'ENTRATA', numero: n, locazione: l, bancali: b, note: nt, ts: ts});
+  document.getElementById('in-n-pfx').value = '';
   document.getElementById('in-n').value = '';
   document.getElementById('in-l').value = 'ARRIVI';
   document.getElementById('in-b').value = '0';
@@ -2468,7 +2512,8 @@ function regE() {
 }
 
 function trovB() {
-  var n = String(document.getElementById('out-n').value || '').trim().toUpperCase();
+  var _pfx = String(document.getElementById('out-n-pfx').value || '').trim().toUpperCase();
+  var n = _pfx + String(document.getElementById('out-n').value || '').trim().toUpperCase();
   var b = BL[n];
   var box = document.getElementById('trvbox');
   if (b) {
@@ -2484,7 +2529,8 @@ function trovB() {
 }
 
 function regU() {
-  var n = String(document.getElementById('out-n').value || '').trim().toUpperCase();
+  var _pfx = String(document.getElementById('out-n-pfx').value || '').trim().toUpperCase();
+  var n = _pfx + String(document.getElementById('out-n').value || '').trim().toUpperCase();
   var bu = parseInt(document.getElementById('out-b').value) || 0;
   var nt = document.getElementById('out-nt').value.trim();
   if (!n) { return tst('Inserisci il numero bilico', 'er'); }
@@ -2540,6 +2586,7 @@ function confU() {
   suonoUscita();
   rimuoviProg(n);
   rimuoviPrenotazioneNum(n);
+  document.getElementById('out-n-pfx').value = '';
   document.getElementById('out-n').value = '';
   document.getElementById('out-b').value = '0';
   document.getElementById('out-nt').value = '';
@@ -2549,7 +2596,10 @@ function confU() {
 
 function uscV(n) {
   goP('uscita');
-  document.getElementById('out-n').value = n;
+  var _s = String(n).trim().toUpperCase();
+  var _m = _s.match(/^([A-Za-z]?)(\d+)$/);
+  document.getElementById('out-n-pfx').value = _m ? _m[1] : '';
+  document.getElementById('out-n').value = _m ? _m[2] : _s;
   trovB();
 }
 
@@ -2793,6 +2843,202 @@ function eseguiImport() {
   });
 }
 
+// ══════════════════════════════════════════════
+// MISSIONI — MOBILE (solo creazione admin)
+// ══════════════════════════════════════════════
+function aggiornaBadgeMissioniMob() {
+  var el = document.getElementById('badge-miss-mob');
+  if (!el) return;
+  // mostra il conteggio di tutte le missioni non ancora 'caricata'
+  var n = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; }).length;
+  el.textContent = n;
+  el.style.display = n > 0 ? 'inline' : 'none';
+}
+
+var _missFDal = '', _missFAl = '', _missFTipo = '', _missFStato = '';
+
+function apriMissioniMob(fDal, fAl, fTipo, fStato) {
+  // conserva o aggiorna i filtri
+  if (fDal   !== undefined) _missFDal   = fDal;
+  if (fAl    !== undefined) _missFAl    = fAl;
+  if (fTipo  !== undefined) _missFTipo  = fTipo;
+  if (fStato !== undefined) _missFStato = fStato;
+  // applica filtri
+  var lista = MISSIONI.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+  if (_missFDal)   { lista = lista.filter(function(m){ return (m.data||'') >= _missFDal; }); }
+  if (_missFAl)    { lista = lista.filter(function(m){ return (m.data||'') <= _missFAl; }); }
+  if (_missFTipo)  { lista = lista.filter(function(m){ return m.tipo === _missFTipo; }); }
+  if (_missFStato) { lista = lista.filter(function(m){ return m.stato === _missFStato; }); }
+  var html = '<div style="padding:14px;">';
+  // header
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+  html += '<strong style="font-size:17px;color:var(--pb);">&#x1F4E6; Missioni</strong>';
+  html += '<button onclick="apriCreaMissioneMob()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);border-radius:var(--rs);color:var(--pb);padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;">+ Nuova</button>';
+  html += '</div>';
+  // filtri
+  html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;">';
+  html += '<input type="date" value="'+_missFDal+'" onchange="apriMissioniMob(this.value,\''+_missFAl+'\',\''+_missFTipo+'\',\''+_missFStato+'\')" style="font-size:12px;padding:4px 6px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);flex:1;min-width:120px;" placeholder="Dal">';
+  html += '<input type="date" value="'+_missFAl+'" onchange="apriMissioniMob(\''+_missFDal+'\',this.value,\''+_missFTipo+'\',\''+_missFStato+'\')" style="font-size:12px;padding:4px 6px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);flex:1;min-width:120px;" placeholder="Al">';
+  html += '<select onchange="apriMissioniMob(\''+_missFDal+'\',\''+_missFAl+'\',this.value,\''+_missFStato+'\')" style="font-size:12px;padding:4px 6px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);flex:1;min-width:110px;">';
+  html += '<option value=""'+ (_missFTipo===''?' selected':'') +'>Tutti i tipi</option>';
+  html += '<option value="locazione"'+ (_missFTipo==='locazione'?' selected':'') +'>&#x1F4CD; Locazione</option>';
+  html += '<option value="manuale"'+ (_missFTipo==='manuale'?' selected':'') +'>&#x270B; Manuale</option>';
+  html += '</select>';
+  html += '<select onchange="apriMissioniMob(\''+_missFDal+'\',\''+_missFAl+'\',\''+_missFTipo+'\',this.value)" style="font-size:12px;padding:4px 6px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);flex:1;min-width:110px;">';
+  html += '<option value=""'+ (_missFStato===''?' selected':'') +'>Tutti gli stati</option>';
+  html += '<option value="attesa"'+ (_missFStato==='attesa'?' selected':'') +'>&#x23F3; Attesa</option>';
+  html += '<option value="in_corso"'+ (_missFStato==='in_corso'?' selected':'') +'>&#x1F7E1; In corso</option>';
+  html += '<option value="completata"'+ (_missFStato==='completata'?' selected':'') +'>&#x1F7E2; Completata</option>';
+  html += '<option value="caricata"'+ (_missFStato==='caricata'?' selected':'') +'>&#x2705; Caricata</option>';
+  html += '</select>';
+  html += '<button onclick="_missFDal=\'\';_missFAl=\'\';_missFTipo=\'\';_missFStato=\'\';apriMissioniMob()" style="font-size:12px;padding:4px 8px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);cursor:pointer;">&#x274C;</button>';
+  html += '</div>';
+  // lista
+  if (!lista.length) {
+    html += '<div style="text-align:center;color:var(--tx2);padding:20px;">Nessuna missione trovata</div>';
+  } else {
+    lista.forEach(function(m) {
+      var conf = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+      var tot = (m.bilici||[]).length;
+      var plt = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+      var df = m.data ? m.data.split('-').reverse().join('/') : '—';
+      var lbl = m.tipo==='locazione'?'&#x1F4CD; '+(m.locazione||''):'&#x270B; Manuale';
+      var prog = tot>0?Math.round(conf/tot*100):0;
+      var statoCol, statoLbl;
+      if (m.stato==='caricata')        { statoCol='var(--gb)';  statoLbl='&#x2705; Caricata'; }
+      else if (m.stato==='completata') { statoCol='#00bfff';    statoLbl='&#x1F7E2; Completata'; }
+      else if (m.stato==='in_corso')   { statoCol='var(--ob)';  statoLbl='&#x1F7E1; In corso'; }
+      else                             { statoCol='var(--tx2)'; statoLbl='&#x23F3; Attesa'; }
+      html += '<div style="background:var(--sf);border:1px solid rgba(163,113,247,.3);border-radius:10px;padding:12px;margin-bottom:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">';
+      html += '<strong style="color:var(--pb);">'+lbl+'</strong>';
+      html += '<span style="font-size:12px;color:var(--tx2);">'+df+'</span>';
+      html += '</div>';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+      html += '<span style="font-size:12px;color:var(--tx2);">'+conf+'/'+tot+' bilici · '+plt+' PLT</span>';
+      html += '<span style="font-size:11px;font-weight:700;color:'+statoCol+';">'+statoLbl+'</span>';
+      html += '</div>';
+      html += '<div style="background:var(--sf2);border-radius:3px;height:5px;margin-bottom:8px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>';
+      if (m.operatoreChiusura) {
+        html += '<div style="font-size:11px;color:var(--tx2);margin-bottom:6px;">&#x1F464; Chiusa da: <strong>'+m.operatoreChiusura+'</strong></div>';
+      }
+      html += '<button onclick="eliminaMissioneMob(\''+m.id+'\')" style="background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 10px;font-size:12px;cursor:pointer;">&#x1F5D1; Elimina</button>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  var el = document.getElementById('stor-content');
+  if (el) { el.innerHTML = html; apriStor(); }
+}
+
+function apriCreaMissioneMob() {
+  var locs = {};
+  Object.values(BL).forEach(function(b){ if(b.locazione) locs[b.locazione]=true; });
+  var opzioni = Object.keys(locs).sort().map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
+  var oggi = new Date().toISOString().slice(0,10);
+  var html = '<div style="padding:16px;">' +
+    '<strong style="font-size:16px;color:var(--pb);">&#x1F4E6; Nuova Missione</strong>' +
+    '<div style="margin-top:12px;"><div class="fl" style="margin-bottom:4px;">Tipo</div>' +
+    '<select id="mob-miss-tipo" class="fi" onchange="onChangeTipoMob()">' +
+    '<option value="locazione">&#x1F4CD; Da Locazione</option>' +
+    '<option value="manuale">&#x270B; Selezione Manuale</option></select></div>' +
+    '<div id="mob-miss-loc-wrap" style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Locazione</div>' +
+    '<select id="mob-miss-loc" class="fi" onchange="populaLocMob()"><option value="">— seleziona —</option>' + opzioni + '</select>' +
+    '<div id="mob-miss-loc-list" style="margin-top:8px;"></div></div>' +
+    '<div id="mob-miss-man-wrap" style="display:none;margin-top:10px;">' +
+    '<div style="display:flex;gap:6px;margin-bottom:8px;align-items:stretch;">' +
+    '<input id="mob-miss-pfx" type="text" maxlength="1" placeholder="A" style="width:44px;text-align:center;text-transform:uppercase;font-size:26px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);padding:0;outline:none;font-family:\'Barlow Condensed\',sans-serif;-webkit-appearance:none;flex-shrink:0;" oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,\'\');" onkeydown="if(this.value.length===1&&event.key!==\'Backspace\'){event.preventDefault();document.getElementById(\'mob-miss-num\').focus();}">' +
+    '<input class="fi fib" id="mob-miss-num" type="number" placeholder="N° bilico" inputmode="numeric" style="flex:1;min-width:0;">' +
+    '<input class="fi" id="mob-miss-plt" type="number" placeholder="PLT" inputmode="numeric" style="width:70px;">' +
+    '<button onclick="aggBilicoMob()" style="background:var(--pb);border:none;border-radius:var(--rs);color:#fff;padding:0 12px;font-size:18px;cursor:pointer;">+</button></div>' +
+    '<div id="mob-miss-man-list"></div></div>' +
+    '<div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Data carico</div><input class="fi" id="mob-miss-data" type="date" value="'+oggi+'"></div>' +
+    '<div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Nota</div><input class="fi" id="mob-miss-nota" type="text" placeholder="Opzionale..."></div>' +
+    '<div style="margin-top:12px;display:flex;gap:8px;">' +
+    '<button onclick="creaMissioneMob()" style="flex:1;background:var(--pb);border:none;border-radius:var(--rs);color:#fff;padding:12px;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">&#x2705; CREA</button>' +
+    '<button onclick="apriMissioniMob()" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);padding:12px 16px;cursor:pointer;">&#x2190; Indietro</button>' +
+    '</div></div>';
+  var el = document.getElementById('stor-content');
+  if (el) { el.innerHTML = html; }
+  _missBiliciManMob = [];
+}
+var _missBiliciManMob = [];
+function onChangeTipoMob() {
+  var tipo = document.getElementById('mob-miss-tipo').value;
+  document.getElementById('mob-miss-loc-wrap').style.display = tipo==='locazione'?'block':'none';
+  document.getElementById('mob-miss-man-wrap').style.display = tipo==='manuale'?'block':'none';
+}
+function populaLocMob() {
+  var loc = document.getElementById('mob-miss-loc').value;
+  var el = document.getElementById('mob-miss-loc-list');
+  if (!loc || !el) return;
+  var lista = Object.values(BL).filter(function(b){ return b.locazione===loc; });
+  var html = '';
+  lista.forEach(function(b){
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--bd);">' +
+      '<strong style="flex:1;">#'+b.numero+'</strong><span style="font-size:12px;color:var(--tx2);">'+b.bancali+' PLT</span>' +
+      '<input id="mob-loc-plt-'+b.numero+'" type="number" value="'+b.bancali+'" max="'+b.bancali+'" style="width:60px;text-align:center;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx);padding:3px;">' +
+      '</div>';
+  });
+  el.innerHTML = html || '<div style="color:var(--tx2);font-size:13px;">Nessun bilico</div>';
+}
+function aggBilicoMob() {
+  var _pfxEl = document.getElementById('mob-miss-pfx');
+  var _pfxV = _pfxEl ? String(_pfxEl.value||'').trim().toUpperCase() : '';
+  var num = _pfxV + String(document.getElementById('mob-miss-num').value||'').trim().toUpperCase();
+  var plt = parseInt(document.getElementById('mob-miss-plt').value)||0;
+  if (!num) return;
+  if (_missBiliciManMob.find(function(x){return x.numero===num;})) { tst('Già aggiunto','er'); return; }
+  var b = Object.values(BL).find(function(x){return String(x.numero)===num;});
+  _missBiliciManMob.push({numero:num, plt: plt||(b?b.bancali:0)});
+  if (_pfxEl) _pfxEl.value = '';
+  document.getElementById('mob-miss-num').value='';
+  document.getElementById('mob-miss-plt').value='';
+  var el = document.getElementById('mob-miss-man-list');
+  if (el) el.innerHTML = _missBiliciManMob.map(function(x,i){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--bd);">' +
+      '<strong style="flex:1;">#'+x.numero+'</strong><span style="color:var(--tx2);">'+x.plt+' PLT</span>' +
+      '<button onclick="_missBiliciManMob.splice('+i+',1);aggBilicoMob.__trigger__()" style="background:none;border:none;color:var(--rb);cursor:pointer;">&#x2715;</button></div>';
+  }).join('');
+}
+function creaMissioneMob() {
+  var tipo = document.getElementById('mob-miss-tipo').value;
+  var data = document.getElementById('mob-miss-data').value;
+  var nota = (document.getElementById('mob-miss-nota').value||'').trim();
+  if (!data) { tst('Inserisci la data','er'); return; }
+  var bilici = [];
+  if (tipo === 'locazione') {
+    var loc = document.getElementById('mob-miss-loc').value;
+    if (!loc) { tst('Seleziona la locazione','er'); return; }
+    Object.values(BL).filter(function(b){return b.locazione===loc;}).forEach(function(b){
+      var inp = document.getElementById('mob-loc-plt-'+b.numero);
+      var plt = inp ? (parseInt(inp.value)||0) : b.bancali;
+      if (plt > 0) bilici.push({numero:b.numero, bancaliProg:Math.min(plt,b.bancali), confermato:false});
+    });
+  } else {
+    bilici = _missBiliciManMob.map(function(x){return {numero:x.numero, bancaliProg:x.plt, confermato:false};});
+  }
+  if (!bilici.length) { tst('Nessun bilico selezionato','er'); return; }
+  var loc2 = tipo==='locazione' ? (document.getElementById('mob-miss-loc').value||'') : '';
+  if (UC && fdb) {
+    fdb.collection('missioni').add({tipo:tipo, locazione:loc2, bilici:bilici, data:data, nota:nota, stato:'attesa', creatore:CURR_USER?CURR_USER.username:'', ts:Date.now()}).then(function(){
+      tst('Missione creata — '+bilici.length+' bilici','ok');
+      apriMissioniMob();
+    }).catch(function(e){tst('Errore: '+e.message,'er');});
+  } else { tst('Connessione cloud necessaria','er'); }
+}
+function eliminaMissioneMob(id) {
+  var m = MISSIONI.find(function(x){ return x.id === id; });
+  if (!m) return;
+  if (m.stato !== 'attesa') {
+    tst('⚠️ Eliminazione non consentita — la missione è già in corso o completata', 'er');
+    return;
+  }
+  if (!confirm('Eliminare questa missione in attesa?')) return;
+  if (UC && fdb) fdb.collection('missioni').doc(id).delete().then(function(){tst('Eliminata','ok');apriMissioniMob();});
+}
+// ══════════════════════════════════════════════
+
 function expExcel() {
   var wb = XLSX.utils.book_new();
   var r1 = [['NUMERO','LOCAZIONE','BANCALI','NOTE','DATA']];
@@ -2934,11 +3180,15 @@ function lgDel(m) {
 
 function ui() {
   var lst = Object.values(BL);
-  // stock secco = tutti i bilici ESCLUSI FRESCO (PARTENZE incluse = fisicamente presenti)
+  // bilici Marchesi = bilici con lettera nel numero (es. E116, A905)
+  var pltMarchesi = lst.reduce(function(s, b) {
+    return /[a-zA-Z]/.test(String(b.numero || '')) ? s + (b.bancali || 0) : s;
+  }, 0);
+  // stock secco = tutti i bilici ESCLUSI FRESCO, meno i Marchesi (stoccati esternamente)
   var stockSecco = lst.reduce(function(s, b) {
     var loc = (b.locazione || '').toUpperCase();
     return loc === 'FRESCO' ? s : s + (b.bancali || 0);
-  }, 0);
+  }, 0) - pltMarchesi;
   // partenze = PLT che si libereranno a breve
   var partenzePlt = lst.reduce(function(s, b) {
     return (b.locazione || '').toUpperCase() === 'PARTENZE' ? s + (b.bancali || 0) : s;
@@ -2957,15 +3207,14 @@ function ui() {
   var pltBilicoFresc = parseInt(localStorage.getItem('MAG_PLT_BILICO_FRESCO')   || '0') || 0;
   var postiDispSecco  = postiSecco > 0 ? postiSecco - stockSecco  : null;
   var postiDispFresc  = postiFresc > 0 ? postiFresc - stockFresco : null;
-  var biliciDispSecco = (postiSecco > 0 && pltBilico      > 0) ? Math.floor((postiSecco - stockSecco + partenzePlt)  / pltBilico)      : null;
-  var biliciDispFresc = (postiFresc > 0 && pltBilicoFresc > 0) ? Math.floor((postiFresc - stockFresco) / pltBilicoFresc) : null;
+  var biliciDispSecco = (postiSecco > 0 && pltBilico > 0) ? Math.floor((postiSecco - stockSecco + partenzePlt - pltMarchesi) / pltBilico) : null;
   function _s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val !== null ? val : '—'; }
   _s('s-stock-secco',        stockSecco);
   _s('s-stock-fresco',       stockFresco);
   _s('s-posti-disp-secco',   postiDispSecco);
   _s('s-posti-disp-fresco',  postiDispFresc);
   _s('s-bilici-disp-secco',  biliciDispSecco);
-  _s('s-bilici-disp-fresco', biliciDispFresc);
+  _s('s-bilici-disp-fresco', pltMarchesi);
   _s('s-plt-in',             pltIn);
   _s('s-plt-out',            pltOut);
 

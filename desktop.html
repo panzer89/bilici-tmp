@@ -390,6 +390,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 
       <div class="sb-sect" id="sb-sect-pianif">PIANIFICAZIONE</div>
       <button class="sb-item" id="tbprog" onclick="goP('programmazione')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Programmazione<span class="sb-badge bl" id="sb-prog-badge">0</span></button>
+      <button class="sb-item" id="tbmiss" onclick="goP('missioni')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Missioni<span class="sb-badge" style="background:var(--pb);" id="sb-miss-badge" style="display:none;">0</span></button>
       <div class="sb-sect">STRUMENTI</div>
       <button class="sb-item" id="tbstor" onclick="goP('storico')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Storico</button>
       <button class="sb-item-stor" id="tb-excel" onclick="expExcel()" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Esporta Excel</button>
@@ -408,7 +409,10 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;">
+        <div class="topbar-title" id="topbar-title" style="flex:none;">Dashboard</div>
+        <button id="topbar-info-btn" onclick="document.getElementById('mo-dash-info').classList.add('open')" title="Legenda caselle" style="display:none;background:rgba(163,113,247,.12);border:1px solid rgba(163,113,247,.35);border-radius:50%;width:22px;height:22px;color:var(--pb);font-size:13px;font-weight:900;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;line-height:1;">&#x2139;</button>
+      </div>
       <div class="topbar-actions" id="topbar-actions"></div>
     </div>
     <div class="content">
@@ -425,7 +429,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
           <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Disp. Bilici Secco</div></div>
           <div class="sc gn"><div class="v" id="s-plt-in">0</div><div class="lb">⬆ PLT entrati oggi</div></div>
           <div class="sc rd"><div class="v" id="s-plt-out">0</div><div class="lb">⬇ PLT usciti oggi</div></div>
-          <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">—</div><div class="lb">❄️ Disp. Bilici Fresco</div></div>
+          <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">0</div><div class="lb">🏭 MARCHESI</div></div>
         </div>
         <div id="supbox" style="display:none"><div class="sup"><div class="sut">&#x2699;&#xFE0F; MODALITA LOCALE</div><div class="sui">Per cloud: <a href="https://console.firebase.google.com" target="_blank">Firebase</a></div></div></div>
         <div class="two-col">
@@ -447,7 +451,14 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
               </div>
             </div>
           </div>
-          <div><div class="stl">Ultimi movimenti</div><div class="card" style="padding:12px 14px;"><div id="log-home"><div class="emp"><p>Nessun movimento</p></div></div></div></div>
+          <div>
+            <div class="stl" style="display:flex;align-items:center;gap:8px;">&#x1F4E6; Missioni attive<span id="dash-miss-count" style="display:none;background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);color:var(--pb);border-radius:20px;padding:0 8px;font-size:12px;font-weight:700;">0</span></div>
+            <div style="background:var(--sf);border:1.5px solid rgba(163,113,247,.35);border-radius:var(--r);overflow:hidden;margin-bottom:12px;">
+              <div id="dash-miss-list"><div class="prog-empty">Nessuna missione attiva</div></div>
+            </div>
+            <div class="stl">Ultimi movimenti</div>
+            <div class="card" style="padding:12px 14px;"><div id="log-home"><div class="emp"><p>Nessun movimento</p></div></div></div>
+          </div>
         </div>
       </div>
 
@@ -468,7 +479,15 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
             </div>
           </div>
           <div class="card"><div class="card-t">Registra Entrata</div>
-            <div class="fg"><div class="fl">Numero Bilico</div><input class="fi fib" id="in-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off"></div>
+            <div class="fg"><div class="fl">Numero Bilico</div>
+              <div style="display:flex;gap:6px;align-items:stretch;">
+                <input id="in-n-pfx" type="text" maxlength="1" placeholder="A"
+                  style="width:46px;text-align:center;text-transform:uppercase;font-size:22px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);padding:0;outline:none;font-family:'Barlow Condensed',sans-serif;cursor:text;"
+                  oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');"
+                  onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('in-n').focus();}">
+                <input class="fi fib" id="in-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0;">
+              </div>
+            </div>
             <div class="fg"><div class="fl">Tipo merce</div><div style="display:flex;gap:8px;"><button class="btn bbl" style="flex:1;padding:7px 10px;font-size:12px;" onclick="setTipoEntrata('ARRIVI')">&#x1F4E6; SECCO → ARRIVI</button><button class="btn bcy" style="flex:1;padding:7px 10px;font-size:12px;" onclick="setTipoEntrata('FRESCO')">&#x2744; FRESCO</button></div></div>
             <div class="fg"><div class="fl">Locazione</div><div class="loc-wrap"><input class="fi" id="in-l" type="text" placeholder="es. A1, BANCHINA, FRESCO..." autocomplete="off" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"><button class="qr-btn" onclick="apriQR('in-l')">&#x1F4F7;</button></div></div>
             <div class="fg"><div class="fl">Bancali</div><div class="crow"><button class="cbt" onclick="stp('in-b',-1)">&#x2212;</button><input class="cvl" id="in-b" type="number" value="0" min="0" inputmode="numeric"><button class="cbt" onclick="stp('in-b',1)">+</button></div></div>
@@ -483,7 +502,15 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
       <div class="page" id="page-uscita">
         <div class="two-col">
           <div><div class="card"><div class="card-t" style="color:var(--rb);">Registra Uscita</div>
-            <div class="fg"><div class="fl">Numero Bilico</div><input class="fi fib" id="out-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" oninput="trovB()"></div>
+            <div class="fg"><div class="fl">Numero Bilico</div>
+              <div style="display:flex;gap:6px;align-items:stretch;">
+                <input id="out-n-pfx" type="text" maxlength="1" placeholder="A"
+                  style="width:46px;text-align:center;text-transform:uppercase;font-size:22px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);padding:0;outline:none;font-family:'Barlow Condensed',sans-serif;cursor:text;"
+                  oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');trovB();"
+                  onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('out-n').focus();}">
+                <input class="fi fib" id="out-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" oninput="trovB()" style="flex:1;min-width:0;">
+              </div>
+            </div>
             <div class="trv" id="trvbox"><div class="trv-t">&#x2705; Bilico trovato</div><div class="trv-i">&#x1F4CD; <span id="out-lo" style="color:var(--pb)">-</span> &nbsp;|&nbsp; &#x1F4E6; <span id="out-ba" style="color:var(--ob)">-</span> bancali</div></div>
             <div class="fg"><div class="fl">Bancali Uscita</div><div class="crow"><button class="cbt" onclick="stp('out-b',-1)">&#x2212;</button><input class="cvl" id="out-b" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('out-b',1)">+</button></div></div>
             <div class="fg"><div class="fl">Note</div><input class="fi" id="out-nt" type="text" placeholder="Destinazione..." autocomplete="off"></div>
@@ -590,15 +617,190 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
     <div style="display:flex;gap:10px;margin-bottom:16px;">
       <button id="tab-stoccare" class="btn tog" onclick="selCarrellistaTab('stoccare')" style="flex:1;padding:10px;">&#x1F4E6; DA STOCCARE</button>
       <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')" style="flex:1;padding:10px;">&#x2705; DA PREPARARE</button>
+      <button id="tab-car-missioni" class="btn bgh" onclick="selCarrellistaTab('missioni')" style="flex:1;padding:10px;position:relative;">&#x1F69B; MISSIONI<span id="badge-car-miss-desk" style="display:none;position:absolute;top:4px;right:6px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;">0</span></button>
     </div>
     <div id="car-stoccare-content"><div id="car-stoccare-list"></div></div>
     <div id="car-preparare-content" style="display:none;"><div id="car-preparare-list"></div></div>
+    <div id="car-missioni-content" style="display:none;"><div id="car-missioni-desk-list"></div></div>
+  </div>
+</div>
+
+<!-- PAGINA MISSIONI -->
+<div class="page" id="page-missioni">
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div class="card" style="padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--pb);">&#x1F4E6; Missioni</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="expMissioni()" style="background:rgba(34,197,94,.08);border:1px solid var(--gn);border-radius:var(--rs);color:var(--gb);padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;">&#x1F4E5; Excel</button>
+          <button onclick="apriCreaMissione()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);border-radius:var(--rs);color:var(--pb);padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">+ Nuova Missione</button>
+        </div>
+      </div>
+      <!-- FILTRI -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <label style="font-size:11px;color:var(--tx2);white-space:nowrap;">Dal</label>
+          <input type="date" id="miss-f-dal" oninput="renderMissioniDesk()" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <label style="font-size:11px;color:var(--tx2);white-space:nowrap;">Al</label>
+          <input type="date" id="miss-f-al" oninput="renderMissioniDesk()" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
+        </div>
+        <select id="miss-f-tipo" onchange="renderMissioniDesk()" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
+          <option value="">Tutti i tipi</option>
+          <option value="locazione">&#x1F4CD; Locazione</option>
+          <option value="manuale">&#x270B; Manuale</option>
+        </select>
+        <select id="miss-f-stato" onchange="renderMissioniDesk()" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
+          <option value="">Tutti gli stati</option>
+          <option value="attesa">&#x23F3; Attesa</option>
+          <option value="in_corso">&#x1F7E1; In corso</option>
+          <option value="completata">&#x1F7E2; Completata</option>
+          <option value="caricata">&#x2705; Caricata</option>
+        </select>
+        <button onclick="resetFiltriMissioni()" style="font-size:11px;padding:4px 10px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);cursor:pointer;">&#x274C; Reset</button>
+      </div>
+      <div id="miss-desk-list"><div class="emp"><p>Nessuna missione</p></div></div>
+    </div>
   </div>
 </div>
 
 <div class="page" id="page-storico"><div style="display:flex;flex-direction:column;gap:14px;"><div class="card" style="padding:14px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--tx);margin-bottom:12px;">&#x1F50D; Filtri</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;"><div><div class="stor-fi-label">Numero bilico</div><input class="stor-fi" id="sf-num" type="text" placeholder="es. 839" oninput="filtraStorico()"></div><div><div class="stor-fi-label">Locazione</div><input class="stor-fi" id="sf-loc" type="text" placeholder="es. 5-A-00" oninput="filtraStorico()"></div><div><div class="stor-fi-label">Tipo</div><select class="stor-fi" id="sf-tipo" onchange="filtraStorico()"><option value="">Tutti</option><option value="ENTRATA">&#x1F7E2; Entrata</option><option value="USCITA">&#x1F534; Uscita</option><option value="MODIFICA">&#x270F;&#xFE0F; Modifica</option><option value="TRASFERIMENTO">&#x1F504; Trasferimento</option></select></div></div><div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:flex-end;"><div><div class="stor-fi-label">Data da</div><input class="stor-fi" id="sf-da" type="date" oninput="filtraStorico()"></div><div><div class="stor-fi-label">Data a</div><input class="stor-fi" id="sf-a" type="date" oninput="filtraStorico()"></div><div style="display:flex;gap:6px;align-items:center;"><span id="sf-count" style="font-size:12px;color:var(--tx2);"></span><button onclick="resetFiltriStorico()" style="height:32px;padding:0 10px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);font-size:11px;cursor:pointer;">&#x21BA; Reset</button><button onclick="chiPin('svuota',null)" style="height:32px;padding:0 10px;background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);font-size:11px;cursor:pointer;">&#x1F5D1; Svuota</button></div></div></div><div class="card" style="padding:14px;"><div id="stor-av-list"><div class="emp"><div class="ic">&#x1F4CB;</div><p>Nessun movimento</p></div></div></div></div></div>
 </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREA MISSIONE -->
+<div class="mo" id="mo-crea-missione">
+  <div class="mdl" style="max-width:520px;">
+    <div class="mha"></div>
+    <div class="mtt" id="miss-modal-title" style="color:var(--pb);">&#x1F4E6; Nuova Missione</div>
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button id="miss-tab-loc" onclick="setTipoMissione('locazione')" style="flex:1;padding:8px;border-radius:var(--rs);border:1px solid var(--pb);background:rgba(163,113,247,.15);color:var(--pb);font-weight:700;cursor:pointer;font-size:13px;">&#x1F4CD; Da Locazione</button>
+        <button id="miss-tab-man" onclick="setTipoMissione('manuale')" style="flex:1;padding:8px;border-radius:var(--rs);border:1px solid var(--bd);background:none;color:var(--tx2);cursor:pointer;font-size:13px;">&#x270B; Manuale</button>
+      </div>
+      <!-- Da Locazione -->
+      <div id="miss-loc-section">
+        <div class="fg"><div class="fl">Locazione</div>
+          <select class="fi" id="miss-loc-sel" onchange="populaLocazioneMissione()">
+            <option value="">— seleziona —</option>
+          </select>
+        </div>
+        <div id="miss-loc-trucks" style="margin-top:8px;max-height:200px;overflow-y:auto;"></div>
+      </div>
+      <!-- Manuale -->
+      <div id="miss-man-section" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:stretch;">
+          <input id="miss-man-pfx" type="text" maxlength="1" placeholder="A"
+            style="width:40px;text-align:center;text-transform:uppercase;font-size:20px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);padding:0;outline:none;font-family:'Barlow Condensed',sans-serif;flex-shrink:0;"
+            oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');"
+            onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('miss-man-num').focus();}">
+          <input class="fi fib" id="miss-man-num" type="number" placeholder="N° bilico" inputmode="numeric" style="flex:1;min-width:0;">
+          <input class="fi" id="miss-man-plt" type="number" placeholder="PLT" inputmode="numeric" style="width:72px;">
+          <button onclick="aggiungiBilicoManuale()" style="background:var(--pb);border:none;border-radius:var(--rs);color:#fff;padding:0 14px;font-size:18px;cursor:pointer;">+</button>
+        </div>
+        <div id="miss-man-list" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+      <div class="fg" style="margin-top:12px;"><div class="fl">Data carico</div><input class="fi" id="miss-data" type="date"></div>
+      <div class="fg"><div class="fl">Nota (opzionale)</div><input class="fi" id="miss-nota" type="text" placeholder="Es. Carico cliente Rossi"></div>
+      <div id="miss-riepilogo" style="font-size:13px;color:var(--tx2);margin-top:8px;"></div>
+    </div>
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn bpu" id="miss-modal-btn" onclick="creaMissione()">&#x2705; CREA MISSIONE</button>
+      <button class="btn bgh" onclick="chiM('mo-crea-missione');_editMissioneId=null;">&#x274C; Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETTAGLIO MISSIONE -->
+<div class="mo" id="mo-miss-dtl-desk">
+  <div class="mdl" style="max-width:480px;">
+    <div class="mha"></div>
+    <div class="mtt" style="color:var(--pb);">&#x1F4E6; Dettaglio Missione</div>
+    <div id="miss-dtl-desk-body" style="font-size:13px;max-height:60vh;overflow-y:auto;"></div>
+    <div class="btn-row" style="justify-content:center;margin-top:12px;">
+      <button class="btn" onclick="stampaMissione(_currDtlMissId)" style="background:rgba(31,111,235,.12);border:1px solid var(--bb);color:var(--bb);">&#x1F5A8; Stampa</button>
+      <button class="btn bgh" onclick="chiM('mo-miss-dtl-desk')">&#x2716; Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EVASA / CARICATA -->
+<div class="mo" id="mo-evasa-conf">
+  <div class="mdl" style="max-width:480px;">
+    <div class="mha"></div>
+    <div class="mtt" style="color:var(--gb);">&#x1F69B; Conferma Evasa / Caricata</div>
+    <div id="mo-evasa-body" style="font-size:13px;max-height:55vh;overflow-y:auto;margin-bottom:14px;"></div>
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn bgn" id="mo-evasa-ok-btn" onclick="eseguiEvasa()">&#x2705; CONFERMA — EVASA</button>
+      <button class="btn bgh" onclick="chiM('mo-evasa-conf');_pendEvasaId=null;">&#x274C; Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INFO DASHBOARD -->
+<div class="mo" id="mo-dash-info">
+  <div class="mdl" style="max-width:520px;">
+    <div class="mha"></div>
+    <div class="mtt" style="color:var(--pb);">&#x2139;&#xFE0F; Legenda Dashboard</div>
+    <div style="font-size:13px;max-height:65vh;overflow-y:auto;">
+
+      <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">📦 Caselle Secco</div>
+
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin-bottom:14px;align-items:start;">
+        <span style="color:var(--og);font-weight:700;white-space:nowrap;">Stock Secco</span>
+        <span style="color:var(--tx2);">Somma PLT di tutti i bilici in magazzino dove locazione ≠ FRESCO, <strong>esclusi i Marchesi</strong>.</span>
+
+        <span style="color:var(--og);font-weight:700;white-space:nowrap;">Disp. PLT Secco</span>
+        <span style="color:var(--tx2);">Posti secco totali (impostazioni) − Stock secco. Mostra <strong>—</strong> se non configurato.</span>
+
+        <span style="color:var(--og);font-weight:700;white-space:nowrap;">Disp. Bilici Secco</span>
+        <span style="color:var(--tx2);">(Posti secco − Stock secco + PLT in PARTENZE − PLT Marchesi) ÷ PLT/bilico. I bilici in PARTENZE vengono aggiunti perché si libereranno a breve.</span>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">❄️ Caselle Fresco</div>
+
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin-bottom:14px;align-items:start;">
+        <span style="color:var(--cy);font-weight:700;white-space:nowrap;">Stock Fresco</span>
+        <span style="color:var(--tx2);">Somma PLT di tutti i bilici dove locazione = FRESCO.</span>
+
+        <span style="color:var(--cy);font-weight:700;white-space:nowrap;">Disp. PLT Fresco</span>
+        <span style="color:var(--tx2);">Posti fresco totali (impostazioni) − Stock fresco. Mostra <strong>—</strong> se non configurato.</span>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">📅 Movimento giornaliero</div>
+
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin-bottom:14px;align-items:start;">
+        <span style="color:var(--gb);font-weight:700;white-space:nowrap;">PLT Entrati oggi</span>
+        <span style="color:var(--tx2);">Somma <em>bancali</em> di tutti i movimenti ENTRATA con data odierna nello storico.</span>
+
+        <span style="color:var(--rb);font-weight:700;white-space:nowrap;">PLT Usciti oggi</span>
+        <span style="color:var(--tx2);">Somma <em>bancaliUsciti</em> di tutti i movimenti USCITA con data odierna nello storico.</span>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">🏭 Marchesi</div>
+
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin-bottom:14px;align-items:start;">
+        <span style="color:var(--cb);font-weight:700;white-space:nowrap;">MARCHESI</span>
+        <span style="color:var(--tx2);">Somma PLT di tutti i bilici il cui <strong>numero contiene una lettera</strong> (es. E116, A234). Vengono contati separatamente e sottratti dallo stock secco.</span>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">📦 Missioni attive &amp; Ultimi movimenti</div>
+
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:start;">
+        <span style="color:var(--pb);font-weight:700;white-space:nowrap;">Missioni attive</span>
+        <span style="color:var(--tx2);">Tutte le missioni con stato ≠ Caricata. Aggiornate in tempo reale da Firestore.</span>
+
+        <span style="color:var(--tx2);font-weight:700;white-space:nowrap;">Ultimi movimenti</span>
+        <span style="color:var(--tx2);">Gli 8 movimenti più recenti (ENTRATA + USCITA) dallo storico Firestore.</span>
+      </div>
+
+    </div>
+    <div class="btn-row" style="justify-content:center;margin-top:14px;">
+      <button class="btn bgh" onclick="chiM('mo-dash-info')">&#x2716; Chiudi</button>
     </div>
   </div>
 </div>
@@ -722,7 +924,7 @@ function goP(n) {
   document.querySelectorAll('.sb-item').forEach(function(t) { t.classList.remove('active'); });
   var page = document.getElementById('page-' + n);
   if (page) { page.classList.add('active'); }
-  var mp = {home:'tbh', entrata:'tbe', uscita:'tbu', magazzino:'tbm', programmazione:'tbprog', storico:'tbstor'};
+  var mp = {home:'tbh', entrata:'tbe', uscita:'tbu', magazzino:'tbm', programmazione:'tbprog', storico:'tbstor', missioni:'tbmiss'};
   if (mp[n]) { var tb = document.getElementById(mp[n]); if (tb) { tb.classList.add('active'); } }
   if (n==='programmazione') { setTimeout(function(){renderCalendario();},80); }
   if (n!=='programmazione') { aggTOSel = null; }
@@ -740,7 +942,8 @@ function goP(n) {
     if(sfTipo)sfTipo.value='';
     filtraStorico();
   }
-  var titles = {home:'Dashboard', entrata:'Entrata Bilico', uscita:'Uscita / Carico', magazzino:'Magazzino', programmazione:'Programmazione Uscite', storico:'Storico Movimenti', carrellista:'Carrellista'};
+  if (n === 'missioni') { renderMissioniDesk(); }
+  var titles = {home:'Dashboard', entrata:'Entrata Bilico', uscita:'Uscita / Carico', magazzino:'Magazzino', programmazione:'Programmazione Uscite', storico:'Storico Movimenti', carrellista:'Carrellista', missioni:'Missioni'};
   var tt = document.getElementById('topbar-title');
   if (tt) { tt.textContent = titles[n] || n; }
   if (n === 'entrata') { var _li = document.getElementById('in-l'); if (_li && !_li.value) _li.value = 'ARRIVI'; }
@@ -754,6 +957,9 @@ function aggiornaTopbarAzioni() {
   var impBtn=document.getElementById('tb-importa');
   if(exBtn) exBtn.style.display=isAdmin()?'flex':'none';
   if(impBtn) impBtn.style.display=isAdmin()?'flex':'none';
+  var _cp = document.querySelector('.page.active');
+  var ibtn = document.getElementById('topbar-info-btn');
+  if (ibtn) ibtn.style.display = (_cp && _cp.id === 'page-home') ? 'flex' : 'none';
 }
 
 function applicaLivello(lvl) {
@@ -995,6 +1201,7 @@ function renderTuttiOrdini() {
       var fonteQB="'"+p.partner.fonte+"'";
       var dataB=p.partner.data||p.data;
       html+='<button onclick="modificaOrdine('+fonteQB+','+idQB+','+p.partner.numero+','+notaQB+',\''+dataB+'\',' +(p.partner.bancaliProg||0)+')" title="#'+p.partner.numero+'" style="'+btnEdit+'color:var(--pb);">&#x270F;&#xFE0F;</button>';
+      html+='<button onclick="sganciaTO('+idQ+','+fonteQ+')" title="Sgancia coppia" style="background:none;border:1px solid var(--pb);border-radius:var(--rs);color:var(--pb);padding:3px 7px;font-size:13px;cursor:pointer;margin-right:3px;">&#x2702;</button>';
       html+='<button onclick="eliminaOrdineCoppia('+fonteQ+','+idQ+','+fonteQB+','+idQB+','+p.numero+','+p.partner.numero+')" style="'+btnDel+'">&#x2715;</button>';
     } else {
       html+='<button onclick="eliminaOrdine('+fonteQ+','+idQ+','+p.numero+')" style="'+btnDel+'">&#x2715;</button>';
@@ -1095,6 +1302,24 @@ function startAggancioTO(docId, numero, fonte) {
     }
     completaAggancioTO(docId, numero, fonte);
   }
+}
+function sganciaTO(docId, fonte) {
+  if (!docId) return;
+  var item = trovaDaTO(docId, fonte);
+  if (!item || !item.aggancioId) return;
+  var aggId = item.aggancioId;
+  var partner = null, partnerFonte = null;
+  var colls = [{arr:PROG,fonte:'prog'},{arr:PROG_DOMANI,fonte:'prog_domani'}];
+  Object.keys(CAL_DATA||{}).forEach(function(dt){ colls.push({arr:CAL_DATA[dt]||[],fonte:'prog_calendario'}); });
+  colls.forEach(function(c){ if(!partner){ var f=c.arr.find(function(x){return x.aggancioId===aggId&&x.id!==docId;}); if(f){partner=f;partnerFonte=c.fonte;} } });
+  if (UC && fdb) {
+    fdb.collection(fonte).doc(docId).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+    if (partner && partner.id) fdb.collection(partnerFonte).doc(partner.id).update({aggancioId: firebase.firestore.FieldValue.delete()}).catch(function(){});
+  }
+  delete item.aggancioId;
+  if (partner) delete partner.aggancioId;
+  tst('Bilici sganciati', 'ok');
+  setTimeout(renderTuttiOrdini, 200);
 }
 function completaAggancioTO(docId2, numero2, fonte2) {
   var aggId = 'AG' + Date.now();
@@ -1224,7 +1449,14 @@ function cerca() {
   res.innerHTML = tr.length ? tr.map(function(b) { return crdB(b, true); }).join('') : '<div class="emp"><div class="ic">&#x1F50D;</div><p>' + (q ? 'Nessun risultato' : 'Nessun bilico in magazzino') + '</p></div>';
 }
 
-function uscV(n) { goP('uscita'); document.getElementById('out-n').value = n; trovB(); }
+function uscV(n) {
+  goP('uscita');
+  var s = String(n).trim().toUpperCase();
+  var m = s.match(/^([A-Za-z]?)(\d+)$/);
+  document.getElementById('out-n-pfx').value = m ? m[1] : '';
+  document.getElementById('out-n').value     = m ? m[2] : s;
+  trovB();
+}
 
 function aggProgFromInput(inpId, bancId, notaId) {
   var val = String(document.getElementById(inpId).value || '').trim().toUpperCase();
@@ -1269,10 +1501,15 @@ function aggProgDomaniFromInput(inpId, bancId, notaId) {
 function ui() {
   var lst = Object.values(BL);
   // stock secco = tutti i bilici ESCLUSI FRESCO (PARTENZE incluse = fisicamente presenti)
+  // pltMarchesi = bilici con lettera nel numero (es. E116)
+  var pltMarchesi = lst.reduce(function(s, b) {
+    return /[a-zA-Z]/.test(String(b.numero || '')) ? s + (b.bancali || 0) : s;
+  }, 0);
+  // stock secco = tutti PLT (locazione ≠ FRESCO) meno i Marchesi (contati a parte)
   var stockSecco = lst.reduce(function(s, b) {
     var loc = (b.locazione || '').toUpperCase();
     return loc === 'FRESCO' ? s : s + (b.bancali || 0);
-  }, 0);
+  }, 0) - pltMarchesi;
   // partenze = PLT che si libereranno a breve
   var partenzePlt = lst.reduce(function(s, b) {
     return (b.locazione || '').toUpperCase() === 'PARTENZE' ? s + (b.bancali || 0) : s;
@@ -1292,7 +1529,7 @@ function ui() {
   var pltBilicoFresc= parseInt(localStorage.getItem('MAG_PLT_BILICO_FRESCO')   || '0') || 0;
   var postiDispSecco  = postiSecco > 0 ? postiSecco - stockSecco   : null;
   var postiDispFresc  = postiFresc > 0 ? postiFresc - stockFresco  : null;
-  var biliciDispSecco = (postiSecco > 0 && pltBilico      > 0) ? Math.floor((postiSecco - stockSecco + partenzePlt)  / pltBilico)      : null;
+  var biliciDispSecco = (postiSecco > 0 && pltBilico > 0) ? Math.floor((postiSecco - stockSecco + partenzePlt - pltMarchesi) / pltBilico) : null;
   var biliciDispFresc = (postiFresc > 0 && pltBilicoFresc > 0) ? Math.floor((postiFresc - stockFresco) / pltBilicoFresc) : null;
   function _s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val !== null ? val : '—'; }
   _s('s-stock-secco',        stockSecco);
@@ -1302,7 +1539,7 @@ function ui() {
   _s('s-bilici-disp-secco',  biliciDispSecco);
   _s('s-plt-in',             pltIn);
   _s('s-plt-out',            pltOut);
-  _s('s-bilici-disp-fresco', biliciDispFresc);
+  _s('s-bilici-disp-fresco', pltMarchesi);
   var sbMag = document.getElementById('sb-mag-badge'); if (sbMag) { sbMag.textContent = lst.length; }
   aggiornaSidebarUtente();
   // magazzino (aggiornato tramite cerca)
@@ -1352,6 +1589,12 @@ var FBC = {
 var LOC_ILLIMITATE = ['BANCHINA', 'SMEZZI', 'FRESCO', 'ARRIVI', 'PARTENZE'];
 
 var BL = {}, ST = [], fdb = null, UC = false;
+var MISSIONI = [];
+var _missTipo = 'locazione';
+var _missBiliciMan = [];
+var _editMissioneId = null;
+var _pendEvasaId = null;
+var _currDtlMissId = null;
 var SMM = 'b', pend = null, pbuf = '', paz = null;
 var PIN = '4114';
 var impDati = [];
@@ -1378,6 +1621,16 @@ window.onload = function() {
       ui();
       aggiornaBadgeCarrellista();
       var _cp = document.querySelector('.page.active');
+      if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
+    });
+    fdb.collection('missioni').onSnapshot(function(s) {
+      MISSIONI = [];
+      s.forEach(function(d) { MISSIONI.push(Object.assign({id: d.id}, d.data())); });
+      aggiornaBadgeMissioni();
+      aggiornaBadgeCarrellista();
+      renderDashMissioni();
+      var _cp = document.querySelector('.page.active');
+      if (_cp && _cp.id === 'page-missioni') renderMissioniDesk();
       if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
     });
     fdb.collection('storico').orderBy('ts', 'desc').onSnapshot(function(s) {
@@ -2059,7 +2312,10 @@ function rimuoviProgDomaniById(docId) {
 
 function caricaVeloce(num) {
   goP('uscita');
-  document.getElementById('out-n').value = num;
+  var s = String(num).trim().toUpperCase();
+  var m = s.match(/^([A-Za-z]?)(\d+)$/);
+  document.getElementById('out-n-pfx').value = m ? m[1] : '';
+  document.getElementById('out-n').value     = m ? m[2] : s;
   trovB();
   var progItem = PROG.find(function(p){ return p.numero === String(num); });
   if (progItem && progItem.bancaliProg) {
@@ -2567,7 +2823,8 @@ function setTipoEntrata(loc) {
 }
 
 function regE() {
-  var n = String(document.getElementById('in-n').value || '').trim().toUpperCase();
+  var pfx = String(document.getElementById('in-n-pfx').value || '').trim().toUpperCase();
+  var n = pfx + String(document.getElementById('in-n').value || '').trim().toUpperCase();
   var l = document.getElementById('in-l').value.trim().toUpperCase();
   var b = parseInt(document.getElementById('in-b').value) || 0;
   var nt = document.getElementById('in-nt').value.trim();
@@ -2583,6 +2840,7 @@ function regE() {
   var ts = new Date().toISOString();
   dbSB(n, {numero: n, locazione: l, bancali: b, note: nt, ts: ts});
   dbAS({tipo: 'ENTRATA', numero: n, locazione: l, bancali: b, note: nt, ts: ts});
+  document.getElementById('in-n-pfx').value = '';
   document.getElementById('in-n').value = '';
   document.getElementById('in-l').value = 'ARRIVI';
   document.getElementById('in-b').value = '0';
@@ -2592,7 +2850,8 @@ function regE() {
 }
 
 function trovB() {
-  var n = String(document.getElementById('out-n').value || '').trim().toUpperCase();
+  var pfx = String(document.getElementById('out-n-pfx').value || '').trim().toUpperCase();
+  var n = pfx + String(document.getElementById('out-n').value || '').trim().toUpperCase();
   var b = BL[n];
   var box = document.getElementById('trvbox');
   if (b) {
@@ -2606,7 +2865,8 @@ function trovB() {
 }
 
 function regU() {
-  var n = String(document.getElementById('out-n').value || '').trim().toUpperCase();
+  var pfx = String(document.getElementById('out-n-pfx').value || '').trim().toUpperCase();
+  var n = pfx + String(document.getElementById('out-n').value || '').trim().toUpperCase();
   var bu = parseInt(document.getElementById('out-b').value) || 0;
   var nt = document.getElementById('out-nt').value.trim();
   if (!n) { return tst('Inserisci il numero bilico', 'er'); }
@@ -2877,6 +3137,533 @@ function eseguiImport() {
     btn.innerHTML = '<span class="bi">&#x1F4E5;</span>IMPORTA';
   });
 }
+
+// ══════════════════════════════════════════════
+// MISSIONI — DESKTOP
+// ══════════════════════════════════════════════
+function aggiornaBadgeMissioni() {
+  var el = document.getElementById('sb-miss-badge');
+  if (!el) return;
+  var n = MISSIONI.filter(function(m){ return m.stato !== 'completata'; }).length;
+  el.textContent = n;
+  el.style.display = n > 0 ? 'inline-flex' : 'none';
+}
+
+function resetFiltriMissioni() {
+  var d = document.getElementById('miss-f-dal'); if (d) d.value = '';
+  var a = document.getElementById('miss-f-al'); if (a) a.value = '';
+  var t = document.getElementById('miss-f-tipo'); if (t) t.value = '';
+  var s = document.getElementById('miss-f-stato'); if (s) s.value = '';
+  renderMissioniDesk();
+}
+
+function renderMissioniDesk() {
+  var el = document.getElementById('miss-desk-list');
+  if (!el) return;
+  // Leggi filtri
+  var fDal   = (document.getElementById('miss-f-dal') || {}).value || '';
+  var fAl    = (document.getElementById('miss-f-al') || {}).value || '';
+  var fTipo  = (document.getElementById('miss-f-tipo') || {}).value || '';
+  var fStato = (document.getElementById('miss-f-stato') || {}).value || '';
+  var lista = MISSIONI.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+  // Applica filtri
+  if (fDal)   { lista = lista.filter(function(m){ return (m.data||'') >= fDal; }); }
+  if (fAl)    { lista = lista.filter(function(m){ return (m.data||'') <= fAl; }); }
+  if (fTipo)  { lista = lista.filter(function(m){ return m.tipo === fTipo; }); }
+  if (fStato) { lista = lista.filter(function(m){ return m.stato === fStato; }); }
+  if (!lista.length) { el.innerHTML = '<div class="emp"><p>Nessuna missione trovata</p></div>'; return; }
+  var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+    '<thead><tr style="color:var(--tx2);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">' +
+    '<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Tipo / Locazione</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">Data</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">Bilici</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">PLT</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">Stato</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">Operatore</th>' +
+    '<th style="padding:5px 8px;border-bottom:1px solid var(--bd);"></th>' +
+    '</tr></thead><tbody>';
+  lista.forEach(function(m) {
+    var conf = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot = (m.bilici||[]).length;
+    var plt = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var df = m.data ? m.data.split('-').reverse().join('/') : '—';
+    var tipoLabel = m.tipo === 'locazione' ? '&#x1F4CD; ' + (m.locazione||'') : '&#x270B; Manuale';
+    var statoCol, statoLbl;
+    if (m.stato === 'caricata')   { statoCol = 'var(--gb)';  statoLbl = '&#x2705; Caricata'; }
+    else if (m.stato === 'completata') { statoCol = '#00bfff'; statoLbl = '&#x1F7E2; Completata'; }
+    else if (m.stato === 'in_corso')   { statoCol = 'var(--ob)'; statoLbl = '&#x1F7E1; In corso'; }
+    else                               { statoCol = 'var(--tx2)'; statoLbl = '&#x23F3; Attesa'; }
+    var operatore = m.operatoreChiusura || '—';
+    html += '<tr style="border-bottom:1px solid rgba(48,54,61,.4);">' +
+      '<td style="padding:7px 8px;"><strong style="color:var(--pb);">' + tipoLabel + '</strong>' + (m.nota?'<div style="font-size:11px;color:var(--tx3);">'+m.nota+'</div>':'') + '</td>' +
+      '<td style="padding:7px 8px;text-align:center;color:var(--tx2);">' + df + '</td>' +
+      '<td style="padding:7px 8px;text-align:center;">' + conf + '/' + tot + '</td>' +
+      '<td style="padding:7px 8px;text-align:center;color:var(--ob);font-weight:700;">' + plt + '</td>' +
+      '<td style="padding:7px 8px;text-align:center;color:' + statoCol + ';font-size:12px;">' + statoLbl + '</td>' +
+      '<td style="padding:7px 8px;text-align:center;font-size:12px;color:var(--tx2);">' + operatore + '</td>' +
+      '<td style="padding:7px 8px;text-align:right;white-space:nowrap;">' +
+        '<button onclick="apriDettaglioMissioneDesk(\'' + m.id + '\')" title="Dettaglio" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);padding:3px 7px;font-size:13px;cursor:pointer;margin-right:3px;">&#x1F50D;</button>' +
+        (m.stato === 'attesa' ? '<button onclick="apriModificaMissione(\'' + m.id + '\')" title="Modifica" style="background:none;border:1px solid var(--bb);border-radius:var(--rs);color:var(--bb);padding:3px 7px;font-size:13px;cursor:pointer;margin-right:3px;">&#x270F;&#xFE0F;</button>' : '') +
+        (isAdmin() ? '<button onclick="eliminaMissione(\'' + m.id + '\')" title="Elimina" style="background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 7px;font-size:12px;cursor:pointer;">&#x1F5D1;</button>' : '') +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function apriCreaMissione() {
+  _editMissioneId = null;
+  var titleEl = document.getElementById('miss-modal-title');
+  var btnEl = document.getElementById('miss-modal-btn');
+  if (titleEl) titleEl.innerHTML = '&#x1F4E6; Nuova Missione';
+  if (btnEl) btnEl.innerHTML = '&#x2705; CREA MISSIONE';
+  _missTipo = 'locazione';
+  _missBiliciMan = [];
+  // Popola la select locazioni
+  var sel = document.getElementById('miss-loc-sel');
+  if (sel) {
+    var locs = {};
+    Object.values(BL).forEach(function(b){ if(b.locazione) locs[b.locazione] = true; });
+    sel.innerHTML = '<option value="">— seleziona —</option>';
+    Object.keys(locs).sort().forEach(function(l){ sel.innerHTML += '<option value="'+l+'">'+l+'</option>'; });
+  }
+  document.getElementById('miss-loc-trucks').innerHTML = '';
+  document.getElementById('miss-man-list').innerHTML = '';
+  document.getElementById('miss-man-pfx').value = '';
+  document.getElementById('miss-man-num').value = '';
+  document.getElementById('miss-man-plt').value = '';
+  document.getElementById('miss-nota').value = '';
+  var oggi = new Date().toISOString().slice(0,10);
+  document.getElementById('miss-data').value = oggi;
+  document.getElementById('miss-riepilogo').textContent = '';
+  setTipoMissione('locazione');
+  document.getElementById('mo-crea-missione').classList.add('open');
+}
+
+function apriModificaMissione(id) {
+  var m = MISSIONI.find(function(x){ return x.id === id; });
+  if (!m) return;
+  if (m.stato !== 'attesa') { tst('Solo missioni in attesa sono modificabili', 'er'); return; }
+  _editMissioneId = id;
+  var titleEl = document.getElementById('miss-modal-title');
+  var btnEl = document.getElementById('miss-modal-btn');
+  if (titleEl) titleEl.innerHTML = '&#x270F;&#xFE0F; Modifica Missione';
+  if (btnEl) btnEl.innerHTML = '&#x1F4BE; SALVA MODIFICHE';
+  _missTipo = m.tipo;
+  _missBiliciMan = [];
+  // Popola locazioni
+  var sel = document.getElementById('miss-loc-sel');
+  if (sel) {
+    var locs = {};
+    Object.values(BL).forEach(function(b){ if(b.locazione) locs[b.locazione] = true; });
+    sel.innerHTML = '<option value="">— seleziona —</option>';
+    Object.keys(locs).sort().forEach(function(l){ sel.innerHTML += '<option value="'+l+'">'+l+'</option>'; });
+  }
+  document.getElementById('miss-man-num').value = '';
+  document.getElementById('miss-man-plt').value = '';
+  document.getElementById('miss-nota').value = m.nota || '';
+  document.getElementById('miss-data').value = m.data || '';
+  if (m.tipo === 'locazione') {
+    setTipoMissione('locazione');
+    if (sel) sel.value = m.locazione || '';
+    populaLocazioneMissione();
+    // Ripristina PLT della missione (non la giacenza attuale)
+    (m.bilici||[]).forEach(function(b) {
+      var inp = document.getElementById('miss-loc-plt-' + b.numero);
+      if (inp) inp.value = b.bancaliProg || 0;
+    });
+    aggiornaMissRiepilogo();
+  } else {
+    setTipoMissione('manuale');
+    _missBiliciMan = (m.bilici||[]).map(function(b){ return {numero: String(b.numero), plt: b.bancaliProg||0}; });
+    renderMissBiliciManuale();
+    aggiornaMissRiepilogo();
+  }
+  document.getElementById('mo-crea-missione').classList.add('open');
+}
+
+function setTipoMissione(tipo) {
+  _missTipo = tipo;
+  var tabLoc = document.getElementById('miss-tab-loc');
+  var tabMan = document.getElementById('miss-tab-man');
+  var secLoc = document.getElementById('miss-loc-section');
+  var secMan = document.getElementById('miss-man-section');
+  if (tipo === 'locazione') {
+    tabLoc.style.background='rgba(163,113,247,.15)'; tabLoc.style.borderColor='var(--pb)'; tabLoc.style.color='var(--pb)';
+    tabMan.style.background='none'; tabMan.style.borderColor='var(--bd)'; tabMan.style.color='var(--tx2)';
+    secLoc.style.display='block'; secMan.style.display='none';
+  } else {
+    tabMan.style.background='rgba(163,113,247,.15)'; tabMan.style.borderColor='var(--pb)'; tabMan.style.color='var(--pb)';
+    tabLoc.style.background='none'; tabLoc.style.borderColor='var(--bd)'; tabLoc.style.color='var(--tx2)';
+    secMan.style.display='block'; secLoc.style.display='none';
+  }
+}
+
+function populaLocazioneMissione() {
+  var loc = document.getElementById('miss-loc-sel').value;
+  var el = document.getElementById('miss-loc-trucks');
+  if (!loc) { el.innerHTML = ''; aggiornaMissRiepilogo(); return; }
+  var lista = Object.values(BL).filter(function(b){ return b.locazione === loc; });
+  if (!lista.length) { el.innerHTML = '<div style="color:var(--tx2);font-size:13px;padding:8px;">Nessun bilico in questa locazione</div>'; aggiornaMissRiepilogo(); return; }
+  var html = '';
+  lista.forEach(function(b) {
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);">' +
+      '<strong style="flex:1;">#' + b.numero + '</strong>' +
+      '<span style="color:var(--tx2);font-size:12px;">Giacenza: ' + b.bancali + ' PLT</span>' +
+      '<input id="miss-loc-plt-'+b.numero+'" type="number" value="'+b.bancali+'" min="0" max="'+b.bancali+'" style="width:70px;text-align:center;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx);padding:4px;" oninput="aggiornaMissRiepilogo()">' +
+      '</div>';
+  });
+  el.innerHTML = html;
+  aggiornaMissRiepilogo();
+}
+
+function aggiornaMissRiepilogo() {
+  var el = document.getElementById('miss-riepilogo');
+  if (!el) return;
+  var bilici = getMissBiliciDraft();
+  if (!bilici.length) { el.textContent = ''; return; }
+  var plt = bilici.reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+  el.innerHTML = '<strong style="color:var(--pb);">' + bilici.length + ' bilici</strong> · <strong style="color:var(--ob);">' + plt + ' PLT totali</strong>';
+}
+
+function getMissBiliciDraft() {
+  if (_missTipo === 'locazione') {
+    var loc = document.getElementById('miss-loc-sel').value;
+    if (!loc) return [];
+    return Object.values(BL).filter(function(b){ return b.locazione === loc; }).map(function(b){
+      var inp = document.getElementById('miss-loc-plt-'+b.numero);
+      var plt = inp ? (parseInt(inp.value)||0) : b.bancali;
+      return {numero: b.numero, bancaliProg: Math.min(plt, b.bancali), confermato: false};
+    }).filter(function(b){ return b.bancaliProg > 0; });
+  } else {
+    return _missBiliciMan.map(function(x){ return {numero: x.numero, bancaliProg: x.plt, confermato: false}; });
+  }
+}
+
+function aggiungiBilicoManuale() {
+  var pfx = String(document.getElementById('miss-man-pfx').value||'').trim().toUpperCase();
+  var num = pfx + String(document.getElementById('miss-man-num').value||'').trim().toUpperCase();
+  var plt = parseInt(document.getElementById('miss-man-plt').value)||0;
+  if (!num) { tst('Inserisci il numero bilico', 'er'); return; }
+  if (_missBiliciMan.find(function(x){ return x.numero === num; })) { tst('Bilico #'+num+' già aggiunto', 'er'); return; }
+  var b = Object.values(BL).find(function(x){ return String(x.numero) === num; });
+  var giacenza = b ? b.bancali : 0;
+  if (plt <= 0) plt = giacenza;
+  _missBiliciMan.push({numero: num, plt: Math.min(plt, giacenza) || plt});
+  document.getElementById('miss-man-pfx').value = '';
+  document.getElementById('miss-man-num').value = '';
+  document.getElementById('miss-man-plt').value = '';
+  renderMissBiliciManuale();
+  aggiornaMissRiepilogo();
+}
+
+function rimuoviBilicoMissione(idx) {
+  _missBiliciMan.splice(idx, 1);
+  renderMissBiliciManuale();
+  aggiornaMissRiepilogo();
+}
+
+function renderMissBiliciManuale() {
+  var el = document.getElementById('miss-man-list');
+  if (!el) return;
+  if (!_missBiliciMan.length) { el.innerHTML = '<div style="color:var(--tx2);font-size:12px;padding:6px;">Nessun bilico aggiunto</div>'; return; }
+  var html = '';
+  _missBiliciMan.forEach(function(x, i) {
+    var b = Object.values(BL).find(function(bx){ return String(bx.numero) === x.numero; });
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);">' +
+      '<strong style="flex:1;">#' + x.numero + '</strong>' +
+      '<span style="font-size:12px;color:var(--tx2);">' + x.plt + ' PLT' + (b?' / giac. '+b.bancali:'&#x26A0;&#xFE0F; non in mag.') + '</span>' +
+      '<button onclick="rimuoviBilicoMissione('+i+')" style="background:none;border:none;color:var(--rb);cursor:pointer;font-size:16px;">&#x2715;</button>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function creaMissione() {
+  var bilici = getMissBiliciDraft();
+  if (!bilici.length) { tst('Aggiungi almeno un bilico', 'er'); return; }
+  var data = document.getElementById('miss-data').value;
+  if (!data) { tst('Inserisci la data carico', 'er'); return; }
+  var nota = (document.getElementById('miss-nota').value||'').trim();
+  var loc = _missTipo === 'locazione' ? (document.getElementById('miss-loc-sel').value||'') : '';
+  if (!UC || !fdb) { tst('Connessione cloud necessaria', 'er'); return; }
+  if (_editMissioneId) {
+    // MODIFICA missione esistente
+    fdb.collection('missioni').doc(_editMissioneId).update({
+      tipo: _missTipo, locazione: loc, bilici: bilici, data: data, nota: nota
+    }).then(function(){
+      chiM('mo-crea-missione');
+      _editMissioneId = null;
+      tst('Missione aggiornata!', 'ok');
+    }).catch(function(e){ tst('Errore: '+e.message,'er'); });
+  } else {
+    // CREA nuova missione
+    fdb.collection('missioni').add({
+      tipo: _missTipo, locazione: loc, bilici: bilici, data: data, nota: nota,
+      stato: 'attesa', creatore: CURR_USER ? CURR_USER.username : '', ts: Date.now()
+    }).then(function(){
+      chiM('mo-crea-missione');
+      tst('Missione creata — ' + bilici.length + ' bilici', 'ok');
+    }).catch(function(e){ tst('Errore: '+e.message,'er'); });
+  }
+}
+
+function eliminaMissione(id) {
+  var m = MISSIONI.find(function(x){ return x.id === id; });
+  if (!m) return;
+  if (m.stato !== 'attesa') {
+    tst('&#x26A0;&#xFE0F; Eliminazione non consentita — la missione è già in corso o completata', 'er');
+    return;
+  }
+  if (!confirm('Eliminare questa missione in attesa?')) return;
+  if (UC && fdb) {
+    fdb.collection('missioni').doc(id).delete().then(function(){ tst('Missione eliminata', 'ok'); }).catch(function(e){ tst('Errore: '+e.message,'er'); });
+  }
+}
+
+function apriDettaglioMissioneDesk(id) {
+  var m = MISSIONI.find(function(x){ return x.id === id; });
+  if (!m) return;
+  _currDtlMissId = id;
+  var el = document.getElementById('miss-dtl-desk-body');
+  if (!el) return;
+  var df = m.data ? m.data.split('-').reverse().join('/') : '—';
+  var tipoLabel = m.tipo === 'locazione' ? '&#x1F4CD; ' + (m.locazione||'') : '&#x270B; Manuale';
+  var statoCol, statoLbl;
+  if (m.stato === 'caricata')        { statoCol = 'var(--gb)';  statoLbl = '&#x2705; Caricata'; }
+  else if (m.stato === 'completata') { statoCol = '#00bfff';    statoLbl = '&#x1F7E2; Completata'; }
+  else if (m.stato === 'in_corso')   { statoCol = 'var(--ob)';  statoLbl = '&#x1F7E1; In corso'; }
+  else                               { statoCol = 'var(--tx2)'; statoLbl = '&#x23F3; Attesa'; }
+  var conf = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+  var tot = (m.bilici||[]).length;
+  var pltTot  = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+  var pltConf = (m.bilici||[]).reduce(function(s,b){return s+(b.confermato?(b.bancaliConfermati||b.bancaliProg||0):0);},0);
+  var prog = tot > 0 ? Math.round(conf/tot*100) : 0;
+  var html = '';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+    '<strong style="color:var(--pb);font-size:15px;">' + tipoLabel + '</strong>' +
+    '<span style="border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;color:'+statoCol+';">' + statoLbl + '</span>' +
+    '</div>';
+  html += '<div style="display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--tx2);">' +
+    '<span>&#x1F4C5; ' + df + '</span>' +
+    '<span>&#x1F69B; ' + conf + '/' + tot + ' bilici</span>' +
+    '<span style="color:var(--ob);font-weight:700;">&#x1F4E6; ' + pltConf + '/' + pltTot + ' PLT</span>' +
+    '</div>';
+  if (m.nota) html += '<div style="font-size:12px;color:var(--tx2);margin-bottom:10px;">&#x1F4DD; ' + m.nota + '</div>';
+  html += '<div style="background:var(--sf2);border-radius:4px;height:7px;margin-bottom:12px;">' +
+    '<div style="background:var(--pb);height:100%;width:' + prog + '%;border-radius:4px;"></div>' +
+    '</div>';
+  html += '<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;">Bilici</div>';
+  (m.bilici||[]).forEach(function(b) {
+    var plt = b.confermato ? (b.bancaliConfermati||b.bancaliProg||0) : (b.bancaliProg||0);
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);">' +
+      '<span style="font-weight:700;flex:1;">#' + b.numero + '</span>' +
+      '<span style="color:var(--tx2);">' + plt + ' PLT</span>' +
+      (b.confermato ? '<span style="color:var(--gb);font-size:12px;">&#x2705; Confermato</span>' : '<span style="color:var(--og);font-size:12px;">&#x23F3; Da confermare</span>') +
+      '</div>';
+  });
+  if (m.operatoreChiusura) {
+    html += '<div style="margin-top:10px;font-size:12px;color:var(--tx2);">&#x1F464; Chiusa da: <strong>' + m.operatoreChiusura + '</strong></div>';
+  }
+  el.innerHTML = html;
+  document.getElementById('mo-miss-dtl-desk').classList.add('open');
+}
+
+function stampaMissione(id) {
+  var m = MISSIONI.find(function(x){ return x.id === id; });
+  if (!m) return;
+  var df = m.data ? m.data.split('-').reverse().join('/') : '—';
+  var tipoLabel = m.tipo === 'locazione' ? '📍 ' + (m.locazione||'') : '✋ Manuale';
+  var statoLbl;
+  if (m.stato === 'caricata')        statoLbl = 'Caricata';
+  else if (m.stato === 'completata') statoLbl = 'Completata';
+  else if (m.stato === 'in_corso')   statoLbl = 'In corso';
+  else                               statoLbl = 'Attesa';
+  var conf  = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+  var tot   = (m.bilici||[]).length;
+  var pltTot  = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+  var pltConf = (m.bilici||[]).reduce(function(s,b){return s+(b.confermato?(b.bancaliConfermati||b.bancaliProg||0):0);},0);
+  var righe = (m.bilici||[]).map(function(b, i) {
+    var plt = b.confermato ? (b.bancaliConfermati||b.bancaliProg||0) : (b.bancaliProg||0);
+    return '<tr>' +
+      '<td style="padding:6px 10px;border-bottom:1px solid #ddd;">' + (i+1) + '</td>' +
+      '<td style="padding:6px 10px;border-bottom:1px solid #ddd;font-weight:700;">#' + b.numero + '</td>' +
+      '<td style="padding:6px 10px;border-bottom:1px solid #ddd;text-align:center;">' + plt + '</td>' +
+      '<td style="padding:6px 10px;border-bottom:1px solid #ddd;text-align:center;">' + (b.confermato ? '✅ Confermato' : '⏳ Pianificato') + '</td>' +
+      '</tr>';
+  }).join('');
+  var now = new Date().toLocaleString('it-IT');
+  var w = window.open('', '_blank', 'width=700,height=900');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Missione — ' + tipoLabel + '</title>' +
+    '<style>body{font-family:Arial,sans-serif;font-size:13px;color:#111;margin:30px;}' +
+    'h1{font-size:18px;margin-bottom:4px;}' +
+    '.meta{color:#555;font-size:12px;margin-bottom:16px;}' +
+    'table{width:100%;border-collapse:collapse;margin-bottom:20px;}' +
+    'thead tr{background:#f0f0f0;}' +
+    'th{padding:7px 10px;text-align:left;border-bottom:2px solid #ccc;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}' +
+    '.tot{font-size:13px;font-weight:700;margin-bottom:20px;}' +
+    '.footer{font-size:11px;color:#999;margin-top:30px;border-top:1px solid #ddd;padding-top:8px;}' +
+    '@media print{body{margin:15px;}}' +
+    '</style></head><body>' +
+    '<h1>📦 Missione — ' + tipoLabel + '</h1>' +
+    '<div class="meta">Data carico: <strong>' + df + '</strong> &nbsp;|&nbsp; Stato: <strong>' + statoLbl + '</strong>' +
+    (m.nota ? ' &nbsp;|&nbsp; Note: <em>' + m.nota + '</em>' : '') +
+    (m.operatoreChiusura ? ' &nbsp;|&nbsp; Chiusa da: <strong>' + m.operatoreChiusura + '</strong>' : '') +
+    '</div>' +
+    '<table><thead><tr><th>#</th><th>Bilico</th><th>PLT</th><th>Stato</th></tr></thead><tbody>' + righe + '</tbody></table>' +
+    '<div class="tot">Totale: <strong>' + tot + ' bilici</strong> &nbsp;·&nbsp; <strong>' + pltConf + '/' + pltTot + ' PLT</strong> (' + conf + ' confermati)</div>' +
+    '<div class="footer">Stampato il ' + now + ' &nbsp;|&nbsp; Bilici TMP &nbsp;|&nbsp; ID missione: ' + id + '</div>' +
+    '</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){ w.print(); }, 400);
+}
+
+function renderDashMissioni() {
+  var el = document.getElementById('dash-miss-list');
+  if (!el) return;
+  var cntEl = document.getElementById('dash-miss-count');
+  var attive = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; }).sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+  if (cntEl) { cntEl.textContent = attive.length; cntEl.style.display = attive.length > 0 ? 'inline-block' : 'none'; }
+  if (!attive.length) { el.innerHTML = '<div class="prog-empty">Nessuna missione attiva</div>'; return; }
+  var html = '<div style="padding:8px 12px;">';
+  attive.forEach(function(m) {
+    var conf = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot = (m.bilici||[]).length;
+    var pltTot = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var df = m.data ? m.data.split('-').reverse().join('/') : '—';
+    var tipoLabel = m.tipo === 'locazione' ? '&#x1F4CD; ' + (m.locazione||'') : '&#x270B; Manuale';
+    var statoLbl, statoCol;
+    if (m.stato === 'completata')    { statoCol = '#00bfff'; statoLbl = '&#x1F7E2;'; }
+    else if (m.stato === 'in_corso') { statoCol = 'var(--ob)'; statoLbl = '&#x1F7E1;'; }
+    else                             { statoCol = 'var(--tx2)'; statoLbl = '&#x23F3;'; }
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12px;">' +
+      '<span style="font-size:13px;">' + statoLbl + '</span>' +
+      '<span style="flex:1;font-weight:700;color:var(--pb);">' + tipoLabel + '</span>' +
+      '<span style="color:var(--tx2);">' + df + '</span>' +
+      '<span style="color:var(--tx2);">' + conf + '/' + tot + ' bil.</span>' +
+      '<span style="color:var(--ob);font-weight:700;min-width:50px;text-align:right;">' + pltTot + ' PLT</span>' +
+      '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function apriConfermaEvasa(id) {
+  var m = MISSIONI.find(function(x){ return x.id === id; });
+  if (!m) return;
+  _pendEvasaId = id;
+  var el = document.getElementById('mo-evasa-body');
+  if (!el) return;
+  var df = m.data ? m.data.split('-').reverse().join('/') : '—';
+  var tipoLabel = m.tipo === 'locazione' ? '&#x1F4CD; ' + (m.locazione||'') : '&#x270B; Manuale';
+  var conf = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+  var tot = (m.bilici||[]).length;
+  var pltTot = (m.bilici||[]).reduce(function(s,b){
+    return s + (b.confermato ? (b.bancaliConfermati||b.bancaliProg||0) : (b.bancaliProg||0));
+  }, 0);
+  var nonConf = tot - conf;
+  var html = '';
+  // Info missione
+  html += '<div style="background:var(--sf2);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;">' +
+    '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+    '<strong style="color:var(--pb);">' + tipoLabel + '</strong>' +
+    '<span style="color:var(--tx2);font-size:12px;">&#x1F4C5; ' + df + '</span>' +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--tx2);">&#x1F69B; ' + tot + ' bilici &nbsp;·&nbsp; <strong style="color:var(--ob);">&#x1F4E6; ' + pltTot + ' PLT totali</strong></div>' +
+    '</div>';
+  // Avviso bilici non confermati
+  if (nonConf > 0) {
+    html += '<div style="background:rgba(210,153,34,.12);border:1px solid var(--og);border-radius:var(--rs);padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--ob);">' +
+      '&#x26A0;&#xFE0F; <strong>' + nonConf + ' bilici non confermati</strong> — verranno usati i PLT pianificati.' +
+      '</div>';
+  }
+  // Lista bilici
+  html += '<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;">Riepilogo bilici</div>';
+  (m.bilici||[]).forEach(function(b) {
+    var plt = b.confermato ? (b.bancaliConfermati||b.bancaliProg||0) : (b.bancaliProg||0);
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:13px;">' +
+      '<span style="font-weight:700;flex:1;">#' + b.numero + '</span>' +
+      '<span style="color:var(--ob);font-weight:700;">' + plt + ' PLT</span>' +
+      (b.confermato
+        ? '<span style="color:var(--gb);font-size:11px;">&#x2705; conf.</span>'
+        : '<span style="color:var(--og);font-size:11px;">&#x23F3; pianif.</span>') +
+      '</div>';
+  });
+  html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid var(--gn);border-radius:var(--rs);font-size:13px;font-weight:700;color:var(--gb);text-align:center;">' +
+    '&#x1F6A8; Confermando, storico e magazzino verranno aggiornati in modo definitivo.' +
+    '</div>';
+  el.innerHTML = html;
+  document.getElementById('mo-evasa-conf').classList.add('open');
+}
+
+function eseguiEvasa() {
+  if (!_pendEvasaId) return;
+  if (!UC || !fdb) { tst('Connessione cloud necessaria', 'er'); return; }
+  var missioneId = _pendEvasaId;
+  var m = MISSIONI.find(function(x){ return x.id === missioneId; });
+  if (!m) { chiM('mo-evasa-conf'); _pendEvasaId = null; return; }
+  var caricoId = missioneId;
+  var noteBase = 'Missione ' + (m.tipo === 'locazione' ? (m.locazione||'') : 'Manuale') + ' — evasa da desktop';
+  (m.bilici||[]).forEach(function(bilico, idx) {
+    var plt = bilico.confermato ? (bilico.bancaliConfermati||bilico.bancaliProg||0) : (bilico.bancaliProg||0);
+    if (plt <= 0) return;
+    var bKey = Object.keys(BL).find(function(k){ return String(BL[k].numero) === String(bilico.numero); });
+    var b = bKey ? BL[bKey] : null;
+    var locazione = b ? b.locazione : (m.locazione||'');
+    var actualPlt = b ? Math.min(plt, b.bancali) : plt;
+    var rim = b ? Math.max(0, b.bancali - actualPlt) : 0;
+    // Storico
+    fdb.collection('storico').add({
+      tipo: 'USCITA', numero: bilico.numero, locazione: locazione,
+      bancaliUsciti: actualPlt, bancaliRimasti: rim,
+      note: noteBase, ts: new Date(Date.now() + idx).toISOString(),
+      caricoId: caricoId,
+      operatore: CURR_USER ? CURR_USER.username : ''
+    }).catch(function(){});
+    // Magazzino
+    if (b && b.id) {
+      if (rim === 0) {
+        fdb.collection('bilici').doc(b.id).delete().catch(function(){});
+      } else {
+        var loc = locazione.toUpperCase();
+        fdb.collection('bilici').doc(b.id).update({
+          bancali: rim,
+          locazione: (loc === 'SMEZZI' || loc === 'FRESCO') ? locazione : 'SMEZZI'
+        }).catch(function(){});
+      }
+    }
+  });
+  // Missione → caricata
+  fdb.collection('missioni').doc(missioneId).update({
+    stato: 'caricata',
+    operatoreChiusura: CURR_USER ? CURR_USER.username : ''
+  }).catch(function(){});
+  chiM('mo-evasa-conf');
+  _pendEvasaId = null;
+  tst('&#x1F389; Missione segnata come evasa!', 'ok');
+}
+
+function expMissioni() {
+  if (!MISSIONI.length) { tst('Nessuna missione da esportare', 'er'); return; }
+  var rows = [['ID','TIPO','LOCAZIONE','DATA','STATO','N. BILICI','PLT TOT','BILICI CONF','PLT CONF','NOTA','CREATORE','OP. CHIUSURA']];
+  MISSIONI.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0);}).forEach(function(m) {
+    var conf  = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot   = (m.bilici||[]).length;
+    var pltTot  = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var pltConf = (m.bilici||[]).reduce(function(s,b){return s+(b.confermato?(b.bancaliConfermati||b.bancaliProg||0):0);},0);
+    var df = m.data ? m.data.split('-').reverse().join('/') : '';
+    rows.push([m.id, m.tipo, m.locazione||'', df, m.stato, tot, pltTot, conf, pltConf, m.nota||'', m.creatore||'', m.operatoreChiusura||'']);
+  });
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:22},{wch:12},{wch:14},{wch:12},{wch:12},{wch:10},{wch:10},{wch:12},{wch:10},{wch:25},{wch:14},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Missioni');
+  XLSX.writeFile(wb, 'Missioni_' + new Date().toLocaleDateString('it-IT').split('/').join('-') + '.xlsx');
+  tst('&#x1F4C5; Missioni esportate!', 'ok');
+}
+
+// ══════════════════════════════════════════════
 
 function expExcel() {
   var wb = XLSX.utils.book_new();
@@ -3665,15 +4452,57 @@ function selCarrellistaTab(tab) {
   carrellistaTab = tab;
   document.getElementById('car-stoccare-content').style.display = tab === 'stoccare' ? 'block' : 'none';
   document.getElementById('car-preparare-content').style.display = tab === 'preparare' ? 'block' : 'none';
+  document.getElementById('car-missioni-content').style.display = tab === 'missioni' ? 'block' : 'none';
   document.getElementById('tab-stoccare').className = tab === 'stoccare' ? 'btn tog' : 'btn bgh';
   document.getElementById('tab-preparare').className = tab === 'preparare' ? 'btn tog' : 'btn bgh';
+  document.getElementById('tab-car-missioni').className = tab === 'missioni' ? 'btn tog' : 'btn bgh';
   renderCarrellista();
 }
 
 function renderCarrellista() {
   renderCarrellistaStoccare();
   renderCarrellistaPreparare();
+  renderCarrellistaMissioniDesk();
   aggiornaBadgeCarrellista();
+}
+
+function renderCarrellistaMissioniDesk() {
+  var el = document.getElementById('car-missioni-desk-list');
+  if (!el) return;
+  var attive = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; });
+  if (!attive.length) { el.innerHTML = '<div class="emp"><p>Nessuna missione attiva</p></div>'; return; }
+  var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+    '<thead><tr style="color:var(--tx2);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">' +
+    '<th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);">Tipo / Locazione</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">Data</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">Bilici</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">PLT conf/tot</th>' +
+    '<th style="text-align:center;padding:5px 8px;border-bottom:1px solid var(--bd);">Stato</th>' +
+    '<th style="padding:5px 8px;border-bottom:1px solid var(--bd);"></th>' +
+    '</tr></thead><tbody>';
+  attive.forEach(function(m) {
+    var conf = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot = (m.bilici||[]).length;
+    var pltTot  = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var pltConf = (m.bilici||[]).reduce(function(s,b){return s+(b.confermato?(b.bancaliConfermati||b.bancaliProg||0):0);},0);
+    var df = m.data ? m.data.split('-').reverse().join('/') : '—';
+    var tipoLabel = m.tipo === 'locazione' ? '&#x1F4CD; ' + (m.locazione||'') : '&#x270B; Manuale';
+    var statoCol, statoLbl;
+    if (m.stato === 'completata')    { statoCol = '#00bfff'; statoLbl = '&#x1F7E2; Completata'; }
+    else if (m.stato === 'in_corso') { statoCol = 'var(--ob)'; statoLbl = '&#x1F7E1; In corso'; }
+    else                             { statoCol = 'var(--tx2)'; statoLbl = '&#x23F3; Attesa'; }
+    html += '<tr style="border-bottom:1px solid rgba(48,54,61,.4);">' +
+      '<td style="padding:7px 8px;"><strong style="color:var(--pb);">' + tipoLabel + '</strong></td>' +
+      '<td style="padding:7px 8px;text-align:center;color:var(--tx2);">' + df + '</td>' +
+      '<td style="padding:7px 8px;text-align:center;">' + conf + '/' + tot + '</td>' +
+      '<td style="padding:7px 8px;text-align:center;font-weight:700;"><span style="color:var(--pb);">' + pltConf + '</span><span style="color:var(--tx2);">/' + pltTot + '</span></td>' +
+      '<td style="padding:7px 8px;text-align:center;color:' + statoCol + ';font-size:12px;">' + statoLbl + '</td>' +
+      '<td style="padding:7px 8px;text-align:right;">' +
+        '<button onclick="apriConfermaEvasa(\'' + m.id + '\')" style="background:rgba(34,197,94,.12);border:1px solid var(--gn);border-radius:var(--rs);color:var(--gb);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.3px;">&#x1F69B; EVASA / CARICATA</button>' +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
 }
 
 function renderCarrellistaStoccare() {
@@ -3715,11 +4544,13 @@ function renderCarrellistaPreparare() {
 function aggiornaBadgeCarrellista() {
   var nStoccare = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; }).length;
   var nPreparare = PROG.filter(function(p) { return p.id && !PROG_PREPARATO[p.id]; }).length;
-  var tot = nStoccare + nPreparare;
+  var nMissioni = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; }).length;
+  var tot = nStoccare + nPreparare + nMissioni;
   var badge = document.getElementById('badge-carrellista');
-  if (!badge) return;
-  badge.textContent = tot;
-  badge.style.display = tot > 0 ? 'inline-flex' : 'none';
+  if (badge) { badge.textContent = tot; badge.style.display = tot > 0 ? 'inline-flex' : 'none'; }
+  // badge nel tab missioni dentro la pagina carrellista
+  var bm = document.getElementById('badge-car-miss-desk');
+  if (bm) { bm.textContent = nMissioni; bm.style.display = nMissioni > 0 ? 'inline-block' : 'none'; }
 }
 
 function segnaPreparato(docId, giaSegnato) {

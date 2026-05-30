@@ -857,8 +857,7 @@ function renderProg() {
   if (!el || !badge) { return; }
   var cO = contaOrdiniUnivoci(PROG);
   badge.textContent = cO;
-  var sb = document.getElementById('sb-prog-badge');
-  if (sb) { sb.textContent = cO + contaOrdiniUnivoci(PROG_DOMANI); }
+  aggiornaSbProgBadge();
   if (!PROG || !PROG.length) { el.innerHTML = '<div class="prog-empty">Nessuna uscita programmata</div>'; }
   else { var rAgg = {}; el.innerHTML = PROG.map(function(p) { return buildProgItem(p, false, rAgg); }).join(''); }
   var p2 = document.getElementById('prog-list2');
@@ -879,8 +878,17 @@ function renderProgDomani() {
   var b2 = document.getElementById('prog-domani-count2');
   if (p2) { p2.innerHTML = el.innerHTML; }
   if (b2) { b2.textContent = cD; }
+  aggiornaSbProgBadge();
+}
+
+function contaTuttiOrdini() {
+  var n = contaOrdiniUnivoci(PROG) + contaOrdiniUnivoci(PROG_DOMANI);
+  Object.keys(CAL_DATA||{}).forEach(function(dt){ n += contaOrdiniUnivoci(CAL_DATA[dt]||[]); });
+  return n;
+}
+function aggiornaSbProgBadge() {
   var sb = document.getElementById('sb-prog-badge');
-  if (sb) { sb.textContent = contaOrdiniUnivoci(PROG) + cD; }
+  if (sb) sb.textContent = contaTuttiOrdini();
 }
 
 // ═══ TUTTI GLI ORDINI ═══
@@ -3168,6 +3176,7 @@ function calNav(dir) {
 }
 
 function renderCalendario() {
+  aggiornaSbProgBadge();
   var oggi = new Date();
   var mese = new Date(oggi.getFullYear(), oggi.getMonth() + CAL_MESE, 1);
   var anno = mese.getFullYear(), mesN = mese.getMonth();

@@ -1268,10 +1268,14 @@ function aggProgDomaniFromInput(inpId, bancId, notaId) {
 
 function ui() {
   var lst = Object.values(BL);
-  // stock secco = tutti i bilici ESCLUSI FRESCO e PARTENZE
+  // stock secco = tutti i bilici ESCLUSI FRESCO (PARTENZE incluse = fisicamente presenti)
   var stockSecco = lst.reduce(function(s, b) {
     var loc = (b.locazione || '').toUpperCase();
-    return (loc === 'FRESCO' || loc === 'PARTENZE') ? s : s + (b.bancali || 0);
+    return loc === 'FRESCO' ? s : s + (b.bancali || 0);
+  }, 0);
+  // partenze = PLT che si libereranno a breve
+  var partenzePlt = lst.reduce(function(s, b) {
+    return (b.locazione || '').toUpperCase() === 'PARTENZE' ? s + (b.bancali || 0) : s;
   }, 0);
   // stock fresco = bilici in locazione FRESCO
   var stockFresco = lst.reduce(function(s, b) {
@@ -1288,7 +1292,7 @@ function ui() {
   var pltBilicoFresc= parseInt(localStorage.getItem('MAG_PLT_BILICO_FRESCO')   || '0') || 0;
   var postiDispSecco  = postiSecco > 0 ? postiSecco - stockSecco   : null;
   var postiDispFresc  = postiFresc > 0 ? postiFresc - stockFresco  : null;
-  var biliciDispSecco = (postiSecco > 0 && pltBilico      > 0) ? Math.floor((postiSecco - stockSecco)  / pltBilico)      : null;
+  var biliciDispSecco = (postiSecco > 0 && pltBilico      > 0) ? Math.floor((postiSecco - stockSecco + partenzePlt)  / pltBilico)      : null;
   var biliciDispFresc = (postiFresc > 0 && pltBilicoFresc > 0) ? Math.floor((postiFresc - stockFresco) / pltBilicoFresc) : null;
   function _s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val !== null ? val : '—'; }
   _s('s-stock-secco',        stockSecco);
@@ -3010,8 +3014,9 @@ function lgDel(m) {
   else det='Usciti: '+(m.bancaliUsciti||'-')+', Rimasti: '+(m.bancaliRimasti||'-');
   var caricoTag=m.caricoId?'<span style="font-size:10px;color:var(--tx3);font-weight:600;margin-left:5px;">&#x1F4CB; ID: '+m.caricoId.slice(-6)+'</span>':'';
   var opTag=m.operatore?'<span class="op-tag">&#x1F464; '+m.operatore+'</span>':'';
+  var fotoBtn=(m.fotoSalvata&&m.caricoId)?'<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:15px;padding:0 3px;vertical-align:middle;" title="Vedi foto">&#x1F4F7;</button>':'';
   var s = '<div class="li"><div class="ldot ' + dotCls + '"></div><div class="ltx">';
-  s += '<div class="lm">' + ico + ' <strong>#' + m.numero + '</strong> - ' + label + caricoTag + opTag + '</div>';
+  s += '<div class="lm">' + ico + ' <strong>#' + m.numero + '</strong> - ' + label + caricoTag + opTag + fotoBtn + '</div>';
   if(!isMod) s += '<div class="ls">' + (isTr ? det : 'Loc: ' + (m.locazione||'-') + ' - ' + det) + (m.note ? '<br>' + m.note : '') + '</div>';
   if(isMod && m.diff && m.diff.length) { s += '<div class="diff-box">'; m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">&rarr;</span><span class="diff-new">'+d.a+'</span></div>';}); s+='</div>'; }
   else if(isMod) s += '<div class="ls">' + det + (m.note ? '<br>' + m.note : '') + '</div>';

@@ -2742,7 +2742,7 @@ function expExcel() {
   var ws1 = XLSX.utils.aoa_to_sheet(r1);
   ws1['!cols'] = [{wch:12},{wch:14},{wch:10},{wch:25},{wch:20}];
   XLSX.utils.book_append_sheet(wb, ws1, 'Bilici Presenti');
-  var r2 = [['TIPO','NUMERO','LOCAZIONE','BANCALI','USCITI','RIMASTI','NOTE','DATA']];
+  var r2 = [['TIPO','NUMERO','LOCAZIONE','BANCALI','USCITI','RIMASTI','NOTE','NOTA STORICO','ID INTERNO','DATA']];
   ST.forEach(function(m) {
     var isTr = m.tipo === 'TRASFERIMENTO';
     var locCol = isTr ? (m.locazioneDa || '-') + ' → ' + (m.locazioneA || '-') : (m.locazione || '');
@@ -2751,11 +2751,31 @@ function expExcel() {
       bancCol,
       m.tipo === 'USCITA' ? (m.bancaliUsciti != null ? m.bancaliUsciti : '') : '',
       m.tipo === 'USCITA' ? (m.bancaliRimasti != null ? m.bancaliRimasti : '') : '',
-      m.note || '', new Date(m.ts).toLocaleString('it-IT')]);
+      m.note || '', m.notaStorico || '', m.caricoId || '', new Date(m.ts).toLocaleString('it-IT')]);
   });
   var ws2 = XLSX.utils.aoa_to_sheet(r2);
-  ws2['!cols'] = [{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:22},{wch:20}];
+  ws2['!cols'] = [{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:22},{wch:22},{wch:20},{wch:20}];
   XLSX.utils.book_append_sheet(wb, ws2, 'Storico Movimenti');
+  var r3 = [['N° BILICO','PLT PIANIFICATI','PLT MAGAZZINO','NOTA PIANIFICAZIONE','DATA CARICO','DATA CREAZIONE','OPERATORE','FONTE','ID INTERNO']];
+  getAllOrdiniMob().forEach(function(p) {
+    var b = BL[p.numero];
+    var pltMag = (b && b.bancali != null) ? b.bancali : '';
+    var df = p.data ? p.data.split('-').reverse().join('/') : '';
+    var crea = p.ts ? new Date(p.ts).toLocaleString('it-IT') : '';
+    var fonte = p.fonte==='prog'?'Oggi':p.fonte==='prog_domani'?'Domani':'Calendario';
+    r3.push([p.numero, p.bancaliProg||'', pltMag, p.nota||'', df, crea, p.operatore||'', fonte, p.id||'']);
+    if (p.partner) {
+      var bB = BL[p.partner.numero];
+      var pltMagB = (bB && bB.bancali != null) ? bB.bancali : '';
+      var dfB = p.partner.data ? p.partner.data.split('-').reverse().join('/') : df;
+      var creaB = p.partner.ts ? new Date(p.partner.ts).toLocaleString('it-IT') : crea;
+      var fonteB = p.partner.fonte==='prog'?'Oggi':p.partner.fonte==='prog_domani'?'Domani':'Calendario';
+      r3.push([p.partner.numero, p.partner.bancaliProg||'', pltMagB, p.partner.nota||'', dfB, creaB, p.partner.operatore||'', fonteB, p.partner.id||'']);
+    }
+  });
+  var ws3 = XLSX.utils.aoa_to_sheet(r3);
+  ws3['!cols'] = [{wch:12},{wch:14},{wch:14},{wch:30},{wch:14},{wch:20},{wch:14},{wch:12},{wch:24}];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Ordini Pianificati');
   var dt = new Date().toLocaleDateString('it-IT').split('/').join('-');
   XLSX.writeFile(wb, 'Bilici_' + dt + '.xlsx');
   tst('Excel esportato!', 'ok');

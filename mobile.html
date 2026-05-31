@@ -369,8 +369,23 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">0</div><div class="lb">🏭 MARCHESI</div></div>
   </div>
 
+  <!-- MISSIONI ATTIVE -->
+  <div class="prog-box" id="miss-mob-box" style="border-color:rgba(163,113,247,.5);display:none;">
+    <div class="prog-hdr" onclick="toggleMissMobBox()" style="background:rgba(163,113,247,.08);">
+      <div class="prog-hdr-left">
+        <span style="font-size:20px;">&#x1F4E6;</span>
+        <div class="prog-hdr-title" style="color:var(--pb);">MISSIONI ATTIVE</div>
+        <div class="prog-badge" id="miss-mob-count" style="background:var(--pb);">0</div>
+      </div>
+      <div class="prog-chevron" id="miss-mob-chev">&#x2304;</div>
+    </div>
+    <div class="prog-body" id="miss-mob-body" style="border-top-color:rgba(163,113,247,.3);">
+      <div id="miss-mob-home-list"><div class="prog-empty">Nessuna missione attiva</div></div>
+    </div>
+  </div>
+
   <!-- USCITE IN PROGRAMMA OGGI -->
-  <div class="prog-box">
+  <div class="prog-box" id="prog-box-oggi" style="display:none;">
     <div class="prog-hdr" onclick="toggleProg()">
       <div class="prog-hdr-left">
         <span style="font-size:20px;">&#x1F6A8;</span>
@@ -403,7 +418,7 @@ body[data-lvl="1"] .prog-add{display:none!important;}
   </div>
 
   <!-- USCITE PROGRAMMATE DOMANI -->
-  <div class="prog-box-domani">
+  <div class="prog-box-domani" id="prog-box-domani" style="display:none;">
     <div class="prog-hdr-domani" onclick="toggleProgDomani()">
       <div class="prog-hdr-left">
         <span style="font-size:20px;">&#x1F4C5;</span>
@@ -482,8 +497,6 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <button class="btn" style="width:100%;background:linear-gradient(135deg,#d29922,#b07a19);color:#111;font-size:18px;font-weight:800;padding:16px;margin-bottom:0;" onclick="goP('carrellista')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:6px;"><line x1="1" y1="14" x2="10" y2="14"/><line x1="1" y1="17" x2="10" y2="17"/><line x1="10" y1="5" x2="10" y2="20"/><rect x="10" y="11" width="8" height="9" rx="1"/><line x1="10" y1="7" x2="18" y2="7"/><line x1="18" y1="7" x2="18" y2="11"/><rect x="18" y="15" width="4" height="5" rx="1"/><circle cx="12" cy="21.5" r="1.5"/><circle cx="20" cy="21.5" r="1.5"/></svg>CARRELLISTA</button>
     <div id="badge-carrellista" style="position:absolute;top:-5px;right:-5px;background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px;display:none;">0</div>
   </div>
-  <div class="stl">In Magazzino</div>
-  <button class="btn bbl" onclick="goP('magazzino')"><span class="bi">&#x1F69B;</span>VEDI MAGAZZINO (<span id="cnt-mag">0</span> bilici)</button>
   <div class="stl">Gestione</div>
   <button class="btn bpu" id="btn-utenti" onclick="apriUtenti()" style="display:none;"><span class="bi">&#x1F465;</span>GESTIONE UTENTI</button>
   <button class="btn bog" onclick="apriStor()"><span class="bi">&#x1F4CB;</span>STORICO MOVIMENTI</button>
@@ -617,9 +630,11 @@ body[data-lvl="1"] .prog-add{display:none!important;}
   <div class="car-tab-bar">
     <button id="tab-stoccare" class="btn bog" onclick="selCarrellistaTab('stoccare')">&#x1F4E6; DA STOCCARE</button>
     <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')">&#x2705; DA PREPARARE</button>
+    <button id="tab-car-missioni" class="btn bgh" onclick="selCarrellistaTab('missioni')" style="position:relative;">&#x1F69B; PICKING / CARICO SMEZZI<span id="badge-car-miss-mob" style="display:none;position:absolute;top:6px;right:8px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;">0</span></button>
   </div>
   <div id="car-stoccare-content"><div id="car-stoccare-list"></div></div>
   <div id="car-preparare-content" style="display:none;"><div id="car-preparare-list"></div></div>
+  <div id="car-missioni-content" style="display:none;"><div id="car-missioni-list"></div></div>
 </div>
 
 
@@ -681,6 +696,20 @@ body[data-lvl="1"] .prog-add{display:none!important;}
       </div>
     </div>
     <div id="stor-l"></div>
+    <div style="height:14px"></div>
+  </div>
+</div>
+
+<!-- MODAL MISSIONI -->
+<div class="mo top" id="mo-miss-mob">
+  <div class="mdl full">
+    <div style="height:10px"></div>
+    <div class="mha"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="mtt" style="margin-bottom:0;color:var(--pb);">&#x1F4E6; Missioni</div>
+      <button onclick="chiM('mo-miss-mob')" style="background:none;border:1px solid var(--bd);color:var(--tx2);width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#x2715;</button>
+    </div>
+    <div id="stor-content"></div>
     <div style="height:14px"></div>
   </div>
 </div>
@@ -908,6 +937,10 @@ window.onload = function() {
       MISSIONI = [];
       s.forEach(function(d) { MISSIONI.push(Object.assign({id: d.id}, d.data())); });
       aggiornaBadgeMissioniMob();
+      aggiornaBadgeCarrellista();
+      renderMissMobBox();
+      var _cp = document.querySelector('.page.active');
+      if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
     });
     fdb.collection('storico').orderBy('ts', 'desc').onSnapshot(function(s) {
       ST = [];
@@ -996,6 +1029,18 @@ function doLogin() {
     applicaLivello(usr.livello);
     tst('Benvenuto ' + usr.username + '!', 'ok');
     checkFotoReminderMob();
+    // Auto-export Excel ogni 3 giorni per Leo
+    if (usr.username.toLowerCase() === 'leo') {
+      var _lastExp = parseInt(localStorage.getItem('last_auto_export') || '0');
+      var _treGiorni = 3 * 24 * 60 * 60 * 1000;
+      if (Date.now() - _lastExp >= _treGiorni) {
+        setTimeout(function() {
+          expExcel();
+          localStorage.setItem('last_auto_export', String(Date.now()));
+          tst('&#x1F4CA; Backup automatico Excel eseguito', 'ok');
+        }, 2500);
+      }
+    }
   });
 }
 
@@ -1693,6 +1738,8 @@ function contaOrdiniUnivoci(arr) {
   return n;
 }
 function renderProg() {
+  var box = document.getElementById('prog-box-oggi');
+  if (box) box.style.display = PROG.length ? 'block' : 'none';
   var el = document.getElementById('prog-list');
   var badge = document.getElementById('prog-count');
   badge.textContent = contaOrdiniUnivoci(PROG);
@@ -2202,6 +2249,8 @@ function modificaNotaProgDomani(num) {
 }
 
 function renderProgDomani() {
+  var box = document.getElementById('prog-box-domani');
+  if (box) box.style.display = PROG_DOMANI.length ? 'block' : 'none';
   var el = document.getElementById('prog-domani-list');
   var badge = document.getElementById('prog-domani-count');
   if (!el || !badge) { return; }
@@ -2856,6 +2905,16 @@ function aggiornaBadgeMissioniMob() {
 }
 
 var _missFDal = '', _missFAl = '', _missFTipo = '', _missFStato = '';
+var _editMissioneIdMob = null;
+
+function toggleMissCardMob(cid) {
+  var body = document.getElementById('miss-body-' + cid);
+  var chev = document.getElementById('miss-chev-' + cid);
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.innerHTML = open ? '&#x2304;' : '&#x2303;';
+}
 
 function apriMissioniMob(fDal, fAl, fTipo, fStato) {
   // conserva o aggiorna i filtri
@@ -2873,7 +2932,7 @@ function apriMissioniMob(fDal, fAl, fTipo, fStato) {
   // header
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
   html += '<strong style="font-size:17px;color:var(--pb);">&#x1F4E6; Missioni</strong>';
-  html += '<button onclick="apriCreaMissioneMob()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);border-radius:var(--rs);color:var(--pb);padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;">+ Nuova</button>';
+  html += '<button onclick="_editMissioneIdMob=null;apriCreaMissioneMob()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);border-radius:var(--rs);color:var(--pb);padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;">+ Nuova</button>';
   html += '</div>';
   // filtri
   html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;">';
@@ -2909,26 +2968,65 @@ function apriMissioniMob(fDal, fAl, fTipo, fStato) {
       else if (m.stato==='completata') { statoCol='#00bfff';    statoLbl='&#x1F7E2; Completata'; }
       else if (m.stato==='in_corso')   { statoCol='var(--ob)';  statoLbl='&#x1F7E1; In corso'; }
       else                             { statoCol='var(--tx2)'; statoLbl='&#x23F3; Attesa'; }
-      html += '<div style="background:var(--sf);border:1px solid rgba(163,113,247,.3);border-radius:10px;padding:12px;margin-bottom:10px;">';
-      html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">';
+      var cid = m.id.replace(/[^a-zA-Z0-9_-]/g,'_');
+      html += '<div style="background:var(--sf);border:1px solid rgba(163,113,247,.3);border-radius:10px;margin-bottom:10px;overflow:hidden;">';
+      // header cliccabile
+      html += '<div onclick="toggleMissCardMob(\''+cid+'\')" style="padding:12px;cursor:pointer;user-select:none;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
       html += '<strong style="color:var(--pb);">'+lbl+'</strong>';
+      html += '<div style="display:flex;align-items:center;gap:8px;">';
       html += '<span style="font-size:12px;color:var(--tx2);">'+df+'</span>';
+      html += '<span id="miss-chev-'+cid+'" style="font-size:16px;color:var(--tx2);line-height:1;">&#x2304;</span>';
+      html += '</div>';
       html += '</div>';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
       html += '<span style="font-size:12px;color:var(--tx2);">'+conf+'/'+tot+' bilici · '+plt+' PLT</span>';
       html += '<span style="font-size:11px;font-weight:700;color:'+statoCol+';">'+statoLbl+'</span>';
       html += '</div>';
-      html += '<div style="background:var(--sf2);border-radius:3px;height:5px;margin-bottom:8px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>';
+      html += '<div style="background:var(--sf2);border-radius:3px;height:5px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>';
+      html += '</div>';
+      // body collassabile (default chiuso)
+      html += '<div id="miss-body-'+cid+'" style="display:none;padding:0 12px 12px 12px;border-top:1px solid rgba(163,113,247,.2);">';
+      html += '<div style="height:8px;"></div>';
+      // lista bilici con flag
+      if (tot > 0) {
+        html += '<div style="margin-bottom:8px;">';
+        (m.bilici||[]).forEach(function(b, i) {
+          var bPlt = b.confermato ? (b.bancaliConfermati||b.bancaliProg||0) : (b.bancaliProg||0);
+          html += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(48,54,61,.6);">';
+          html += '<span style="font-weight:700;font-size:13px;flex:1;">#'+b.numero+'</span>';
+          html += '<span style="font-size:11px;color:var(--tx2);">'+bPlt+' PLT</span>';
+          if (b.confermato) {
+            html += '<span style="font-size:11px;color:var(--gb);">&#x2705;</span>';
+            if (m.stato !== 'caricata') {
+              html += '<button onclick="togliFlgBilicoMob(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:1px 7px;font-size:11px;cursor:pointer;">&#x2716;</button>';
+            }
+          } else {
+            html += '<span style="font-size:11px;color:var(--og);">&#x23F3;</span>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
       if (m.operatoreChiusura) {
         html += '<div style="font-size:11px;color:var(--tx2);margin-bottom:6px;">&#x1F464; Chiusa da: <strong>'+m.operatoreChiusura+'</strong></div>';
       }
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+      if (conf > 0 && m.stato !== 'caricata') {
+        html += '<button onclick="togliTuttiFlgMob(\''+m.id+'\')" style="background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 10px;font-size:12px;cursor:pointer;">&#x1F504; Togli tutti</button>';
+      }
+      if (m.stato !== 'caricata') {
+        html += '<button onclick="apriModificaMissioneMob(\''+m.id+'\')" style="background:none;border:1px solid var(--bb);border-radius:var(--rs);color:var(--bb);padding:3px 10px;font-size:12px;cursor:pointer;">&#x270F;&#xFE0F; Modifica</button>';
+      }
       html += '<button onclick="eliminaMissioneMob(\''+m.id+'\')" style="background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 10px;font-size:12px;cursor:pointer;">&#x1F5D1; Elimina</button>';
       html += '</div>';
+      html += '</div>'; // fine body
+      html += '</div>'; // fine card
     });
   }
   html += '</div>';
   var el = document.getElementById('stor-content');
-  if (el) { el.innerHTML = html; apriStor(); }
+  if (el) { el.innerHTML = html; document.getElementById('mo-miss-mob').classList.add('open'); }
 }
 
 function apriCreaMissioneMob() {
@@ -2937,7 +3035,7 @@ function apriCreaMissioneMob() {
   var opzioni = Object.keys(locs).sort().map(function(l){ return '<option value="'+l+'">'+l+'</option>'; }).join('');
   var oggi = new Date().toISOString().slice(0,10);
   var html = '<div style="padding:16px;">' +
-    '<strong style="font-size:16px;color:var(--pb);">&#x1F4E6; Nuova Missione</strong>' +
+    '<strong id="mob-miss-form-title" style="font-size:16px;color:var(--pb);">&#x1F4E6; Nuova Missione</strong>' +
     '<div style="margin-top:12px;"><div class="fl" style="margin-bottom:4px;">Tipo</div>' +
     '<select id="mob-miss-tipo" class="fi" onchange="onChangeTipoMob()">' +
     '<option value="locazione">&#x1F4CD; Da Locazione</option>' +
@@ -2955,7 +3053,7 @@ function apriCreaMissioneMob() {
     '<div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Data carico</div><input class="fi" id="mob-miss-data" type="date" value="'+oggi+'"></div>' +
     '<div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Nota</div><input class="fi" id="mob-miss-nota" type="text" placeholder="Opzionale..."></div>' +
     '<div style="margin-top:12px;display:flex;gap:8px;">' +
-    '<button onclick="creaMissioneMob()" style="flex:1;background:var(--pb);border:none;border-radius:var(--rs);color:#fff;padding:12px;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">&#x2705; CREA</button>' +
+    '<button id="mob-miss-form-btn" onclick="creaMissioneMob()" style="flex:1;background:var(--pb);border:none;border-radius:var(--rs);color:#fff;padding:12px;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">&#x2705; CREA</button>' +
     '<button onclick="apriMissioniMob()" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);padding:12px 16px;cursor:pointer;">&#x2190; Indietro</button>' +
     '</div></div>';
   var el = document.getElementById('stor-content');
@@ -3003,6 +3101,10 @@ function aggBilicoMob() {
 }
 function creaMissioneMob() {
   var tipo = document.getElementById('mob-miss-tipo').value;
+  // Auto-aggiungi il bilico se c'è ancora qualcosa nel campo numero non confermato col "+"
+  if (tipo === 'manuale' && String(document.getElementById('mob-miss-num').value||'').trim()) {
+    aggBilicoMob();
+  }
   var data = document.getElementById('mob-miss-data').value;
   var nota = (document.getElementById('mob-miss-nota').value||'').trim();
   if (!data) { tst('Inserisci la data','er'); return; }
@@ -3021,21 +3123,98 @@ function creaMissioneMob() {
   if (!bilici.length) { tst('Nessun bilico selezionato','er'); return; }
   var loc2 = tipo==='locazione' ? (document.getElementById('mob-miss-loc').value||'') : '';
   if (UC && fdb) {
-    fdb.collection('missioni').add({tipo:tipo, locazione:loc2, bilici:bilici, data:data, nota:nota, stato:'attesa', creatore:CURR_USER?CURR_USER.username:'', ts:Date.now()}).then(function(){
-      tst('Missione creata — '+bilici.length+' bilici','ok');
-      apriMissioniMob();
-    }).catch(function(e){tst('Errore: '+e.message,'er');});
+    if (_editMissioneIdMob) {
+      // modalità modifica
+      var editId = _editMissioneIdMob;
+      fdb.collection('missioni').doc(editId).update({tipo:tipo, locazione:loc2, bilici:bilici, data:data, nota:nota}).then(function(){
+        tst('Missione aggiornata — '+bilici.length+' bilici','ok');
+        _editMissioneIdMob = null;
+        apriMissioniMob();
+      }).catch(function(e){tst('Errore: '+e.message,'er');});
+    } else {
+      // modalità creazione
+      fdb.collection('missioni').add({tipo:tipo, locazione:loc2, bilici:bilici, data:data, nota:nota, stato:'attesa', creatore:CURR_USER?CURR_USER.username:'', ts:Date.now()}).then(function(){
+        tst('Missione creata — '+bilici.length+' bilici','ok');
+        apriMissioniMob();
+      }).catch(function(e){tst('Errore: '+e.message,'er');});
+    }
   } else { tst('Connessione cloud necessaria','er'); }
 }
 function eliminaMissioneMob(id) {
   var m = MISSIONI.find(function(x){ return x.id === id; });
   if (!m) return;
-  if (m.stato !== 'attesa') {
-    tst('⚠️ Eliminazione non consentita — la missione è già in corso o completata', 'er');
+  if (m.stato === 'caricata') {
+    tst('⚠️ Impossibile eliminare — la missione è già caricata', 'er');
     return;
   }
-  if (!confirm('Eliminare questa missione in attesa?')) return;
-  if (UC && fdb) fdb.collection('missioni').doc(id).delete().then(function(){tst('Eliminata','ok');apriMissioniMob();});
+  var statoLbl = m.stato === 'in_corso' ? 'in corso' : m.stato === 'completata' ? 'completata' : 'in attesa';
+  if (!confirm('Eliminare questa missione (' + statoLbl + ')?\nL\'operazione non è reversibile.')) return;
+  if (UC && fdb) fdb.collection('missioni').doc(id).delete().then(function(){tst('Missione eliminata','ok');apriMissioniMob();});
+}
+function apriModificaMissioneMob(id) {
+  var m = MISSIONI.find(function(x){ return x.id === id; });
+  if (!m) return;
+  _editMissioneIdMob = id;
+  apriCreaMissioneMob();
+  // titolo e bottone
+  var titleEl = document.getElementById('mob-miss-form-title');
+  if (titleEl) titleEl.innerHTML = '&#x270F;&#xFE0F; Modifica Missione';
+  var btnEl = document.getElementById('mob-miss-form-btn');
+  if (btnEl) btnEl.innerHTML = '&#x270F;&#xFE0F; SALVA';
+  // tipo
+  var tipoEl = document.getElementById('mob-miss-tipo');
+  if (tipoEl) { tipoEl.value = m.tipo; onChangeTipoMob(); }
+  // locazione
+  if (m.tipo === 'locazione') {
+    var locEl = document.getElementById('mob-miss-loc');
+    if (locEl) { locEl.value = m.locazione || ''; populaLocMob(); }
+  }
+  // bilici manuali
+  if (m.tipo === 'manuale') {
+    _missBiliciManMob = (m.bilici || []).map(function(b) {
+      return { numero: b.numero, plt: b.bancaliProg || 0 };
+    });
+    var listEl = document.getElementById('mob-miss-man-list');
+    if (listEl) listEl.innerHTML = _missBiliciManMob.map(function(x, i) {
+      return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--bd);">' +
+        '<strong style="flex:1;">#' + x.numero + '</strong><span style="color:var(--tx2);">' + x.plt + ' PLT</span>' +
+        '<button onclick="_missBiliciManMob.splice(' + i + ',1);aggBilicoMob.__trigger__()" style="background:none;border:none;color:var(--rb);cursor:pointer;">&#x2715;</button></div>';
+    }).join('');
+  }
+  // data
+  var dataEl = document.getElementById('mob-miss-data');
+  if (dataEl && m.data) dataEl.value = m.data;
+  // nota
+  var notaEl = document.getElementById('mob-miss-nota');
+  if (notaEl) notaEl.value = m.nota || '';
+}
+function togliFlgBilicoMob(missioneId, bilIdx) {
+  if (!UC || !fdb) { tst('Connessione cloud necessaria','er'); return; }
+  var m = MISSIONI.find(function(x){ return x.id === missioneId; });
+  if (!m || m.stato === 'caricata') return;
+  var newBilici = (m.bilici||[]).map(function(b, i) {
+    return i === bilIdx ? Object.assign({}, b, {confermato:false, bancaliConfermati:0}) : b;
+  });
+  var confCount = newBilici.filter(function(b){return b.confermato;}).length;
+  var nuovoStato = (confCount === newBilici.length && newBilici.length > 0) ? 'completata'
+    : confCount > 0 ? 'in_corso'
+    : (m.stato === 'attesa' ? 'attesa' : 'in_corso');
+  fdb.collection('missioni').doc(missioneId).update({bilici:newBilici, stato:nuovoStato}).then(function(){
+    tst('Flag rimosso','ok');
+    apriMissioniMob();
+  }).catch(function(e){tst('Errore: '+e.message,'er');});
+}
+function togliTuttiFlgMob(missioneId) {
+  if (!UC || !fdb) { tst('Connessione cloud necessaria','er'); return; }
+  var m = MISSIONI.find(function(x){ return x.id === missioneId; });
+  if (!m || m.stato === 'caricata') return;
+  if (!confirm('Rimuovere tutti i flag di conferma dalla missione?')) return;
+  var newBilici = (m.bilici||[]).map(function(b){ return Object.assign({}, b, {confermato:false, bancaliConfermati:0}); });
+  var nuovoStato = m.stato === 'attesa' ? 'attesa' : 'in_corso';
+  fdb.collection('missioni').doc(missioneId).update({bilici:newBilici, stato:nuovoStato}).then(function(){
+    tst('Tutti i flag rimossi','ok');
+    apriMissioniMob();
+  }).catch(function(e){tst('Errore: '+e.message,'er');});
 }
 // ══════════════════════════════════════════════
 
@@ -3338,14 +3517,17 @@ function selCarrellistaTab(tab) {
   carrellistaTab = tab;
   document.getElementById('car-stoccare-content').style.display = tab === 'stoccare' ? 'block' : 'none';
   document.getElementById('car-preparare-content').style.display = tab === 'preparare' ? 'block' : 'none';
+  document.getElementById('car-missioni-content').style.display = tab === 'missioni' ? 'block' : 'none';
   document.getElementById('tab-stoccare').className = tab === 'stoccare' ? 'btn bog' : 'btn bgh';
   document.getElementById('tab-preparare').className = tab === 'preparare' ? 'btn bog' : 'btn bgh';
+  document.getElementById('tab-car-missioni').className = tab === 'missioni' ? 'btn bog' : 'btn bgh';
   renderCarrellista();
 }
 
 function renderCarrellista() {
   renderCarrellistaStoccare();
   renderCarrellistaPreparare();
+  renderCarrellistaMissioniMob();
   aggiornaBadgeCarrellista();
 }
 
@@ -3385,14 +3567,78 @@ function renderCarrellistaPreparare() {
   }).join('');
 }
 
+function renderCarrellistaMissioniMob() {
+  var el = document.getElementById('car-missioni-list');
+  if (!el) return;
+  var lista = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; });
+  if (!lista.length) { el.innerHTML = '<div class="prog-empty">Nessuna missione attiva</div>'; return; }
+  el.innerHTML = lista.map(function(m) {
+    var conf = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot = (m.bilici||[]).length;
+    var pltConf = (m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
+    var pltTot  = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var statoLbl = m.stato==='completata' ? '&#x1F7E2; Completata' : (m.stato==='in_corso' ? '&#x1F7E1; In corso' : '&#x23F3; Attesa');
+    var statoCol = m.stato==='completata' ? '#00bfff' : (m.stato==='in_corso' ? 'var(--ob)' : 'var(--tx2)');
+    var tipoLbl = m.tipo === 'locazione'
+      ? '&#x1F4CD; CARICO SMEZZI' + (m.locazione ? ' <span style="font-weight:400;font-size:13px;color:var(--tx2);">— '+m.locazione+'</span>' : '')
+      : '&#x270B; Picking Manuale';
+    return '<div class="prog-card" style="padding:12px 14px;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">' +
+      '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;">'+tipoLbl+'</span>' +
+      '<span style="font-size:12px;color:'+statoCol+';">'+statoLbl+'</span>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--tx2);">&#x1F4C5; '+(m.data||'—')+'&nbsp;&middot;&nbsp;&#x1F69B; '+conf+'/'+tot+' bilici&nbsp;&middot;&nbsp;<span style="color:var(--pb);">'+pltConf+'</span><span style="color:var(--tx3);">/'+pltTot+'</span> PLT</div>' +
+      (m.nota ? '<div style="font-size:11px;color:var(--tx2);margin-top:3px;">&#x1F4DD; '+m.nota+'</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function renderMissMobBox() {
+  var box = document.getElementById('miss-mob-box');
+  var el  = document.getElementById('miss-mob-home-list');
+  var cnt = document.getElementById('miss-mob-count');
+  if (!el || !box) return;
+  var attive = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; });
+  box.style.display = attive.length ? 'block' : 'none';
+  if (cnt) cnt.textContent = attive.length;
+  if (!attive.length) { el.innerHTML = '<div class="prog-empty">Nessuna missione attiva</div>'; return; }
+  attive.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+  el.innerHTML = attive.map(function(m) {
+    var conf   = (m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot    = (m.bilici||[]).length;
+    var pltTot = (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var lbl    = m.tipo==='locazione' ? ('&#x1F4CD; '+(m.locazione||'')) : '&#x270B; Manuale';
+    var statoCol = m.stato==='completata' ? '#00bfff' : (m.stato==='in_corso' ? 'var(--ob)' : 'var(--tx2)');
+    var statoIco = m.stato==='completata' ? '&#x1F7E2;' : (m.stato==='in_corso' ? '&#x1F7E1;' : '&#x23F3;');
+    return '<div style="padding:9px 14px;border-bottom:1px solid rgba(163,113,247,.15);">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+      '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:900;color:var(--pb);">'+lbl+'</span>' +
+      '<span style="font-size:13px;color:'+statoCol+';">'+statoIco+'</span>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--tx2);margin-top:2px;">&#x1F4C5; '+(m.data||'—')+'&nbsp;&middot;&nbsp;&#x1F69B; '+conf+'/'+tot+'&nbsp;&middot;&nbsp;&#x1F4E6; '+pltTot+' PLT</div>' +
+      '</div>';
+  }).join('');
+}
+
+function toggleMissMobBox() {
+  var body = document.getElementById('miss-mob-body');
+  var chev = document.getElementById('miss-mob-chev');
+  var isOpen = body.classList.contains('open');
+  if (isOpen) { body.classList.remove('open'); chev.classList.remove('open'); }
+  else { body.classList.add('open'); chev.classList.add('open'); }
+}
+
 function aggiornaBadgeCarrellista() {
   var nStoccare = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; }).length;
   var nPreparare = PROG.filter(function(p) { return p.id && !PROG_PREPARATO[p.id]; }).length;
-  var tot = nStoccare + nPreparare;
+  var nMissioni = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; }).length;
+  var tot = nStoccare + nPreparare + nMissioni;
   var badge = document.getElementById('badge-carrellista');
   if (!badge) return;
   badge.textContent = tot;
   badge.style.display = tot > 0 ? 'flex' : 'none';
+  var bm = document.getElementById('badge-car-miss-mob');
+  if (bm) { bm.textContent = nMissioni; bm.style.display = nMissioni > 0 ? 'inline-block' : 'none'; }
 }
 
 function segnaPreparato(docId, giaSegnato) {

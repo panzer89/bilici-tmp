@@ -331,9 +331,9 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
           <span class="lbl">Consultazione<br>Magazzino</span>
         </button>
         <div class="menu-btn-wrap">
-          <button class="menu-btn" style="flex:1;background:rgba(163,113,247,.12);border:1px solid rgba(163,113,247,.35);color:var(--pb);" onclick="goPage('missioni','MISSIONI')">
-            <span class="ic">&#x1F4E6;</span>
-            <span class="lbl">Missioni</span>
+          <button class="menu-btn" style="flex:1;background:rgba(163,113,247,.12);border:1px solid rgba(163,113,247,.35);color:var(--pb);" onclick="goPage('missioni','CARICO SMEZZI')">
+            <span class="ic"><svg width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="1" y="9" width="9" height="7" rx="1.5"/><line x1="5" y1="9" x2="5" y2="6"/><line x1="2" y1="7" x2="8" y2="7"/><line x1="10" y1="12" x2="23" y2="12"/><line x1="10" y1="15" x2="23" y2="15"/><line x1="23" y1="12" x2="23" y2="15"/><circle cx="2.5" cy="19" r="2"/><circle cx="8.5" cy="19" r="2"/><circle cx="23" cy="18" r="1.8"/></svg></span>
+            <span class="lbl">CARICO SMEZZI</span>
           </button>
           <div class="prog-badge-home" id="badge-missioni" style="background:var(--pb);display:none;">0</div>
         </div>
@@ -538,22 +538,37 @@ body[data-lvl="1"] .add-prog-btn{display:none!important;}
       <div id="mag-all"></div>
     </div>
 
-    <!-- CARRELLISTA -->
+    <!-- CARRELLISTA HUB -->
     <div class="page" id="page-carrellista">
       <div class="car-tab-bar">
-        <button id="tab-stoccare" class="btn bog" onclick="selCarrellistaTab('stoccare')"><span class="btn-ic">&#x1F4E6;</span>DA STOCCARE</button>
-        <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')"><span class="btn-ic">&#x2705;</span>DA PREPARARE</button>
-        <button id="tab-car-missioni" class="btn bgh" onclick="selCarrellistaTab('missioni')" style="position:relative;"><span class="btn-ic">&#x1F69B;</span>MISSIONI<span id="badge-car-miss" style="display:none;position:absolute;top:8px;right:8px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;">0</span></button>
+        <button class="btn bog" onclick="goPage('car-stoccare','DA STOCCARE')" style="position:relative;">
+          <span class="btn-ic">&#x1F4E6;</span>DA STOCCARE
+          <span id="badge-car-stoccare" style="display:none;position:absolute;top:8px;right:8px;background:rgba(0,0,0,.25);color:#111;border-radius:20px;padding:1px 9px;font-size:12px;font-weight:900;">0</span>
+        </button>
+        <button class="btn bgh" onclick="goPage('car-preparare','DA PREPARARE')" style="position:relative;">
+          <span class="btn-ic">&#x2705;</span>DA PREPARARE
+          <span id="badge-car-preparare" style="display:none;position:absolute;top:8px;right:8px;background:var(--gn);color:#fff;border-radius:20px;padding:1px 9px;font-size:12px;font-weight:900;">0</span>
+        </button>
+        <button class="btn bgh" onclick="goPage('car-missioni','PICKING')" style="position:relative;">
+          <span class="btn-ic">&#x1F69B;</span>PICKING
+          <span id="badge-car-miss" style="display:none;position:absolute;top:8px;right:8px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 9px;font-size:12px;font-weight:900;">0</span>
+        </button>
       </div>
-      <div id="car-stoccare-content">
-        <div id="car-stoccare-list"><div class="prog-empty">Caricamento...</div></div>
-      </div>
-      <div id="car-preparare-content" style="display:none;">
-        <div id="car-preparare-list"><div class="prog-empty">Caricamento...</div></div>
-      </div>
-      <div id="car-missioni-content" style="display:none;">
-        <div id="car-missioni-list"><div class="prog-empty">Nessuna missione attiva</div></div>
-      </div>
+    </div>
+
+    <!-- CAR STOCCARE -->
+    <div class="page" id="page-car-stoccare">
+      <div id="car-stoccare-list"><div class="prog-empty">Caricamento...</div></div>
+    </div>
+
+    <!-- CAR PREPARARE -->
+    <div class="page" id="page-car-preparare">
+      <div id="car-preparare-list"><div class="prog-empty">Caricamento...</div></div>
+    </div>
+
+    <!-- CAR MISSIONI -->
+    <div class="page" id="page-car-missioni">
+      <div id="car-missioni-list"><div class="prog-empty">Nessuna missione attiva</div></div>
     </div>
 
     <!-- LISTA MISSIONI -->
@@ -804,6 +819,9 @@ function goPage(pageId, title) {
   if (pageId === 'trasferimento') { aggiornaLogTransfer(); }
   if (pageId === 'magazzino') { renderMagAll(); }
   if (pageId === 'carrellista') { renderCarrellista(); }
+  if (pageId === 'car-stoccare') { renderCarrellistaStoccare(); }
+  if (pageId === 'car-preparare') { renderCarrellistaPreparare(); }
+  if (pageId === 'car-missioni') { renderCarrellistaMissioni(); }
   if (pageId === 'missioni') { renderMissioniOp(); }
   if (pageId === 'missione-detail') { renderDettaglioMissione(); }
 }
@@ -817,6 +835,14 @@ function goBack() {
     document.getElementById('back-btn').style.display = 'none';
   } else if (prev === 'entrata') {
     document.getElementById('hdr-title').textContent = 'ENTRATA MERCI';
+  } else if (prev === 'carrellista') {
+    document.getElementById('hdr-title').textContent = 'CARRELLISTA';
+  } else if (prev === 'car-stoccare') {
+    document.getElementById('hdr-title').textContent = 'DA STOCCARE';
+  } else if (prev === 'car-preparare') {
+    document.getElementById('hdr-title').textContent = 'DA PREPARARE';
+  } else if (prev === 'car-missioni') {
+    document.getElementById('hdr-title').textContent = 'PICKING';
   }
 }
 function goEntrata(cat) {
@@ -877,7 +903,7 @@ window.onload = function() {
       aggiornaUI();
       aggiornaBadgeCarrellista();
       var cur = pageStack[pageStack.length-1];
-      if (cur === 'carrellista') renderCarrellista();
+      if (cur === 'carrellista' || cur === 'car-stoccare' || cur === 'car-preparare' || cur === 'car-missioni') renderCarrellista();
     });
     fdb.collection('storico').orderBy('ts','desc').limit(50).onSnapshot(function(s) {
       ST = []; s.forEach(function(d) { ST.push(Object.assign({id: d.id}, d.data())); });
@@ -889,14 +915,14 @@ window.onload = function() {
       aggiornaBadgeUscita();
       aggiornaBadgeCarrellista();
       var cur = pageStack[pageStack.length-1];
-      if (cur === 'carrellista') renderCarrellista();
+      if (cur === 'carrellista' || cur === 'car-stoccare' || cur === 'car-preparare' || cur === 'car-missioni') renderCarrellista();
     });
     fdb.collection('prog_preparato').onSnapshot(function(s) {
       PROG_PREPARATO = {};
       s.forEach(function(d) { PROG_PREPARATO[d.id] = true; });
       aggiornaBadgeCarrellista();
       var cur = pageStack[pageStack.length-1];
-      if (cur === 'carrellista') renderCarrellista();
+      if (cur === 'carrellista' || cur === 'car-stoccare' || cur === 'car-preparare' || cur === 'car-missioni') renderCarrellista();
     });
     fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s) {
       PROG_DOMANI = []; s.forEach(function(d) { PROG_DOMANI.push(Object.assign({id: d.id}, d.data())); });
@@ -1002,7 +1028,7 @@ function aggiornaUI() {
   if (cur === 'trasferimento') { aggiornaLogTransfer(); }
   if (cur === 'entrata-form') { aggiornaLogEntrate(currentCat); }
   if (cur === 'magazzino') { renderMagAll(); cercaMag(); }
-  if (cur === 'carrellista') { renderCarrellista(); }
+  if (cur === 'carrellista' || cur === 'car-stoccare' || cur === 'car-preparare' || cur === 'car-missioni') { renderCarrellista(); }
 }
 function caricaCredenziali() {
   try {
@@ -1954,18 +1980,6 @@ function aggiornaBadgeUscita() {
 // ═══════════════════════════════════════
 // ═══ CARRELLISTA ═══════════════════════
 // ═══════════════════════════════════════
-var carrellistaTab = 'stoccare';
-
-function selCarrellistaTab(tab) {
-  carrellistaTab = tab;
-  document.getElementById('car-stoccare-content').style.display = tab === 'stoccare' ? 'block' : 'none';
-  document.getElementById('car-preparare-content').style.display = tab === 'preparare' ? 'block' : 'none';
-  document.getElementById('car-missioni-content').style.display = tab === 'missioni' ? 'block' : 'none';
-  document.getElementById('tab-stoccare').className = tab === 'stoccare' ? 'btn bog' : 'btn bgh';
-  document.getElementById('tab-preparare').className = tab === 'preparare' ? 'btn bog' : 'btn bgh';
-  document.getElementById('tab-car-missioni').className = tab === 'missioni' ? 'btn bog' : 'btn bgh';
-  renderCarrellista();
-}
 
 function renderCarrellista() {
   renderCarrellistaStoccare();
@@ -2052,8 +2066,12 @@ function aggiornaBadgeCarrellista() {
   var tot = nStoccare + nPreparare + nMissioni;
   var badge = document.getElementById('badge-carrellista');
   if (badge) { badge.textContent = tot; badge.classList.toggle('visible', tot > 0); }
-  var badgeMiss = document.getElementById('badge-car-miss');
-  if (badgeMiss) { badgeMiss.textContent = nMissioni; badgeMiss.style.display = nMissioni > 0 ? 'block' : 'none'; }
+  var bs = document.getElementById('badge-car-stoccare');
+  if (bs) { bs.textContent = nStoccare; bs.style.display = nStoccare > 0 ? 'inline-block' : 'none'; }
+  var bp = document.getElementById('badge-car-preparare');
+  if (bp) { bp.textContent = nPreparare; bp.style.display = nPreparare > 0 ? 'inline-block' : 'none'; }
+  var bm = document.getElementById('badge-car-miss');
+  if (bm) { bm.textContent = nMissioni; bm.style.display = nMissioni > 0 ? 'inline-block' : 'none'; }
 }
 
 function segnaPreparato(docId, giaSegnato) {
@@ -2170,7 +2188,7 @@ function compressaFoto(file, callback) {
 function aggiornaBadgeMissioni() {
   var el = document.getElementById('badge-missioni');
   if (!el) return;
-  var n = MISSIONI.length; // attesa + in_corso + completata (listener esclude già caricata)
+  var n = MISSIONI.filter(function(m){ return m.tipo === 'locazione'; }).length;
   el.textContent = n;
   el.style.display = n > 0 ? 'flex' : 'none';
 }
@@ -2178,9 +2196,10 @@ function aggiornaBadgeMissioni() {
 function renderMissioniOp() {
   var el = document.getElementById('missioni-op-list');
   if (!el) return;
-  if (!MISSIONI.length) { el.innerHTML = '<div class="prog-empty" style="padding:24px;text-align:center;color:var(--tx2);">Nessuna missione attiva</div>'; return; }
+  var lista = MISSIONI.filter(function(m){ return m.tipo === 'locazione'; });
+  if (!lista.length) { el.innerHTML = '<div class="prog-empty" style="padding:24px;text-align:center;color:var(--tx2);">Nessuna missione di tipo locazione attiva</div>'; return; }
   var html = '';
-  MISSIONI.forEach(function(m) {
+  lista.forEach(function(m) {
     var confermati = (m.bilici||[]).filter(function(b){ return b.confermato; }).length;
     var tot = (m.bilici||[]).length;
     var pltTot = (m.bilici||[]).reduce(function(s,b){ return s+(b.bancaliProg||0); }, 0);

@@ -567,7 +567,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
               </div>
               <div>
                 <div class="stor-fi-label">Data Carico</div>
-                <input class="stor-fi" id="to-fd" type="date" oninput="renderTuttiOrdini()">
+                <input class="stor-fi" id="to-fd" type="date" oninput="renderTuttiOrdini()" onclick="try{this.showPicker()}catch(e){}">
               </div>
               <div style="display:flex;align-items:flex-end;gap:6px;">
                 <button onclick="document.getElementById('to-fn').value='';document.getElementById('to-fd').value='';renderTuttiOrdini();" style="height:32px;padding:0 10px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);font-size:11px;cursor:pointer;">&#x21BA; Reset</button>
@@ -615,8 +615,8 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 <div class="page" id="page-carrellista">
   <div class="card" style="padding:16px;">
     <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <button id="tab-stoccare" class="btn tog" onclick="selCarrellistaTab('stoccare')" style="flex:1;padding:10px;">&#x1F4E6; DA STOCCARE</button>
-      <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')" style="flex:1;padding:10px;">&#x2705; DA PREPARARE</button>
+      <button id="tab-stoccare" class="btn tog" onclick="selCarrellistaTab('stoccare')" style="flex:1;padding:10px;position:relative;">&#x1F4E6; DA STOCCARE<span id="badge-tab-stoc-desk" style="display:none;position:absolute;top:4px;right:6px;background:var(--rb);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;">0</span></button>
+      <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')" style="flex:1;padding:10px;position:relative;">&#x2705; DA PREPARARE<span id="badge-tab-prep-desk" style="display:none;position:absolute;top:4px;right:6px;background:var(--ob);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;">0</span></button>
       <button id="tab-car-missioni" class="btn bgh" onclick="selCarrellistaTab('missioni')" style="flex:1;padding:10px;position:relative;">&#x1F69B; MISSIONI<span id="badge-car-miss-desk" style="display:none;position:absolute;top:4px;right:6px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;">0</span></button>
     </div>
     <div id="car-stoccare-content"><div id="car-stoccare-list"></div></div>
@@ -640,11 +640,11 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;">
         <div style="display:flex;align-items:center;gap:4px;">
           <label style="font-size:11px;color:var(--tx2);white-space:nowrap;">Dal</label>
-          <input type="date" id="miss-f-dal" oninput="renderMissioniDesk()" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
+          <input type="date" id="miss-f-dal" oninput="renderMissioniDesk()" onclick="try{this.showPicker()}catch(e){}" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
         </div>
         <div style="display:flex;align-items:center;gap:4px;">
           <label style="font-size:11px;color:var(--tx2);white-space:nowrap;">Al</label>
-          <input type="date" id="miss-f-al" oninput="renderMissioniDesk()" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
+          <input type="date" id="miss-f-al" oninput="renderMissioniDesk()" onclick="try{this.showPicker()}catch(e){}" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
         </div>
         <select id="miss-f-tipo" onchange="renderMissioniDesk()" style="font-size:12px;padding:4px 7px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);">
           <option value="">Tutti i tipi</option>
@@ -704,7 +704,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
         </div>
         <div id="miss-man-list" style="max-height:200px;overflow-y:auto;"></div>
       </div>
-      <div class="fg" style="margin-top:12px;"><div class="fl">Data carico</div><input class="fi" id="miss-data" type="date"></div>
+      <div class="fg" style="margin-top:12px;"><div class="fl">Data carico</div><input class="fi" id="miss-data" type="date" onclick="try{this.showPicker()}catch(e){}"></div>
       <div class="fg"><div class="fl">Nota (opzionale)</div><input class="fi" id="miss-nota" type="text" placeholder="Es. Carico cliente Rossi"></div>
       <div id="miss-riepilogo" style="font-size:13px;color:var(--tx2);margin-top:8px;"></div>
     </div>
@@ -4677,6 +4677,10 @@ function aggiornaBadgeCarrellista() {
   // badge nel tab missioni dentro la pagina carrellista
   var bm = document.getElementById('badge-car-miss-desk');
   if (bm) { bm.textContent = nMissioni; bm.style.display = nMissioni > 0 ? 'inline-block' : 'none'; }
+  var bs = document.getElementById('badge-tab-stoc-desk');
+  if (bs) { bs.textContent = nStoccare; bs.style.display = nStoccare > 0 ? 'inline-block' : 'none'; }
+  var bp = document.getElementById('badge-tab-prep-desk');
+  if (bp) { bp.textContent = nPreparare; bp.style.display = nPreparare > 0 ? 'inline-block' : 'none'; }
 }
 
 function segnaPreparato(docId, giaSegnato) {

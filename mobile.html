@@ -366,7 +366,7 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div class="sc og"><div class="v" id="s-bilici-disp-secco">—</div><div class="lb">📦 Disp. Bilici Secco</div></div>
     <div class="sc gn"><div class="v" id="s-plt-in">0</div><div class="lb">⬆ PLT Entrati</div></div>
     <div class="sc rd"><div class="v" id="s-plt-out">0</div><div class="lb">⬇ PLT Usciti</div></div>
-    <div class="sc cy"><div class="v" id="s-bilici-disp-fresco">0</div><div class="lb">🏭 MARCHESI</div></div>
+    <div class="sc pu"><div class="v" id="s-bilici-disp-fresco">0</div><div class="lb">🏭 MARCHESI</div></div>
   </div>
 
   <!-- MISSIONI ATTIVE -->
@@ -468,7 +468,7 @@ body[data-lvl="1"] .prog-add{display:none!important;}
           <input type="number" id="to-mob-plt" placeholder="PLT" min="0" inputmode="numeric" autocomplete="off" style="width:78px;height:42px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;padding:0 8px;outline:none;">
         </div>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input type="date" id="to-mob-data" style="flex:1;height:38px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:0 10px;outline:none;">
+          <input type="date" id="to-mob-data" onclick="try{this.showPicker()}catch(e){}" style="flex:1;height:38px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:0 10px;outline:none;">
           <input type="text" id="to-mob-nota" placeholder="Nota opzionale..." autocomplete="off" style="flex:2;height:38px;background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:13px;padding:0 10px;outline:none;">
         </div>
         <button onclick="aggiungiOrdineMob()" style="width:100%;height:42px;background:var(--pu);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px;">&#x2795; AGGIUNGI ORDINE</button>
@@ -493,6 +493,7 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     </div>
   </div>
   <div class="stl">Operatività</div>
+  <button class="btn" id="btn-missioni" onclick="apriMissioniMob()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);color:var(--pb);display:none;"><span class="bi">&#x1F4E6;</span>MISSIONI <span id="badge-miss-mob" style="background:var(--pb);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:4px;display:none;">0</span></button>
   <div style="position:relative;">
     <button class="btn" style="width:100%;background:linear-gradient(135deg,#d29922,#b07a19);color:#111;font-size:18px;font-weight:800;padding:16px;margin-bottom:0;" onclick="goP('carrellista')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:middle;margin-right:6px;"><line x1="1" y1="14" x2="10" y2="14"/><line x1="1" y1="17" x2="10" y2="17"/><line x1="10" y1="5" x2="10" y2="20"/><rect x="10" y="11" width="8" height="9" rx="1"/><line x1="10" y1="7" x2="18" y2="7"/><line x1="18" y1="7" x2="18" y2="11"/><rect x="18" y="15" width="4" height="5" rx="1"/><circle cx="12" cy="21.5" r="1.5"/><circle cx="20" cy="21.5" r="1.5"/></svg>CARRELLISTA</button>
     <div id="badge-carrellista" style="position:absolute;top:-5px;right:-5px;background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px;display:none;">0</div>
@@ -500,9 +501,6 @@ body[data-lvl="1"] .prog-add{display:none!important;}
   <div class="stl">Gestione</div>
   <button class="btn bpu" id="btn-utenti" onclick="apriUtenti()" style="display:none;"><span class="bi">&#x1F465;</span>GESTIONE UTENTI</button>
   <button class="btn bog" onclick="apriStor()"><span class="bi">&#x1F4CB;</span>STORICO MOVIMENTI</button>
-  <button class="btn" id="btn-missioni" onclick="apriMissioniMob()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);color:var(--pb);display:none;"><span class="bi">&#x1F4E6;</span>MISSIONI <span id="badge-miss-mob" style="background:var(--pb);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:4px;display:none;">0</span></button>
-  <button class="btn bpu" id="btn-export" onclick="expExcel()"><span class="bi">&#x1F4CA;</span>ESPORTA EXCEL</button>
-  <button class="btn bcy" id="btn-import" onclick="apriImport()"><span class="bi">&#x1F4E5;</span>IMPORTA DA EXCEL</button>
 </div>
 
 <!-- ENTRATA -->
@@ -628,8 +626,8 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;"><line x1="1" y1="14" x2="10" y2="14"/><line x1="1" y1="17" x2="10" y2="17"/><line x1="10" y1="5" x2="10" y2="20"/><rect x="10" y="11" width="8" height="9" rx="1"/><line x1="10" y1="7" x2="18" y2="7"/><line x1="18" y1="7" x2="18" y2="11"/><rect x="18" y="15" width="4" height="5" rx="1"/><circle cx="12" cy="21.5" r="1.5"/><circle cx="20" cy="21.5" r="1.5"/></svg> CARRELLISTA</div>
   </div>
   <div class="car-tab-bar">
-    <button id="tab-stoccare" class="btn bog" onclick="selCarrellistaTab('stoccare')">&#x1F4E6; DA STOCCARE</button>
-    <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')">&#x2705; DA PREPARARE</button>
+    <button id="tab-stoccare" class="btn bog" onclick="selCarrellistaTab('stoccare')" style="position:relative;">&#x1F4E6; DA STOCCARE<span id="badge-tab-stoc-mob" style="display:none;position:absolute;top:6px;right:8px;background:var(--rb);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;">0</span></button>
+    <button id="tab-preparare" class="btn bgh" onclick="selCarrellistaTab('preparare')" style="position:relative;">&#x2705; DA PREPARARE<span id="badge-tab-prep-mob" style="display:none;position:absolute;top:6px;right:8px;background:var(--ob);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;">0</span></button>
     <button id="tab-car-missioni" class="btn bgh" onclick="selCarrellistaTab('missioni')" style="position:relative;">&#x1F69B; PICKING / CARICO SMEZZI<span id="badge-car-miss-mob" style="display:none;position:absolute;top:6px;right:8px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;">0</span></button>
   </div>
   <div id="car-stoccare-content"><div id="car-stoccare-list"></div></div>
@@ -1126,9 +1124,7 @@ function applicaLivello(lvl) {
   document.body.setAttribute('data-lvl', String(lvl));
   var isAdmin=(lvl===0||lvl===2);
   document.getElementById('btn-utenti').style.display = isAdmin ? 'flex' : 'none';
-  document.getElementById('btn-export').style.display = isAdmin ? 'flex' : 'none';
   document.getElementById('btn-missioni').style.display = isAdmin ? 'flex' : 'none';
-  document.getElementById('btn-import').style.display = isAdmin ? 'flex' : 'none';
   // campo locazione: solo QR per livello 1
   var locInp = document.getElementById('in-l');
   var locEdit = document.getElementById('edit-l');
@@ -3050,7 +3046,7 @@ function apriCreaMissioneMob() {
     '<input class="fi" id="mob-miss-plt" type="number" placeholder="PLT" inputmode="numeric" style="width:70px;">' +
     '<button onclick="aggBilicoMob()" style="background:var(--pb);border:none;border-radius:var(--rs);color:#fff;padding:0 12px;font-size:18px;cursor:pointer;">+</button></div>' +
     '<div id="mob-miss-man-list"></div></div>' +
-    '<div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Data carico</div><input class="fi" id="mob-miss-data" type="date" value="'+oggi+'"></div>' +
+    '<div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Data carico</div><input class="fi" id="mob-miss-data" type="date" value="'+oggi+'" onclick="try{this.showPicker()}catch(e){}"></div>' +
     '<div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Nota</div><input class="fi" id="mob-miss-nota" type="text" placeholder="Opzionale..."></div>' +
     '<div style="margin-top:12px;display:flex;gap:8px;">' +
     '<button id="mob-miss-form-btn" onclick="creaMissioneMob()" style="flex:1;background:var(--pb);border:none;border-radius:var(--rs);color:#fff;padding:12px;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">&#x2705; CREA</button>' +
@@ -3639,6 +3635,10 @@ function aggiornaBadgeCarrellista() {
   badge.style.display = tot > 0 ? 'flex' : 'none';
   var bm = document.getElementById('badge-car-miss-mob');
   if (bm) { bm.textContent = nMissioni; bm.style.display = nMissioni > 0 ? 'inline-block' : 'none'; }
+  var bs = document.getElementById('badge-tab-stoc-mob');
+  if (bs) { bs.textContent = nStoccare; bs.style.display = nStoccare > 0 ? 'inline-block' : 'none'; }
+  var bp = document.getElementById('badge-tab-prep-mob');
+  if (bp) { bp.textContent = nPreparare; bp.style.display = nPreparare > 0 ? 'inline-block' : 'none'; }
 }
 
 function segnaPreparato(docId, giaSegnato) {

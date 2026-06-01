@@ -3769,8 +3769,12 @@ function renderCarrellistaStoccare() {
 function renderCarrellistaPreparare() {
   var el = document.getElementById('car-preparare-list');
   if (!el) return;
-  if (!PROG.length) { el.innerHTML = '<div class="prog-empty">Nessun bilico da preparare oggi</div>'; return; }
-  el.innerHTML = PROG.map(function(p) {
+  var listaPrep = PROG.filter(function(p) {
+    var b = BL[p.numero];
+    return !b || (b.locazione||'').toUpperCase() !== 'FRESCO';
+  });
+  if (!listaPrep.length) { el.innerHTML = '<div class="prog-empty">Nessun bilico da preparare oggi</div>'; return; }
+  el.innerHTML = listaPrep.map(function(p) {
     var preparato = !!(p.id && PROG_PREPARATO[p.id]);
     var b = BL[p.numero];
     var bancNote = b ? ('&#x1F4E6; ' + b.bancali + (p.bancaliProg ? ' &middot; ord. ' + p.bancaliProg : '') + ' bancali &nbsp;&middot;&nbsp; &#x1F4CD; ' + b.locazione) : 'Non in magazzino';
@@ -3848,7 +3852,7 @@ function toggleMissMobBox() {
 
 function aggiornaBadgeCarrellista() {
   var nStoccare = Object.values(BL).filter(function(b) { return (b.locazione||'').toUpperCase() === 'ARRIVI'; }).length;
-  var nPreparare = PROG.filter(function(p) { return p.id && !PROG_PREPARATO[p.id]; }).length;
+  var nPreparare = PROG.filter(function(p) { var b=BL[p.numero]; return p.id && !PROG_PREPARATO[p.id] && (!b||(b.locazione||'').toUpperCase()!=='FRESCO'); }).length;
   var nMissioni = MISSIONI.filter(function(m){ return m.stato !== 'caricata'; }).length;
   var tot = nStoccare + nPreparare + nMissioni;
   var badge = document.getElementById('badge-carrellista');

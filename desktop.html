@@ -514,6 +514,18 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
             <div class="trv" id="trvbox"><div class="trv-t">&#x2705; Bilico trovato</div><div class="trv-i">&#x1F4CD; <span id="out-lo" style="color:var(--pb)">-</span> &nbsp;|&nbsp; &#x1F4E6; <span id="out-ba" style="color:var(--ob)">-</span> bancali</div></div>
             <div class="fg"><div class="fl">Bancali Uscita</div><div class="crow"><button class="cbt" onclick="stp('out-b',-1)">&#x2212;</button><input class="cvl" id="out-b" type="number" value="0" min="0" inputmode="numeric" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('out-b',1)">+</button></div></div>
             <div class="fg"><div class="fl">Note</div><input class="fi" id="out-nt" type="text" placeholder="Destinazione..." autocomplete="off"></div>
+            <div class="fg">
+              <div class="fl">Foto carico (opzionale)</div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
+                <span style="font-size:16px;">&#x1F4F7;</span>
+                <span id="out-foto-lbl" style="font-size:13px;color:var(--tx2);">Clicca per allegare foto</span>
+                <input type="file" id="out-foto" accept="image/*" style="display:none;" onchange="prevFotoUscita(this)">
+              </label>
+              <div id="out-foto-preview" style="display:none;margin-top:8px;position:relative;">
+                <img id="out-foto-img" style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--rs);">
+                <button onclick="clearFotoUscita()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;width:24px;height:24px;font-size:13px;cursor:pointer;">&#x2715;</button>
+              </div>
+            </div>
             <button class="btn brd btn-w" onclick="regU()">&#x1F534; REGISTRA USCITA</button>
           </div></div>
           <div><div class="stl">Ultimi Usciti</div><div class="card" style="padding:10px 14px;"><div id="log-ou"><div class="emp"><p>Nessuna uscita</p></div></div></div></div>
@@ -3037,6 +3049,21 @@ function regU() {
   document.getElementById('mo-u').classList.add('open');
 }
 
+function prevFotoUscita(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    document.getElementById('out-foto-img').src = e.target.result;
+    document.getElementById('out-foto-preview').style.display = 'block';
+    document.getElementById('out-foto-lbl').textContent = '✅ Foto allegata';
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+function clearFotoUscita() {
+  document.getElementById('out-foto').value = '';
+  document.getElementById('out-foto-preview').style.display = 'none';
+  document.getElementById('out-foto-lbl').textContent = 'Clicca per allegare foto';
+}
 function prevFotoMoU(inp) {
   if (!inp.files || !inp.files[0]) return;
   var reader = new FileReader();
@@ -3054,7 +3081,9 @@ function clearFotoMoU() {
 }
 function confU() {
   if (!pend) { return; }
-  var fotoFile = (document.getElementById('mo-u-foto').files || [])[0];
+  // priorità: foto dalla pagina uscita, poi foto dalla modale
+  var fotoFile = (document.getElementById('out-foto').files || [])[0]
+               || (document.getElementById('mo-u-foto').files || [])[0];
   chiM('mo-u');
   clearFotoMoU();
   if (fotoFile) {
@@ -3096,6 +3125,7 @@ function _eseguiUscitaDesk(foto) {
   document.getElementById('out-b').value = '0';
   document.getElementById('out-nt').value = '';
   document.getElementById('trvbox').style.display = 'none';
+  clearFotoUscita();
   pend = null;
 }
 

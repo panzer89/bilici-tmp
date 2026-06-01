@@ -1213,6 +1213,15 @@ function renderTuttiOrdini() {
     html+='<td style="padding:6px 8px;white-space:nowrap;text-align:right;">';
     var btnEdit='background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--bb);padding:3px 8px;font-size:12px;cursor:pointer;margin-right:3px;';
     var btnDel='background:none;border:1px solid var(--rd);border-radius:var(--rs);color:var(--rb);padding:3px 8px;font-size:12px;cursor:pointer;';
+    // ⬆ Carica — solo ordini di oggi con bilico in magazzino
+    if (p.fonte === 'prog') {
+      var inMagTO = !!(BL[p.numero]);
+      var inMagTOB = p.partner ? !!(BL[p.partner.numero]) : false;
+      if (inMagTO || inMagTOB) {
+        var fnTO = p.partner ? "apriUscitaCoppia('"+p.id+"')" : 'caricaVeloce("'+p.numero+'")';
+        html += '<button onclick="'+fnTO+'" class="prog-carica-btn" title="Carica" style="margin-right:4px;">&#x2B06;</button>';
+      }
+    }
     // bottone aggancio — solo admin, solo se non già in coppia
     if(isAdmin() && !p.partner && p.id){
       var aggTOSt = isSelTO ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggTOSel?'border-color:var(--gb);color:var(--gb);':'');

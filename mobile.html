@@ -2066,29 +2066,7 @@ function renderTuttiOrdiniMob() {
       if (sub||p.nota) html+='<div style="font-size:12px;color:var(--tx2);margin-top:2px;">'+sub+(p.nota?' &nbsp;'+p.nota:'')+'</div>';
     }
     html+='</div>';
-    if (p.partner) {
-      var idQB="'"+(p.partner.id||'')+"'";
-      var fonteQB="'"+p.partner.fonte+"'";
-      var inMagA = !!(BL[p.numero]), inMagB = !!(BL[p.partner.numero]);
-      if (p.fonte==='prog' && (inMagA||inMagB) && p.id) {
-        html+='<button class="prog-carica-btn" style="margin-right:2px;" onclick="apriUscitaCoppia('+idQ+')">&#x2B06;</button>';
-      }
-      html+='<button onclick="modificaNotaTOMob('+fonteQ+','+idQ+',\''+p.numero+'\')" style="background:none;border:1px solid var(--bd);border-radius:4px;color:var(--tx2);padding:3px 8px;font-size:14px;cursor:pointer;flex-shrink:0;">&#x270F;&#xFE0F;</button>';
-      html+='<button onclick="sganciaTOMob('+idQ+','+fonteQ+')" title="Sgancia" style="background:none;border:1px solid var(--pb);border-radius:4px;color:var(--pb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2702;</button>';
-      html+='<button onclick="eliminaOrdineCoppiaMob('+fonteQ+','+idQ+','+fonteQB+','+idQB+','+p.numero+','+p.partner.numero+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2715;</button>';
-    } else {
-      var inMagTO = !!(BL[p.numero]);
-      if (p.fonte==='prog' && inMagTO) {
-        html+='<button class="prog-carica-btn" style="margin-right:2px;" onclick="caricaVeloce(\''+p.numero+'\')">&#x2B06;</button>';
-      }
-      html+='<button onclick="modificaNotaTOMob('+fonteQ+','+idQ+',\''+p.numero+'\')" style="background:none;border:1px solid var(--bd);border-radius:4px;color:var(--tx2);padding:3px 8px;font-size:14px;cursor:pointer;flex-shrink:0;">&#x270F;&#xFE0F;</button>';
-      if (isAdmTO && p.id) {
-        var isSelTO = aggTOSelMob !== null && aggTOSelMob.docId === p.id;
-        var aggToSt = isSelTO ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggTOSelMob !== null ? 'border-color:var(--gb);color:var(--gb);' : 'border-color:var(--bb);color:var(--bb);');
-        html+='<button onclick="startAggancioTOMob('+idQ+','+p.numero+','+fonteQ+')" style="background:none;border:1px solid;border-radius:4px;padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;'+aggToSt+'" title="Aggancia">&#x1F517;</button>';
-      }
-      html+='<button onclick="eliminaOrdineMob('+fonteQ+','+idQ+','+p.numero+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2715;</button>';
-    }
+    html+='<button onclick="apriMenuTOMob('+fonteQ+','+idQ+')" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);padding:4px 12px;font-size:18px;cursor:pointer;flex-shrink:0;letter-spacing:2px;line-height:1;">&#x22EF;</button>';
     html+='</div>';
   });
   el.innerHTML = html;
@@ -2248,6 +2226,82 @@ function aggProgDomani() {
   document.getElementById('prog-domani-banc-inp').value = '';
   suonoSirena();
   tst('Bilico ' + val + ' aggiunto per domani', 'ok');
+}
+
+// ─── MODIFICA ORDINE MOBILE (modale completa) ───
+var _editOrdineMob = null;
+function apriModificaOrdineMob(fonte, id) {
+  var p = trovaDaTOMob(id, fonte);
+  if (!p) return;
+  _editOrdineMob = {fonte: fonte, id: id, numero: p.numero};
+  document.getElementById('mo-ord-mob-num').textContent = '#' + p.numero;
+  document.getElementById('mo-ord-mob-data').value = p.data || '';
+  document.getElementById('mo-ord-mob-nota').value = p.nota || '';
+  document.getElementById('mo-ord-mob-plt').value = p.bancaliProg || 0;
+  chiM('mo-menu-to');
+  document.getElementById('mo-ordine-mob').classList.add('open');
+}
+function salvaOrdineMob() {
+  if (!_editOrdineMob) return;
+  var nuovaData = document.getElementById('mo-ord-mob-data').value;
+  var nuovaNota = (document.getElementById('mo-ord-mob-nota').value || '').trim();
+  var nuoviPlt  = parseInt(document.getElementById('mo-ord-mob-plt').value) || 0;
+  var fonte = _editOrdineMob.fonte, id = _editOrdineMob.id;
+  var upd = {nota: nuovaNota, bancaliProg: nuoviPlt};
+  if (nuovaData) upd.data = nuovaData;
+  function aggUpd(arr) {
+    var item = arr.find(function(x){ return x.id === id; });
+    if (item) { item.nota = nuovaNota; item.bancaliProg = nuoviPlt; if (nuovaData) item.data = nuovaData; }
+  }
+  if (UC && fdb && id) { fdb.collection(fonte).doc(id).update(upd).catch(function(e){ tst('Errore: '+e.message,'er'); }); }
+  if (fonte === 'prog') { aggUpd(PROG); renderProg(); }
+  else if (fonte === 'prog_domani') { aggUpd(PROG_DOMANI); renderProgDomani(); }
+  else { Object.keys(CAL_DATA).forEach(function(dt){ aggUpd(CAL_DATA[dt]||[]); }); }
+  chiM('mo-ordine-mob');
+  _editOrdineMob = null;
+  tst('Ordine aggiornato', 'ok');
+  setTimeout(renderTuttiOrdiniMob, 300);
+}
+
+// ─── MENU 3 PUNTINI ORDINE MOBILE ───
+function apriMenuTOMob(fonte, id) {
+  var lista = getAllOrdiniMob();
+  var p = lista.find(function(x){ return x.id === id; });
+  if (!p) p = trovaDaTOMob(id, fonte);
+  if (!p) return;
+  var inMag  = !!(BL[p.numero]);
+  var inMagB = p.partner ? !!(BL[p.partner.numero]) : false;
+  var isAdm  = CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2);
+  var idQ = "'"+id+"'", fonteQ = "'"+fonte+"'";
+  var bs = 'width:100%;padding:11px 14px;border-radius:var(--rs);font-size:15px;font-weight:700;cursor:pointer;text-align:left;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.3px;';
+  var html = '';
+  // ⬆ Carica
+  if (fonte === 'prog' && (inMag || inMagB)) {
+    var fnCarica = p.partner ? "apriUscitaCoppia('"+id+"')" : "caricaVeloce('"+p.numero+"')";
+    html += '<button onclick="chiM(\'mo-menu-to\');'+fnCarica+'" style="'+bs+'background:var(--rd);border:none;color:#fff;">&#x2B06; Carica</button>';
+  }
+  // ✏️ Modifica
+  html += '<button onclick="apriModificaOrdineMob('+fonteQ+','+idQ+')" style="'+bs+'background:var(--sf2);border:1px solid var(--bd);color:var(--bb);">&#x270F;&#xFE0F; Modifica</button>';
+  // 🔗 Aggancia / Annulla
+  if (!p.partner && id && isAdm) {
+    var isSelTO = aggTOSelMob !== null && aggTOSelMob.docId === id;
+    html += '<button onclick="chiM(\'mo-menu-to\');startAggancioTOMob('+idQ+',\''+p.numero+'\','+fonteQ+')" style="'+bs+'background:var(--sf2);border:1px solid var(--bd);color:var(--bb);">'+(isSelTO?'&#x274C; Annulla selezione':'&#x1F517; Aggancia')+'</button>';
+  }
+  // ✂️ Sgancia
+  if (p.partner) {
+    html += '<button onclick="chiM(\'mo-menu-to\');sganciaTOMob('+idQ+','+fonteQ+')" style="'+bs+'background:var(--sf2);border:1px solid var(--pb);color:var(--pb);">&#x2702; Sgancia coppia</button>';
+  }
+  // ✕ Elimina
+  if (p.partner) {
+    var idQB = "'"+(p.partner.id||'')+"'", fonteQB = "'"+p.partner.fonte+"'";
+    html += '<button onclick="chiM(\'mo-menu-to\');eliminaOrdineCoppiaMob('+fonteQ+','+idQ+','+fonteQB+','+idQB+',\''+p.numero+'\',\''+p.partner.numero+'\')" style="'+bs+'background:none;border:1px solid var(--rd);color:var(--rb);">&#x2715; Elimina coppia</button>';
+  } else {
+    html += '<button onclick="chiM(\'mo-menu-to\');eliminaOrdineMob('+fonteQ+','+idQ+',\''+p.numero+'\')" style="'+bs+'background:none;border:1px solid var(--rd);color:var(--rb);">&#x2715; Elimina</button>';
+  }
+  var titolo = p.partner ? '#'+p.numero+' + #'+p.partner.numero : '#'+p.numero;
+  document.getElementById('mo-menu-to-title').textContent = titolo;
+  document.getElementById('mo-menu-to-actions').innerHTML = html;
+  document.getElementById('mo-menu-to').classList.add('open');
 }
 
 function modificaNotaTOMob(fonte, docId, numero) {
@@ -3777,6 +3831,32 @@ function rispondiFotoReminderMob(ok) {
   // Rimanda: non salva nulla → riappare al prossimo accesso
 }
 </script>
+
+<!-- MODAL MODIFICA ORDINE MOBILE -->
+<div class="mo" id="mo-ordine-mob">
+  <div class="mdl" style="max-width:340px;">
+    <div class="mha"></div>
+    <div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Ordine</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:12px;">Bilico <strong id="mo-ord-mob-num" style="color:var(--bb);font-size:15px;"></strong></div>
+    <div class="edit-field"><div class="edit-label">Data carico</div><input class="edit-inp" id="mo-ord-mob-data" type="date" onclick="try{this.showPicker()}catch(e){}"></div>
+    <div class="edit-field" style="margin-top:10px;"><div class="edit-label">PLT pianificati</div><div class="crow"><button class="cbt" onclick="stp('mo-ord-mob-plt',-1)">&#x2212;</button><input class="cvl" id="mo-ord-mob-plt" type="number" min="0" inputmode="numeric" placeholder="0"><button class="cbt" onclick="stp('mo-ord-mob-plt',1)">+</button></div></div>
+    <div class="edit-field" style="margin-top:10px;"><div class="edit-label">Nota</div><input class="edit-inp" id="mo-ord-mob-nota" type="text" placeholder="Nota opzionale..." autocomplete="off"></div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn bgn" onclick="salvaOrdineMob()">&#x2713; SALVA</button>
+      <button class="btn bgh" onclick="chiM('mo-ordine-mob')">&#x2716; Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MENU AZIONI ORDINE (3 puntini) -->
+<div class="mo" id="mo-menu-to">
+  <div class="mdl" style="max-width:300px;">
+    <div class="mha"></div>
+    <div id="mo-menu-to-title" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--bb);margin-bottom:14px;"></div>
+    <div id="mo-menu-to-actions" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button onclick="chiM('mo-menu-to')" style="margin-top:14px;width:100%;padding:10px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);font-size:13px;cursor:pointer;">Annulla</button>
+  </div>
+</div>
 
 <!-- MODAL USCITA COPPIA -->
 <div class="mo" id="mo-coppia-uscita">

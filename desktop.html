@@ -3267,10 +3267,17 @@ function leggiFileImport(evt) {
         var ban = parseInt(r[iB]) || 0;
         var nt = iNt >= 0 ? String(r[iNt] || '').trim() : '';
         var dt = iD >= 0 ? parsaData(r[iD]) : new Date().toISOString();
-        if (!num || !loc) { continue; }
+        if (!num) { continue; }
+        var esiste = !!(BL[num]);
+        // Per bilici esistenti: locazione opzionale (usa quella già in Firestore)
+        // Per bilici nuovi: locazione obbligatoria
+        if (!loc) {
+          if (esiste) { loc = (BL[num].locazione || '').toUpperCase(); }
+          else { errori.push('Riga ' + (i+1) + ': locazione mancante per bilico nuovo ' + num); continue; }
+        }
         if (ban <= 0) { errori.push('Riga ' + (i+1) + ': bancali non validi per bilico ' + num); continue; }
         // UPSERT: segna se il bilico esiste già (aggiornamento) o è nuovo
-        impDati.push({numero: num, locazione: loc, bancali: ban, note: nt, ts: dt, _aggiorna: !!(BL[num])});
+        impDati.push({numero: num, locazione: loc, bancali: ban, note: nt, ts: dt, _aggiorna: esiste});
       }
 
       if (impDati.length === 0) {

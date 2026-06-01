@@ -1700,6 +1700,100 @@ function apriUscitaCoppia(docId) {
   document.getElementById('mo-coppia-uscita').classList.add('open');
 }
 
+// ─── CARICA RAPIDO MOBILE ───
+var _cqmNumero = null;
+function apriCaricaQuickMob(numero, bancaliProg) {
+  var b = BL[numero];
+  if (!b) { tst('Bilico #'+numero+' non in magazzino','er'); return; }
+  _cqmNumero = numero;
+  document.getElementById('cqm-banc').value = (bancaliProg && bancaliProg <= b.bancali) ? bancaliProg : b.bancali;
+  document.getElementById('cqm-nota').value = '';
+  document.getElementById('cqm-foto').value = '';
+  document.getElementById('cqm-foto-preview').style.display = 'none';
+  document.getElementById('cqm-foto-lbl').textContent = 'Tocca per scattare / allegare foto';
+  document.getElementById('cqm-info').innerHTML =
+    '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+    '<strong style="color:var(--bb);font-size:15px;">#'+numero+'</strong>' +
+    '<span style="color:var(--tx2);">&#x1F4CD; '+b.locazione+'</span>' +
+    '</div>' +
+    '<span style="color:var(--ob);font-weight:700;">&#x1F4E6; '+b.bancali+' bancali presenti</span>';
+  chiM('mo-menu-to');
+  document.getElementById('mo-carica-quick-mob').classList.add('open');
+}
+function prevFotoCQM(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    document.getElementById('cqm-foto-img').src = e.target.result;
+    document.getElementById('cqm-foto-preview').style.display = 'block';
+    document.getElementById('cqm-foto-lbl').textContent = '✅ Foto allegata';
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+function clearFotoCQM() {
+  document.getElementById('cqm-foto').value = '';
+  document.getElementById('cqm-foto-preview').style.display = 'none';
+  document.getElementById('cqm-foto-lbl').textContent = 'Tocca per scattare / allegare foto';
+}
+function confCaricaQuickMob() {
+  if (!_cqmNumero) return;
+  var bu = parseInt(document.getElementById('cqm-banc').value) || 0;
+  var nt = document.getElementById('cqm-nota').value.trim();
+  var b = BL[_cqmNumero];
+  if (!b) { tst('Bilico non trovato','er'); return; }
+  if (bu <= 0) { tst('Inserisci bancali in uscita','er'); return; }
+  if (bu > b.bancali) { tst('Bancali superiori ai presenti ('+b.bancali+')','er'); return; }
+  var fotoFile = (document.getElementById('cqm-foto').files || [])[0];
+  chiM('mo-carica-quick-mob'); clearFotoCQM();
+  pend = {n: _cqmNumero, bu: bu, nt: nt, b: b};
+  _cqmNumero = null;
+  if (fotoFile) {
+    var r = new FileReader();
+    r.onload = function(e) { _eseguiUscitaMob(e.target.result); };
+    r.readAsDataURL(fotoFile);
+  } else { _eseguiUscitaMob(null); }
+}
+function prevFotoMCU(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    document.getElementById('mcu-foto-img').src = e.target.result;
+    document.getElementById('mcu-foto-preview').style.display = 'block';
+    document.getElementById('mcu-foto-lbl').textContent = '✅ Foto allegata';
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+function clearFotoMCU() {
+  var el=document.getElementById('mcu-foto'); if(el) el.value='';
+  var pv=document.getElementById('mcu-foto-preview'); if(pv) pv.style.display='none';
+  var lb=document.getElementById('mcu-foto-lbl'); if(lb) lb.textContent='Tocca per scattare / allegare foto';
+}
+// ─── apriCaricaQuickTOMob: entry point da menu "..." ───
+function apriCaricaQuickTOMob(fonte, id) {
+  var lista = getAllOrdiniMob();
+  var itemA = lista.find(function(x){ return x.id === id; });
+  if (!itemA) itemA = trovaDaTOMob(id, fonte);
+  if (!itemA) return;
+  if (!itemA.aggancioId) { apriCaricaQuickMob(itemA.numero, itemA.bancaliProg); return; }
+  var itemB = lista.find(function(x){ return x.aggancioId===itemA.aggancioId && x.id!==id; });
+  if (!itemB) { apriCaricaQuickMob(itemA.numero, itemA.bancaliProg); return; }
+  var bilA = BL[itemA.numero], bilB = BL[itemB.numero];
+  _coppiaA = {item:itemA, bilico:bilA};
+  _coppiaB = {item:itemB, bilico:bilB};
+  document.getElementById('mcu-numA').textContent = '#'+itemA.numero;
+  document.getElementById('mcu-numB').textContent = '#'+itemB.numero;
+  document.getElementById('mcu-bancA').value = (itemA.bancaliProg&&bilA&&itemA.bancaliProg<=bilA.bancali)?itemA.bancaliProg:(bilA?bilA.bancali:0);
+  document.getElementById('mcu-bancB').value = (itemB.bancaliProg&&bilB&&itemB.bancaliProg<=bilB.bancali)?itemB.bancaliProg:(bilB?bilB.bancali:0);
+  document.getElementById('mcu-ntA').value='';
+  document.getElementById('mcu-ntB').value='';
+  var elNA=document.getElementById('mcu-notaA'); if(itemA.nota){elNA.textContent='📝 '+itemA.nota;elNA.style.display='block';}else{elNA.style.display='none';}
+  var elNB=document.getElementById('mcu-notaB'); if(itemB.nota){elNB.textContent='📝 '+itemB.nota;elNB.style.display='block';}else{elNB.style.display='none';}
+  document.getElementById('mcu-info').textContent = '';
+  clearFotoMCU();
+  chiM('mo-menu-to');
+  document.getElementById('mo-coppia-uscita').classList.add('open');
+}
+
 function confUscitaCoppia() {
   if (!_coppiaA || !_coppiaB) return;
   var buA = parseInt(document.getElementById('mcu-bancA').value) || 0;
@@ -1712,7 +1806,15 @@ function confUscitaCoppia() {
   if (bilB && buB <= 0) { return tst('Inserisci bancali per bilico #'+itemB.numero,'er'); }
   if (bilA && buA > bilA.bancali) { return tst('Bancali #'+itemA.numero+': supera i presenti ('+bilA.bancali+')','er'); }
   if (bilB && buB > bilB.bancali) { return tst('Bancali #'+itemB.numero+': supera i presenti ('+bilB.bancali+')','er'); }
-  chiM('mo-coppia-uscita');
+  var fotoFile = (document.getElementById('mcu-foto').files || [])[0];
+  chiM('mo-coppia-uscita'); clearFotoMCU();
+  if (fotoFile) {
+    var rdr = new FileReader();
+    rdr.onload = function(e) { _eseguiCoppiaMob(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,e.target.result); };
+    rdr.readAsDataURL(fotoFile);
+  } else { _eseguiCoppiaMob(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,null); }
+}
+function _eseguiCoppiaMob(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,foto) {
   var caricoId = 'C'+Date.now();
   var ts = new Date().toISOString();
   var rimA = 0, rimB = 0;
@@ -1720,13 +1822,15 @@ function confUscitaCoppia() {
     rimA = bilA.bancali - buA;
     if (rimA===0) { dbDB(itemA.numero); }
     else { var lA=bilA.locazione.toUpperCase(); dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'}); }
-    dbAS({tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId});
+    var stA={tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId};
+    if(foto) stA.foto=foto; dbAS(stA);
   }
   if (bilB) {
     rimB = bilB.bancali - buB;
     if (rimB===0) { dbDB(itemB.numero); }
     else { var lB=bilB.locazione.toUpperCase(); dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'}); }
-    dbAS({tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId});
+    var stB={tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId};
+    if(foto) stB.foto=foto; dbAS(stB);
   }
   if (UC&&fdb) {
     if(itemA.id) fdb.collection('prog').doc(itemA.id).delete().catch(function(){});
@@ -2276,9 +2380,8 @@ function apriMenuTOMob(fonte, id) {
   var bs = 'width:100%;padding:11px 14px;border-radius:var(--rs);font-size:15px;font-weight:700;cursor:pointer;text-align:left;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.3px;';
   var html = '';
   // ⬆ Carica
-  if (fonte === 'prog' && (inMag || inMagB)) {
-    var fnCarica = p.partner ? "apriUscitaCoppia('"+id+"')" : "caricaVeloce('"+p.numero+"')";
-    html += '<button onclick="chiM(\'mo-menu-to\');'+fnCarica+'" style="'+bs+'background:var(--rd);border:none;color:#fff;">&#x2B06; Carica</button>';
+  if (inMag || inMagB) {
+    html += '<button onclick="apriCaricaQuickTOMob(\''+fonte+'\',\''+id+'\')" style="'+bs+'background:var(--rd);border:none;color:#fff;">&#x2B06; Carica</button>';
   }
   // ✏️ Modifica
   html += '<button onclick="apriModificaOrdineMob('+fonteQ+','+idQ+')" style="'+bs+'background:var(--sf2);border:1px solid var(--bd);color:var(--bb);">&#x270F;&#xFE0F; Modifica</button>';
@@ -3858,6 +3961,39 @@ function rispondiFotoReminderMob(ok) {
   </div>
 </div>
 
+<!-- MODAL CARICA RAPIDO MOBILE -->
+<div class="mo" id="mo-carica-quick-mob">
+  <div class="mdl">
+    <div class="mha"></div>
+    <div class="mtt rd">&#x2B06; Carica Bilico</div>
+    <div id="cqm-info" style="background:var(--sf2);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;font-size:13px;"></div>
+    <div class="fl" style="margin-bottom:5px;">Bancali in uscita</div>
+    <div class="crow" style="margin-bottom:12px;">
+      <button class="cbt" onclick="stp('cqm-banc',-1)">&#x2212;</button>
+      <input class="cvl" id="cqm-banc" type="number" min="1" inputmode="numeric" placeholder="0" style="border-color:var(--rd)!important;">
+      <button class="cbt" onclick="stp('cqm-banc',1)">+</button>
+    </div>
+    <div class="fl" style="margin-bottom:5px;">Nota</div>
+    <input class="fi" id="cqm-nota" type="text" placeholder="Opzionale..." autocomplete="off" style="margin-bottom:12px;">
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">&#x1F4F7; Foto carico (opzionale)</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
+        <span style="font-size:18px;">&#x1F4F7;</span>
+        <span id="cqm-foto-lbl" style="font-size:13px;color:var(--tx2);">Tocca per scattare / allegare foto</span>
+        <input type="file" id="cqm-foto" accept="image/*" capture="environment" style="display:none;" onchange="prevFotoCQM(this)">
+      </label>
+      <div id="cqm-foto-preview" style="display:none;margin-top:8px;position:relative;">
+        <img id="cqm-foto-img" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--rs);">
+        <button onclick="clearFotoCQM()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;width:24px;height:24px;font-size:13px;cursor:pointer;">&#x2715;</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn brd" onclick="confCaricaQuickMob()" style="flex:1;margin-bottom:0;">&#x2B06; CARICA</button>
+      <button class="btn bgh" onclick="chiM('mo-carica-quick-mob')" style="flex:1;margin-bottom:0;">&#x274C; Annulla</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL USCITA COPPIA -->
 <div class="mo" id="mo-coppia-uscita">
   <div class="mdl">
@@ -3890,8 +4026,20 @@ function rispondiFotoReminderMob(ok) {
         <input class="fi" id="mcu-ntB" type="text" placeholder="Facoltativo" autocomplete="off">
       </div>
     </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">&#x1F4F7; Foto carico (opzionale)</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
+        <span style="font-size:18px;">&#x1F4F7;</span>
+        <span id="mcu-foto-lbl" style="font-size:13px;color:var(--tx2);">Tocca per scattare / allegare foto</span>
+        <input type="file" id="mcu-foto" accept="image/*" capture="environment" style="display:none;" onchange="prevFotoMCU(this)">
+      </label>
+      <div id="mcu-foto-preview" style="display:none;margin-top:8px;position:relative;">
+        <img id="mcu-foto-img" style="width:100%;max-height:140px;object-fit:cover;border-radius:var(--rs);">
+        <button onclick="clearFotoMCU()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;width:24px;height:24px;font-size:13px;cursor:pointer;">&#x2715;</button>
+      </div>
+    </div>
     <div style="display:flex;gap:8px;">
-      <button class="btn brd" onclick="confUscitaCoppia()" style="flex:1;margin-bottom:0;">&#x1F534; CONFERMA USCITA</button>
+      <button class="btn brd" onclick="confUscitaCoppia()" style="flex:1;margin-bottom:0;">&#x2B06; CONFERMA USCITA</button>
       <button class="btn bgh" onclick="chiM('mo-coppia-uscita')" style="flex:1;margin-bottom:0;">&#x2716; Annulla</button>
     </div>
   </div>

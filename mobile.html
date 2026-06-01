@@ -2085,7 +2085,7 @@ function caricaProgDomani() {
     aggTuttiOrdiniMob();
     controllaGiorno();
   });
-  fdb.collection('prog_calendario').onSnapshot(function(snap) {
+  fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(snap) {
     CAL_DATA = {};
     snap.forEach(function(d) {
       var item = Object.assign({id: d.id}, d.data());

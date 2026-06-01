@@ -394,7 +394,8 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
       <div class="sb-sect">STRUMENTI</div>
       <button class="sb-item" id="tbstor" onclick="goP('storico')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Storico</button>
       <button class="sb-item-stor" id="tb-excel" onclick="expExcel()" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Esporta Excel</button>
-      <button class="sb-item-stor" id="tb-importa" onclick="apriImport()" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Importa</button>
+      <button class="sb-item-stor" id="tb-importa" onclick="apriImport('add')" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Importa</button>
+      <button class="sb-item-stor" id="tb-importa-mod" onclick="apriImport('modify')" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Importa / Modifica</button>
       <button class="sb-item-stor" id="tb-scarica-foto" onclick="scaricaTutteFoto(false)" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Scarica foto</button>
     </nav>
     <div class="sb-footer">
@@ -846,7 +847,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
   </div>
 </div>
 <!-- MODAL IMPORTA -->
-<div class="mo" id="mo-imp"><div class="mdl wide"><div class="mha"></div><div class="mtt cy">&#x1F4E5; Importa da Excel</div><div class="imp-info"><strong style="color:var(--cb)">Colonne:</strong><div class="col-hdr"><div class="col-tag">NUMERO</div><div class="col-tag">LOCAZIONE</div><div class="col-tag">BANCALI</div><div class="col-tag">NOTE</div><div class="col-tag">DATA</div></div></div><div class="imp-note">&#x2139;&#xFE0F; DATA opzionale. BANCHINA, SMEZZI, FRESCO illimitate.</div><div style="margin-bottom:8px;"><button class="btn bgh" style="padding:6px 10px;font-size:12px;" onclick="scaricaTemplate()">&#x1F4CB; TEMPLATE</button></div><div class="fg"><div class="fl">File Excel</div><input type="file" id="imp-file" accept=".xlsx,.xls" style="background:var(--bg);border:1.5px solid var(--cy);border-radius:var(--rs);color:var(--tx);padding:8px;width:100%;font-size:13px;"></div><div id="imp-preview" style="display:none;margin-bottom:12px;"><div class="fl" style="margin-bottom:5px;">Anteprima:</div><div id="imp-preview-content" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:10px;font-size:12px;max-height:150px;overflow-y:auto;"></div></div><div id="imp-err" style="display:none;background:rgba(218,54,51,.1);border:1px solid var(--rd);border-radius:var(--rs);padding:8px 12px;color:var(--rb);font-size:12px;margin-bottom:10px;"></div><div class="btn-row"><button class="btn bcy" id="imp-btn" onclick="eseguiImport()" style="display:none;">&#x1F4E5; IMPORTA</button><button class="btn bgh" onclick="chiM('mo-imp')">&#x2716; Chiudi</button></div></div></div>
+<div class="mo" id="mo-imp"><div class="mdl wide"><div class="mha"></div><div class="mtt cy" id="imp-modal-title">&#x1F4E5; Importa da Excel</div><div class="imp-info"><strong style="color:var(--cb)">Colonne:</strong><div class="col-hdr"><div class="col-tag">NUMERO</div><div class="col-tag">LOCAZIONE</div><div class="col-tag">BANCALI</div><div class="col-tag">NOTE</div><div class="col-tag">DATA</div></div></div><div class="imp-note">&#x2139;&#xFE0F; DATA opzionale. BANCHINA, SMEZZI, FRESCO illimitate.</div><div style="margin-bottom:8px;"><button class="btn bgh" style="padding:6px 10px;font-size:12px;" onclick="scaricaTemplate()">&#x1F4CB; TEMPLATE</button></div><div class="fg"><div class="fl">File Excel</div><input type="file" id="imp-file" accept=".xlsx,.xls" style="background:var(--bg);border:1.5px solid var(--cy);border-radius:var(--rs);color:var(--tx);padding:8px;width:100%;font-size:13px;"></div><div id="imp-preview" style="display:none;margin-bottom:12px;"><div class="fl" style="margin-bottom:5px;">Anteprima:</div><div id="imp-preview-content" style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:10px;font-size:12px;max-height:150px;overflow-y:auto;"></div></div><div id="imp-err" style="display:none;background:rgba(218,54,51,.1);border:1px solid var(--rd);border-radius:var(--rs);padding:8px 12px;color:var(--rb);font-size:12px;margin-bottom:10px;"></div><div class="btn-row"><button class="btn bcy" id="imp-btn" onclick="eseguiImport()" style="display:none;">&#x1F4E5; IMPORTA</button><button class="btn bgh" onclick="chiM('mo-imp')">&#x2716; Chiudi</button></div></div></div>
 <!-- MODAL MODIFICA ORDINE PROGRAMMAZIONE -->
 <div class="mo" id="mo-ordine"><div class="mdl" style="max-width:340px;"><div class="mha"></div><div class="mtt" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Ordine</div><div style="font-size:13px;color:var(--tx2);margin-bottom:12px;">Bilico <strong id="mo-ord-num" style="color:var(--bb);font-size:15px;"></strong></div><div class="edit-field"><div class="edit-label">Data</div><input class="edit-inp" id="mo-ord-data" type="date"></div><div class="edit-field"><div class="edit-label">PLT pianificati</div><div class="crow"><button class="cbt" onclick="stp('mo-ord-plt',-1)">&#x2212;</button><input class="cvl" id="mo-ord-plt" type="number" min="0" inputmode="numeric" placeholder="0"><button class="cbt" onclick="stp('mo-ord-plt',1)">+</button></div></div><div class="edit-field"><div class="edit-label">Nota</div><input class="edit-inp" id="mo-ord-nota" type="text" placeholder="Nota opzionale..." autocomplete="off"></div><div class="btn-row" style="margin-top:10px;"><button class="btn bgn" onclick="salvaOrdine()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-ordine')">&#x2716; Annulla</button></div></div></div>
 
@@ -991,8 +992,10 @@ function goP(n) {
 function aggiornaTopbarAzioni() {
   var exBtn=document.getElementById('tb-excel');
   var impBtn=document.getElementById('tb-importa');
+  var impModBtn=document.getElementById('tb-importa-mod');
   if(exBtn) exBtn.style.display=isAdmin()?'flex':'none';
   if(impBtn) impBtn.style.display=isAdmin()?'flex':'none';
+  if(impModBtn) impModBtn.style.display=isAdmin()?'flex':'none';
   var _cp = document.querySelector('.page.active');
   var ibtn = document.getElementById('topbar-info-btn');
   if (ibtn) ibtn.style.display = (_cp && _cp.id === 'page-home') ? 'flex' : 'none';
@@ -2002,8 +2005,7 @@ function caricaProg() {
     snap.forEach(function(d) { PROG.push(Object.assign({id: d.id}, d.data())); });
     renderProg();
     aggTuttiOrdini();
-    setTimeout(function(){cerca();},50); // aggiorna badge prenotato
-    renderCalendario();
+    setTimeout(function(){cerca();},50);
     aggiornaBadgeCarrellista();
     var _cp = document.querySelector('.page.active');
     if (_cp && _cp.id === 'page-carrellista') renderCarrellista();
@@ -3182,7 +3184,15 @@ function doPin() {
 }
 
 // ═══ IMPORTA DA EXCEL ═══
-function apriImport() {
+var _importMode = 'add'; // 'add' = solo nuovi | 'modify' = aggiorna anche esistenti
+function apriImport(mode) {
+  _importMode = mode || 'add';
+  var titolo = document.getElementById('imp-modal-title');
+  if (titolo) {
+    titolo.innerHTML = _importMode === 'modify'
+      ? '&#x270F;&#xFE0F; Importa / Modifica Excel'
+      : '&#x1F4E5; Importa da Excel';
+  }
   document.getElementById('imp-file').value = '';
   document.getElementById('imp-preview').style.display = 'none';
   document.getElementById('imp-err').style.display = 'none';
@@ -3289,9 +3299,12 @@ function leggiFileImport(evt) {
       var nAgg   = impDati.filter(function(x){ return  x._aggiorna; }).length;
       document.getElementById('imp-err').style.display = 'none';
       var prev = document.getElementById('imp-preview-content');
+      var isModify = (_importMode === 'modify');
       var html = '<strong style="color:var(--gb)">' + impDati.length + ' bilici</strong>: ';
       if (nNuovi) html += '<span style="color:var(--gb)">+' + nNuovi + ' nuovi</span> ';
-      if (nAgg)   html += '<span style="color:var(--tx2)">&#x23ED; ' + nAgg + ' già presenti (saltati)</span>';
+      if (nAgg)   html += isModify
+        ? '<span style="color:var(--ob)">&#x270F; ' + nAgg + ' verranno aggiornati (ubicazione + q.tà)</span>'
+        : '<span style="color:var(--tx2)">&#x23ED; ' + nAgg + ' già presenti (saltati)</span>';
       html += '<br><span style="font-size:11px;color:var(--tx2);">&#x2139;&#xFE0F; L\'importazione non elimina mai dati esistenti.</span>';
       if (errori.length) {
         html += '<br><span style="color:var(--ob)">&#x26A0; ' + errori.length + ' righe ignorate: ' + errori.join('; ') + '</span>';
@@ -3300,7 +3313,9 @@ function leggiFileImport(evt) {
       for (var j = 0; j < Math.min(impDati.length, 10); j++) {
         var r2 = impDati[j];
         var dStr = new Date(r2.ts).toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit'});
-        var tag = r2._aggiorna ? '<span style="color:var(--tx2);font-size:11px;margin-left:4px;">&#x23ED; saltato</span>' : '<span style="color:var(--gb);font-size:11px;margin-left:4px;">&#x2795; nuovo</span>';
+        var tag = r2._aggiorna
+          ? (isModify ? '<span style="color:var(--ob);font-size:11px;margin-left:4px;">&#x270F; aggiorna</span>' : '<span style="color:var(--tx2);font-size:11px;margin-left:4px;">&#x23ED; saltato</span>')
+          : '<span style="color:var(--gb);font-size:11px;margin-left:4px;">&#x2795; nuovo</span>';
         html += '<div style="padding:4px 0;border-bottom:1px solid var(--bd);">';
         html += '<strong>#' + r2.numero + '</strong>' + tag + ' &rarr; ' + r2.locazione + ' &mdash; ' + r2.bancali + ' bancali &mdash; ' + dStr;
         if (r2.note) { html += ' &mdash; ' + r2.note; }
@@ -3337,7 +3352,11 @@ function eseguiImport() {
   for (var i = 0; i < impDati.length; i++) {
     var r = impDati[i];
     if (r._aggiorna) {
-      // Bilico esistente — saltato, nessuna modifica
+      if (_importMode === 'modify') {
+        // IMPORTA/MODIFICA — aggiorna ubicazione + quantità + note
+        promesse.push(dbUB(r.numero, {bancali: r.bancali, locazione: r.locazione, note: r.note}));
+      }
+      // modalità 'add' → saltato senza modifiche
       nAgg++;
     } else {
       // NUOVO bilico — controlla conflitto locazione solo per i nuovi
@@ -3360,7 +3379,7 @@ function eseguiImport() {
     chiM('mo-imp');
     var msg = '';
     if (nNuovi) msg += nNuovi + ' nuovi aggiunti';
-    if (nAgg)   msg += (msg ? ' · ' : '') + nAgg + ' già presenti saltati';
+    if (nAgg)   msg += (msg ? ' · ' : '') + nAgg + (_importMode === 'modify' ? ' aggiornati' : ' già presenti saltati');
     tst('Importazione completata: ' + msg, 'ok');
     impDati = [];
     btn.disabled = false;
@@ -5040,14 +5059,20 @@ function checkFotoReminder() {
       var cnt = document.getElementById('mo-foto-reminder-count');
       if (cnt) { cnt.textContent = n; }
       document.getElementById('mo-foto-reminder').classList.add('open');
-      try { localStorage.setItem(chiave, '1'); } catch(x) {}
     });
   }, 1800);
 }
 
 function rispondiFotoReminder(si) {
   chiM('mo-foto-reminder');
-  if (si) { scaricaTutteFoto(true); }
+  if (si) {
+    // Scarica e cancella → segna come "visto" questo mese
+    var oggi = new Date();
+    var chiave = 'FOTO_REMINDER_' + oggi.getFullYear() + '_' + (oggi.getMonth() + 1);
+    try { localStorage.setItem(chiave, '1'); } catch(x) {}
+    scaricaTutteFoto(true);
+  }
+  // Se "Rimanda" → chiave NON salvata → riproposto al prossimo login
 }
 </script>
 

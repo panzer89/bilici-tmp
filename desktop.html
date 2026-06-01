@@ -3253,15 +3253,24 @@ function leggiFileImport(evt) {
       var errori = [];
       for (var i = 1; i < rows.length; i++) {
         var r = rows[i];
-        var num = String(r[iN] || '').trim().toUpperCase();
+        // Legge NUMERO dalla cella raw per gestire bilici con lettere (E116, A234 ecc.)
+        var cellAddr = XLSX.utils.encode_cell({r: i, c: iN});
+        var cell = ws[cellAddr];
+        var num;
+        if (cell) {
+          if (cell.t === 's') { num = cell.v; }
+          else if (cell.w) { num = cell.w; }
+          else { num = String(cell.v || ''); }
+        } else { num = String(r[iN] || ''); }
+        num = num.trim().toUpperCase();
         var loc = String(r[iL] || '').trim().toUpperCase();
         var ban = parseInt(r[iB]) || 0;
         var nt = iNt >= 0 ? String(r[iNt] || '').trim() : '';
         var dt = iD >= 0 ? parsaData(r[iD]) : new Date().toISOString();
         if (!num || !loc) { continue; }
         if (ban <= 0) { errori.push('Riga ' + (i+1) + ': bancali non validi per bilico ' + num); continue; }
-        if (BL[num]) { errori.push('Riga ' + (i+1) + ': bilico ' + num + ' gia presente in magazzino'); continue; }
-        impDati.push({numero: num, locazione: loc, bancali: ban, note: nt, ts: dt});
+        // UPSERT: segna se il bilico esiste già (aggiornamento) o è nuovo
+        impDati.push({numero: num, locazione: loc, bancali: ban, note: nt, ts: dt, _aggiorna: !!(BL[num])});
       }
 
       if (impDati.length === 0) {
@@ -3269,9 +3278,14 @@ function leggiFileImport(evt) {
         return;
       }
 
+      var nNuovi = impDati.filter(function(x){ return !x._aggiorna; }).length;
+      var nAgg   = impDati.filter(function(x){ return  x._aggiorna; }).length;
       document.getElementById('imp-err').style.display = 'none';
       var prev = document.getElementById('imp-preview-content');
-      var html = '<strong style="color:var(--gb)">' + impDati.length + ' bilici pronti per importazione</strong>';
+      var html = '<strong style="color:var(--gb)">' + impDati.length + ' bilici</strong>: ';
+      if (nNuovi) html += '<span style="color:var(--gb)">+' + nNuovi + ' nuovi</span> ';
+      if (nAgg)   html += '<span style="color:var(--ob)">&#x270F; ' + nAgg + ' aggiornamenti</span>';
+      html += '<br><span style="font-size:11px;color:var(--tx2);">&#x2139;&#xFE0F; L\'importazione non elimina mai dati esistenti.</span>';
       if (errori.length) {
         html += '<br><span style="color:var(--ob)">&#x26A0; ' + errori.length + ' righe ignorate: ' + errori.join('; ') + '</span>';
       }
@@ -3279,8 +3293,9 @@ function leggiFileImport(evt) {
       for (var j = 0; j < Math.min(impDati.length, 10); j++) {
         var r2 = impDati[j];
         var dStr = new Date(r2.ts).toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit'});
+        var tag = r2._aggiorna ? '<span style="color:var(--ob);font-size:11px;margin-left:4px;">&#x270F; aggiorna</span>' : '<span style="color:var(--gb);font-size:11px;margin-left:4px;">&#x2795; nuovo</span>';
         html += '<div style="padding:4px 0;border-bottom:1px solid var(--bd);">';
-        html += '<strong>#' + r2.numero + '</strong> &rarr; ' + r2.locazione + ' &mdash; ' + r2.bancali + ' bancali &mdash; ' + dStr;
+        html += '<strong>#' + r2.numero + '</strong>' + tag + ' &rarr; ' + r2.locazione + ' &mdash; ' + r2.bancali + ' bancali &mdash; ' + dStr;
         if (r2.note) { html += ' &mdash; ' + r2.note; }
         html += '</div>';
       }
@@ -3311,25 +3326,36 @@ function eseguiImport() {
   btn.disabled = true;
 
   var promesse = [];
+  var nNuovi = 0, nAgg = 0;
   for (var i = 0; i < impDati.length; i++) {
     var r = impDati[i];
-    var locOcc = null;
-    if (!isIllimitata(r.locazione)) {
-      Object.values(BL).forEach(function(x) { if (x.locazione === r.locazione) { locOcc = x; } });
-      // controlla anche quelli gia importati in questa sessione
-      for (var k = 0; k < i; k++) {
-        if (!isIllimitata(impDati[k].locazione) && impDati[k].locazione === r.locazione) { locOcc = impDati[k]; }
+    if (r._aggiorna) {
+      // AGGIORNA bilico esistente — solo bancali, locazione e note
+      promesse.push(dbUB(r.numero, {bancali: r.bancali, locazione: r.locazione, note: r.note}));
+      nAgg++;
+    } else {
+      // NUOVO bilico — controlla conflitto locazione solo per i nuovi
+      var locOcc = null;
+      if (!isIllimitata(r.locazione)) {
+        Object.values(BL).forEach(function(x) { if (x.locazione === r.locazione && !x._aggiorna) { locOcc = x; } });
+        for (var k = 0; k < i; k++) {
+          if (!impDati[k]._aggiorna && !isIllimitata(impDati[k].locazione) && impDati[k].locazione === r.locazione) { locOcc = impDati[k]; }
+        }
       }
-    }
-    if (!locOcc || isIllimitata(r.locazione)) {
-      promesse.push(dbSB(r.numero, {numero: r.numero, locazione: r.locazione, bancali: r.bancali, note: r.note, ts: r.ts}));
-      promesse.push(dbAS({tipo: 'ENTRATA', numero: r.numero, locazione: r.locazione, bancali: r.bancali, note: r.note, ts: r.ts}));
+      if (!locOcc || isIllimitata(r.locazione)) {
+        promesse.push(dbSB(r.numero, {numero: r.numero, locazione: r.locazione, bancali: r.bancali, note: r.note, ts: r.ts}));
+        promesse.push(dbAS({tipo: 'ENTRATA', numero: r.numero, locazione: r.locazione, bancali: r.bancali, note: r.note, ts: r.ts}));
+        nNuovi++;
+      }
     }
   }
 
   Promise.all(promesse).then(function() {
     chiM('mo-imp');
-    tst('Importati ' + impDati.length + ' bilici!', 'ok');
+    var msg = '';
+    if (nNuovi) msg += nNuovi + ' nuovi';
+    if (nAgg)   msg += (msg ? ' · ' : '') + nAgg + ' aggiornati';
+    tst('Importazione completata: ' + msg, 'ok');
     impDati = [];
     btn.disabled = false;
   }).catch(function(e) {

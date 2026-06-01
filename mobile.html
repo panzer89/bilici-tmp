@@ -584,6 +584,18 @@ body[data-lvl="1"] .prog-add{display:none!important;}
       <div class="fl">Note (opzionale)</div>
       <input class="fi" id="out-nt" type="text" placeholder="Destinazione, cliente..." autocomplete="off">
     </div>
+    <div class="fg">
+      <div class="fl">Foto carico (opzionale)</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
+        <span style="font-size:18px;">&#x1F4F7;</span>
+        <span id="out-foto-lbl" style="font-size:13px;color:var(--tx2);">Scatta o scegli dal dispositivo</span>
+        <input type="file" id="out-foto" accept="image/*" style="display:none;" onchange="prevFotoUscita(this)">
+      </label>
+      <div id="out-foto-preview" style="display:none;margin-top:8px;position:relative;">
+        <img id="out-foto-img" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--rs);">
+        <button onclick="clearFotoUscita()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;width:26px;height:26px;font-size:13px;cursor:pointer;">&#x2715;</button>
+      </div>
+    </div>
     <button class="btn brd" onclick="regU()"><span class="bi">&#x1F534;</span>REGISTRA USCITA</button>
   </div>
   <div class="stl">Ultimi Usciti</div>
@@ -649,7 +661,7 @@ body[data-lvl="1"] .prog-add{display:none!important;}
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
         <span style="font-size:18px;">&#x1F4F7;</span>
         <span id="mo-u-foto-lbl" style="font-size:13px;color:var(--tx2);">Tocca per scattare / allegare foto</span>
-        <input type="file" id="mo-u-foto" accept="image/*" capture="environment" style="display:none;" onchange="prevFotoMoU(this)">
+        <input type="file" id="mo-u-foto" accept="image/*" style="display:none;" onchange="prevFotoMoU(this)">
       </label>
       <div id="mo-u-foto-preview" style="display:none;margin-top:8px;position:relative;">
         <img id="mo-u-foto-img" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--rs);">
@@ -2798,6 +2810,21 @@ function regU() {
   document.getElementById('mo-u').classList.add('open');
 }
 
+function prevFotoUscita(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    document.getElementById('out-foto-img').src = e.target.result;
+    document.getElementById('out-foto-preview').style.display = 'block';
+    document.getElementById('out-foto-lbl').textContent = '✅ Foto allegata';
+  };
+  r.readAsDataURL(inp.files[0]);
+}
+function clearFotoUscita() {
+  document.getElementById('out-foto').value = '';
+  document.getElementById('out-foto-preview').style.display = 'none';
+  document.getElementById('out-foto-lbl').textContent = 'Scatta o scegli dal dispositivo';
+}
 function prevFotoMoU(inp) {
   if (!inp.files || !inp.files[0]) return;
   var reader = new FileReader();
@@ -2815,7 +2842,9 @@ function clearFotoMoU() {
 }
 function confU() {
   if (!pend) { return; }
-  var fotoFile = (document.getElementById('mo-u-foto').files || [])[0];
+  // priorità: foto dalla pagina uscita, poi foto dalla modale
+  var fotoFile = (document.getElementById('out-foto').files || [])[0]
+               || (document.getElementById('mo-u-foto').files || [])[0];
   chiM('mo-u');
   clearFotoMoU();
   if (fotoFile) {
@@ -2858,6 +2887,7 @@ function _eseguiUscitaMob(foto) {
   document.getElementById('out-b').value = '0';
   document.getElementById('out-nt').value = '';
   document.getElementById('trvbox').style.display = 'none';
+  clearFotoUscita();
   pend = null;
 }
 
@@ -3984,7 +4014,7 @@ function rispondiFotoReminderMob(ok) {
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
         <span style="font-size:18px;">&#x1F4F7;</span>
         <span id="cqm-foto-lbl" style="font-size:13px;color:var(--tx2);">Tocca per scattare / allegare foto</span>
-        <input type="file" id="cqm-foto" accept="image/*" capture="environment" style="display:none;" onchange="prevFotoCQM(this)">
+        <input type="file" id="cqm-foto" accept="image/*" style="display:none;" onchange="prevFotoCQM(this)">
       </label>
       <div id="cqm-foto-preview" style="display:none;margin-top:8px;position:relative;">
         <img id="cqm-foto-img" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--rs);">
@@ -4035,7 +4065,7 @@ function rispondiFotoReminderMob(ok) {
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
         <span style="font-size:18px;">&#x1F4F7;</span>
         <span id="mcu-foto-lbl" style="font-size:13px;color:var(--tx2);">Tocca per scattare / allegare foto</span>
-        <input type="file" id="mcu-foto" accept="image/*" capture="environment" style="display:none;" onchange="prevFotoMCU(this)">
+        <input type="file" id="mcu-foto" accept="image/*" style="display:none;" onchange="prevFotoMCU(this)">
       </label>
       <div id="mcu-foto-preview" style="display:none;margin-top:8px;position:relative;">
         <img id="mcu-foto-img" style="width:100%;max-height:140px;object-fit:cover;border-radius:var(--rs);">

@@ -176,7 +176,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);height
 .prog-ban{font-size:12px;color:var(--ob);}
 .prog-note-txt{font-size:11px;color:var(--tx2);}
 .prog-actions{display:flex;gap:6px;flex-wrap:wrap;}
-.prog-carica-btn{height:38px;padding:0 12px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.prog-carica-btn{height:38px;width:38px;padding:0;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .prog-carica-btn:active{opacity:.8;}
 .prog-del-btn{height:38px;width:38px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
 .prog-del-btn:active{border-color:var(--rd);color:var(--rb);}
@@ -644,6 +644,18 @@ body[data-lvl="1"] .prog-add{display:none!important;}
     <div class="mha"></div>
     <div class="mtt rd">&#x26A0;&#xFE0F; Conferma Uscita</div>
     <div class="mbd" id="mo-u-tx"></div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">&#x1F4F7; Foto carico (opzionale)</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;">
+        <span style="font-size:18px;">&#x1F4F7;</span>
+        <span id="mo-u-foto-lbl" style="font-size:13px;color:var(--tx2);">Tocca per scattare / allegare foto</span>
+        <input type="file" id="mo-u-foto" accept="image/*" capture="environment" style="display:none;" onchange="prevFotoMoU(this)">
+      </label>
+      <div id="mo-u-foto-preview" style="display:none;margin-top:8px;position:relative;">
+        <img id="mo-u-foto-img" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--rs);">
+        <button onclick="clearFotoMoU()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;width:24px;height:24px;font-size:13px;cursor:pointer;line-height:1;">&#x2715;</button>
+      </div>
+    </div>
     <div class="brow">
       <button class="btn brd" onclick="confU()">&#x2705; CONFERMA</button>
       <button class="btn bgh" onclick="chiM('mo-u')">&#x274C; ANNULLA</button>
@@ -1806,14 +1818,14 @@ function renderProg() {
     // Azioni
     html += '<div class="prog-actions">';
     if (isPaired) {
-      if (inMag || bilB) { html += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x1F534; CARICA</button>'; }
+      if (inMag || bilB) { html += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x2B06;</button>'; }
       html += '<button class="prog-del-btn" style="font-size:14px;" onclick="modificaNotaProg(\'' + p.numero + '\')">&#x270F;&#xFE0F;</button>';
       html += '<button class="prog-del-btn" style="border-color:var(--pb);color:var(--pb);" title="Sgancia" onclick="sganciaProg(\'' + docId + '\')">&#x2702;</button>';
       if (CURR_USER && (CURR_USER.livello === 0 || CURR_USER.livello === 2)) {
         html += '<button class="prog-del-btn" onclick="rimuoviProgById(\'' + docId + '\')">&#x2716;</button>';
       }
     } else {
-      if (inMag) { html += '<button class="prog-carica-btn" onclick="caricaVeloce(\'' + p.numero + '\')">&#x1F534; CARICA</button>'; }
+      if (inMag) { html += '<button class="prog-carica-btn" onclick="caricaVeloce(\'' + p.numero + '\')">&#x2B06;</button>'; }
       html += '<button class="prog-del-btn" style="font-size:14px;" onclick="modificaNotaProg(\'' + p.numero + '\')">&#x270F;&#xFE0F;</button>';
       var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggancioSel !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
       var aggTitle = isSelected ? 'Annulla selezione' : 'Aggancia';
@@ -2057,13 +2069,23 @@ function renderTuttiOrdiniMob() {
     if (p.partner) {
       var idQB="'"+(p.partner.id||'')+"'";
       var fonteQB="'"+p.partner.fonte+"'";
-      html+='<button onclick="sganciaTOMob('+idQ+','+fonteQ+')" title="Sgancia" style="background:none;border:1px solid var(--pb);border-radius:4px;color:var(--pb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;margin-right:4px;">&#x2702;</button>';
+      var inMagA = !!(BL[p.numero]), inMagB = !!(BL[p.partner.numero]);
+      if (p.fonte==='prog' && (inMagA||inMagB) && p.id) {
+        html+='<button class="prog-carica-btn" style="margin-right:2px;" onclick="apriUscitaCoppia('+idQ+')">&#x2B06;</button>';
+      }
+      html+='<button onclick="modificaNotaTOMob('+fonteQ+','+idQ+',\''+p.numero+'\')" style="background:none;border:1px solid var(--bd);border-radius:4px;color:var(--tx2);padding:3px 8px;font-size:14px;cursor:pointer;flex-shrink:0;">&#x270F;&#xFE0F;</button>';
+      html+='<button onclick="sganciaTOMob('+idQ+','+fonteQ+')" title="Sgancia" style="background:none;border:1px solid var(--pb);border-radius:4px;color:var(--pb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2702;</button>';
       html+='<button onclick="eliminaOrdineCoppiaMob('+fonteQ+','+idQ+','+fonteQB+','+idQB+','+p.numero+','+p.partner.numero+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2715;</button>';
     } else {
+      var inMagTO = !!(BL[p.numero]);
+      if (p.fonte==='prog' && inMagTO) {
+        html+='<button class="prog-carica-btn" style="margin-right:2px;" onclick="caricaVeloce(\''+p.numero+'\')">&#x2B06;</button>';
+      }
+      html+='<button onclick="modificaNotaTOMob('+fonteQ+','+idQ+',\''+p.numero+'\')" style="background:none;border:1px solid var(--bd);border-radius:4px;color:var(--tx2);padding:3px 8px;font-size:14px;cursor:pointer;flex-shrink:0;">&#x270F;&#xFE0F;</button>';
       if (isAdmTO && p.id) {
         var isSelTO = aggTOSelMob !== null && aggTOSelMob.docId === p.id;
         var aggToSt = isSelTO ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (aggTOSelMob !== null ? 'border-color:var(--gb);color:var(--gb);' : 'border-color:var(--bb);color:var(--bb);');
-        html+='<button onclick="startAggancioTOMob('+idQ+','+p.numero+','+fonteQ+')" style="background:none;border:1px solid;border-radius:4px;padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;margin-right:4px;'+aggToSt+'" title="Aggancia">&#x1F517;</button>';
+        html+='<button onclick="startAggancioTOMob('+idQ+','+p.numero+','+fonteQ+')" style="background:none;border:1px solid;border-radius:4px;padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;'+aggToSt+'" title="Aggancia">&#x1F517;</button>';
       }
       html+='<button onclick="eliminaOrdineMob('+fonteQ+','+idQ+','+p.numero+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0;">&#x2715;</button>';
     }
@@ -2226,6 +2248,20 @@ function aggProgDomani() {
   document.getElementById('prog-domani-banc-inp').value = '';
   suonoSirena();
   tst('Bilico ' + val + ' aggiunto per domani', 'ok');
+}
+
+function modificaNotaTOMob(fonte, docId, numero) {
+  var item = trovaDaTOMob(docId, fonte);
+  if (!item) return;
+  var nuovaNota = prompt('Modifica nota per bilico #' + numero + ':', item.nota || '');
+  if (nuovaNota === null) return;
+  nuovaNota = nuovaNota.trim();
+  item.nota = nuovaNota;
+  if (UC && fdb && docId) {
+    var coll = fonte === 'prog_calendario' ? 'prog_calendario' : fonte;
+    fdb.collection(coll).doc(docId).update({nota: nuovaNota}).catch(function(e){ tst('Errore: '+e.message,'er'); });
+  }
+  renderTuttiOrdiniMob();
 }
 
 function modificaNotaProgDomani(num) {
@@ -2605,29 +2641,58 @@ function regU() {
   document.getElementById('mo-u').classList.add('open');
 }
 
+function prevFotoMoU(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('mo-u-foto-img').src = e.target.result;
+    document.getElementById('mo-u-foto-preview').style.display = 'block';
+    document.getElementById('mo-u-foto-lbl').textContent = '✅ Foto allegata';
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+function clearFotoMoU() {
+  document.getElementById('mo-u-foto').value = '';
+  document.getElementById('mo-u-foto-preview').style.display = 'none';
+  document.getElementById('mo-u-foto-lbl').textContent = 'Tocca per scattare / allegare foto';
+}
 function confU() {
   if (!pend) { return; }
+  var fotoFile = (document.getElementById('mo-u-foto').files || [])[0];
   chiM('mo-u');
+  clearFotoMoU();
+  if (fotoFile) {
+    var reader = new FileReader();
+    reader.onload = function(e) { _eseguiUscitaMob(e.target.result); };
+    reader.readAsDataURL(fotoFile);
+  } else {
+    _eseguiUscitaMob(null);
+  }
+}
+function _eseguiUscitaMob(foto) {
   var n = pend.n, bu = pend.bu, nt = pend.nt, b = pend.b;
   var rim = b.bancali - bu;
   var ts = new Date().toISOString();
+  var storEntry;
   if (rim === 0) {
     dbDB(n);
-    dbAS({tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: 0, note: nt, ts: ts});
+    storEntry = {tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: 0, note: nt, ts: ts};
+    if (foto) storEntry.foto = foto;
+    dbAS(storEntry);
     tst('Bilico ' + n + ' uscito - locazione ' + b.locazione + ' liberata', 'ok');
   } else {
-    // uscita parziale: sposta in SMEZZI se non e gia li
     var locOrig = b.locazione.toUpperCase();
     var nuovaLoc = (locOrig === 'SMEZZI' || locOrig === 'FRESCO') ? locOrig : 'SMEZZI';
     dbUB(n, {bancali: rim, locazione: nuovaLoc});
-    dbAS({tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: rim, note: nt, ts: ts});
+    storEntry = {tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: rim, note: nt, ts: ts};
+    if (foto) storEntry.foto = foto;
+    dbAS(storEntry);
     if (nuovaLoc !== locOrig) {
       tst('Usciti ' + bu + ' bancali - rimasti ' + rim + ' spostati in SMEZZI', 'ok');
     } else {
       tst('Usciti ' + bu + ' bancali - rimasti ' + rim + ' in ' + nuovaLoc, 'ok');
     }
   }
-  // rimuovi automaticamente dalle uscite programmate
   suonoUscita();
   rimuoviProg(n);
   rimuoviPrenotazioneNum(n);

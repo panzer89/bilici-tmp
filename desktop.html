@@ -174,7 +174,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'Barlow',
 .prog-ban{font-size:12px;color:var(--ob);}
 .prog-note-txt{font-size:14px;color:var(--tx);padding:6px 10px 6px 12px;border-left:3px solid var(--bl);background:rgba(56,139,253,.06);border-radius:0 6px 6px 0;margin-top:5px;}
 .prog-actions{display:flex;gap:5px;flex-shrink:0;}
-.prog-carica-btn{height:30px;padding:0 9px;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;cursor:pointer;}
+.prog-carica-btn{height:30px;width:30px;padding:0;background:var(--rd);color:#fff;border:none;border-radius:var(--rs);font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .prog-del-btn{height:30px;width:30px;background:none;border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;}
 .prog-del-btn:hover{border-color:var(--rd);color:var(--rb);}
 .prog-empty{padding:12px;font-size:13px;color:var(--tx2);text-align:center;}
@@ -806,7 +806,7 @@ body[data-lvl="1"] .sb-settings-btn{display:none!important;}
 </div>
 
 <!-- MODAL CONFERMA USCITA -->
-<div class="mo" id="mo-u"><div class="mdl"><div class="mha"></div><div class="mtt rd">&#x26A0;&#xFE0F; Conferma Uscita</div><div class="mbd" id="mo-u-tx"></div><div class="btn-row" style="justify-content:center;"><button class="btn brd" onclick="confU()">&#x2705; CONFERMA</button><button class="btn bgh" onclick="chiM('mo-u')">&#x274C; ANNULLA</button></div></div></div>
+<div class="mo" id="mo-u"><div class="mdl"><div class="mha"></div><div class="mtt rd">&#x26A0;&#xFE0F; Conferma Uscita</div><div class="mbd" id="mo-u-tx"></div><div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">&#x1F4F7; Foto carico (opzionale)</div><label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--rs);padding:8px 12px;"><span style="font-size:16px;">&#x1F4F7;</span><span id="mo-u-foto-lbl" style="font-size:13px;color:var(--tx2);">Clicca per allegare foto</span><input type="file" id="mo-u-foto" accept="image/*" style="display:none;" onchange="prevFotoMoU(this)"></label><div id="mo-u-foto-preview" style="display:none;margin-top:8px;position:relative;"><img id="mo-u-foto-img" style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--rs);"><button onclick="clearFotoMoU()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;width:24px;height:24px;font-size:13px;cursor:pointer;">&#x2715;</button></div></div><div class="btn-row" style="justify-content:center;"><button class="btn brd" onclick="confU()">&#x2705; CONFERMA</button><button class="btn bgh" onclick="chiM('mo-u')">&#x274C; ANNULLA</button></div></div></div>
 <!-- MODAL PIN -->
 <div class="mo" id="mo-p"><div class="mdl" style="max-width:320px;"><div class="mha"></div><div class="mtt og">&#x1F510; PIN</div><div class="pds"><div class="pd" id="pd0"></div><div class="pd" id="pd1"></div><div class="pd" id="pd2"></div><div class="pd" id="pd3"></div></div><div class="per" id="perr"></div><div class="pgd"><button class="pk" onclick="pki('1')">1</button><button class="pk" onclick="pki('2')">2</button><button class="pk" onclick="pki('3')">3</button><button class="pk" onclick="pki('4')">4</button><button class="pk" onclick="pki('5')">5</button><button class="pk" onclick="pki('6')">6</button><button class="pk" onclick="pki('7')">7</button><button class="pk" onclick="pki('8')">8</button><button class="pk" onclick="pki('9')">9</button><button class="pk em"></button><button class="pk" onclick="pki('0')">0</button><button class="pk dl" onclick="pkd()">&#x232B;</button></div><button class="btn bgh" onclick="chiM('mo-p')" style="width:100%;">Annulla</button></div></div>
 <!-- MODAL ELIMINA MISSIONE CARICATA (doppio PIN) -->
@@ -1431,12 +1431,12 @@ function buildProgItem(p, isDomani, renderedAggIds) {
   // Azioni
   s += '<div class="prog-actions">';
   if (isPaired) {
-    if (!isDomani && (inMag || bilB)) { s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x1F534; CARICA</button>'; }
+    if (!isDomani && (inMag || bilB)) { s += '<button class="prog-carica-btn" onclick="apriUscitaCoppia(\'' + docId + '\')">&#x2B06;</button>'; }
     s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(\'' + docId + '\')">&#x270F;&#xFE0F;</button>';
     s += '<button class="prog-del-btn" style="border-color:var(--pb);color:var(--pb);" title="Sgancia" onclick="' + (isDomani ? 'sganciaProgDomani' : 'sganciaProg') + '(\'' + docId + '\')">&#x2702;</button>';
     if (isAdmin()) { s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'rimuoviProgDomaniById' : 'rimuoviProgById') + '(\'' + docId + '\')">&#x2716;</button>'; }
   } else {
-    if (!isDomani && inMag) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + num + '&quot;)">&#x1F534; CARICA</button>'; }
+    if (!isDomani && inMag) { s += '<button class="prog-carica-btn" onclick="caricaVeloce(&quot;' + num + '&quot;)">&#x2B06;</button>'; }
     s += '<button class="prog-del-btn" onclick="' + (isDomani ? 'modificaNotaProgDomani' : 'modificaNotaProg') + '(\'' + docId + '\')">&#x270F;&#xFE0F;</button>';
     var aggSt = isSelected ? 'border-color:var(--cb);color:var(--cb);background:rgba(13,148,136,.12);' : (selObj !== null ? 'border-color:var(--gb);color:var(--gb);' : '');
     var aggTitle = isSelected ? 'Annulla selezione' : 'Aggancia';
@@ -2920,22 +2920,52 @@ function regU() {
   document.getElementById('mo-u').classList.add('open');
 }
 
+function prevFotoMoU(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('mo-u-foto-img').src = e.target.result;
+    document.getElementById('mo-u-foto-preview').style.display = 'block';
+    document.getElementById('mo-u-foto-lbl').textContent = '✅ Foto allegata';
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+function clearFotoMoU() {
+  document.getElementById('mo-u-foto').value = '';
+  document.getElementById('mo-u-foto-preview').style.display = 'none';
+  document.getElementById('mo-u-foto-lbl').textContent = 'Clicca per allegare foto';
+}
 function confU() {
   if (!pend) { return; }
+  var fotoFile = (document.getElementById('mo-u-foto').files || [])[0];
   chiM('mo-u');
+  clearFotoMoU();
+  if (fotoFile) {
+    var reader = new FileReader();
+    reader.onload = function(e) { _eseguiUscitaDesk(e.target.result); };
+    reader.readAsDataURL(fotoFile);
+  } else {
+    _eseguiUscitaDesk(null);
+  }
+}
+function _eseguiUscitaDesk(foto) {
   var n = pend.n, bu = pend.bu, nt = pend.nt, b = pend.b;
   var rim = b.bancali - bu;
   var ts = new Date().toISOString();
+  var storEntry;
   if (rim === 0) {
     dbDB(n);
-    dbAS({tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: 0, note: nt, ts: ts});
+    storEntry = {tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: 0, note: nt, ts: ts};
+    if (foto) storEntry.foto = foto;
+    dbAS(storEntry);
     tst('Bilico ' + n + ' uscito - locazione ' + b.locazione + ' liberata', 'ok');
   } else {
-    // uscita parziale: sposta in SMEZZI se non e gia li
     var locOrig = b.locazione.toUpperCase();
     var nuovaLoc = (locOrig === 'SMEZZI' || locOrig === 'FRESCO') ? locOrig : 'SMEZZI';
     dbUB(n, {bancali: rim, locazione: nuovaLoc});
-    dbAS({tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: rim, note: nt, ts: ts});
+    storEntry = {tipo: 'USCITA', numero: n, locazione: b.locazione, bancaliUsciti: bu, bancaliRimasti: rim, note: nt, ts: ts};
+    if (foto) storEntry.foto = foto;
+    dbAS(storEntry);
     if (nuovaLoc !== locOrig) {
       tst('Usciti ' + bu + ' bancali - rimasti ' + rim + ' spostati in SMEZZI', 'ok');
     } else {

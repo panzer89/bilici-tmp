@@ -3291,7 +3291,7 @@ function leggiFileImport(evt) {
       var prev = document.getElementById('imp-preview-content');
       var html = '<strong style="color:var(--gb)">' + impDati.length + ' bilici</strong>: ';
       if (nNuovi) html += '<span style="color:var(--gb)">+' + nNuovi + ' nuovi</span> ';
-      if (nAgg)   html += '<span style="color:var(--ob)">&#x270F; ' + nAgg + ' aggiornamenti</span>';
+      if (nAgg)   html += '<span style="color:var(--tx2)">&#x23ED; ' + nAgg + ' già presenti (saltati)</span>';
       html += '<br><span style="font-size:11px;color:var(--tx2);">&#x2139;&#xFE0F; L\'importazione non elimina mai dati esistenti.</span>';
       if (errori.length) {
         html += '<br><span style="color:var(--ob)">&#x26A0; ' + errori.length + ' righe ignorate: ' + errori.join('; ') + '</span>';
@@ -3300,7 +3300,7 @@ function leggiFileImport(evt) {
       for (var j = 0; j < Math.min(impDati.length, 10); j++) {
         var r2 = impDati[j];
         var dStr = new Date(r2.ts).toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit'});
-        var tag = r2._aggiorna ? '<span style="color:var(--ob);font-size:11px;margin-left:4px;">&#x270F; aggiorna</span>' : '<span style="color:var(--gb);font-size:11px;margin-left:4px;">&#x2795; nuovo</span>';
+        var tag = r2._aggiorna ? '<span style="color:var(--tx2);font-size:11px;margin-left:4px;">&#x23ED; saltato</span>' : '<span style="color:var(--gb);font-size:11px;margin-left:4px;">&#x2795; nuovo</span>';
         html += '<div style="padding:4px 0;border-bottom:1px solid var(--bd);">';
         html += '<strong>#' + r2.numero + '</strong>' + tag + ' &rarr; ' + r2.locazione + ' &mdash; ' + r2.bancali + ' bancali &mdash; ' + dStr;
         if (r2.note) { html += ' &mdash; ' + r2.note; }
@@ -3337,8 +3337,7 @@ function eseguiImport() {
   for (var i = 0; i < impDati.length; i++) {
     var r = impDati[i];
     if (r._aggiorna) {
-      // AGGIORNA bilico esistente — solo bancali, locazione e note
-      promesse.push(dbUB(r.numero, {bancali: r.bancali, locazione: r.locazione, note: r.note}));
+      // Bilico esistente — saltato, nessuna modifica
       nAgg++;
     } else {
       // NUOVO bilico — controlla conflitto locazione solo per i nuovi
@@ -3360,8 +3359,8 @@ function eseguiImport() {
   Promise.all(promesse).then(function() {
     chiM('mo-imp');
     var msg = '';
-    if (nNuovi) msg += nNuovi + ' nuovi';
-    if (nAgg)   msg += (msg ? ' · ' : '') + nAgg + ' aggiornati';
+    if (nNuovi) msg += nNuovi + ' nuovi aggiunti';
+    if (nAgg)   msg += (msg ? ' · ' : '') + nAgg + ' già presenti saltati';
     tst('Importazione completata: ' + msg, 'ok');
     impDati = [];
     btn.disabled = false;

@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Operatore TMP">
+<meta name="theme-color" content="#0d1117">
+<title>Operatore TMP</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+:root{
+  --bg:#0d1117;--sf:#161b22;--sf2:#1e2730;--bd:#30363d;
+  --tx:#e6edf3;--tx2:#8b949e;--tx3:#444c56;
+  --gn:#2ea043;--gb:#3fb950;
+  --rd:#da3633;--rb:#f85149;
+  --og:#d29922;--ob:#e3b341;
+  --bl:#1f6feb;--bb:#388bfd;
+  --pu:#6e40c9;--pb:#a371f7;
+  --cy:#0d9488;--cb:#2dd4bf;
+  --r:14px;--rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;overflow-x:hidden;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);overflow:hidden;overflow-x:hidden;display:flex;flex-direction:column;width:100%;max-width:100vw;}
+#op-shell{flex:1;display:none;flex-direction:column;overflow:hidden;overflow-x:hidden;width:100%;}
+
+/* ── ORIENTATION ── */
+@media screen and (orientation:landscape){
+  body.orient-locked{position:fixed;top:0;left:0;width:100vh;height:100vw;transform:rotate(-90deg) translateX(-100%);transform-origin:top left;}
+}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:32px 24px;width:100%;max-width:380px;}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;text-align:center;margin-bottom:4px;}
+.login-logo span{color:var(--bb);}
+.login-sub{font-size:13px;color:var(--tx2);text-align:center;margin-bottom:24px;}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);margin-bottom:5px;display:block;}
+.inp{background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:16px;padding:14px;width:100%;outline:none;margin-bottom:14px;-webkit-appearance:none;}
+.inp:focus{border-color:var(--bb);}
+.inp::placeholder{color:var(--tx3);}
+.ricorda{display:flex;align-items:center;gap:10px;margin-bottom:18px;cursor:pointer;}
+.ricorda input{width:20px;height:20px;accent-color:var(--bb);flex-shrink:0;}
+.ricorda span{font-size:14px;color:var(--tx2);}
+.login-err{color:var(--rb);font-size:13px;text-align:center;min-height:18px;margin-bottom:10px;}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--sf);border-bottom:2px solid var(--gn);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden;z-index:10;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.back-btn{background:var(--sf2);border:1.5px solid var(--bd);color:var(--tx);border-radius:10px;padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;letter-spacing:.5px;display:none;align-items:center;gap:6px;}
+.back-btn:active{background:var(--bd);}
+.topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;letter-spacing:.5px;}
+.topbar-truck{position:absolute;bottom:4px;left:-28px;font-size:18px;line-height:1;pointer-events:none;animation:truck 30s linear 1 forwards;}
+@keyframes truck{from{transform:translateX(0) scaleX(-1)}to{transform:translateX(calc(100vw + 36px)) scaleX(-1)}}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.conn-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;background:var(--sf2);border:1px solid var(--bd);}
+.conn-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--rb);animation:pulse 2s infinite;}
+.conn-pill.on .dot{background:var(--gb);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.topbar-user{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);display:none;align-items:center;gap:6px;}
+.topbar-avatar{width:26px;height:26px;border-radius:50%;background:rgba(46,160,67,.25);border:1px solid var(--gn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--gb);flex-shrink:0;}
+.icon-btn{height:30px;padding:0 9px;background:none;border:1px solid var(--bd);border-radius:20px;color:var(--tx2);font-size:13px;display:flex;align-items:center;transition:.15s;}
+.icon-btn.locked{border-color:var(--bb);color:var(--bb);}
+
+/* ── PAGES ── */
+#op-shell .pages{flex:1;overflow:hidden;overflow-x:hidden;position:relative;width:100%;}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;display:none;padding:16px 16px 32px;width:100%;box-sizing:border-box;}
+.page.active{display:block;}
+
+/* ── HOME TILE GRID ── */
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0;}
+.home-tile{border:none;border-radius:var(--r);padding:24px 14px 22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;cursor:pointer;position:relative;overflow:hidden;min-height:150px;transition:all .15s;}
+.home-tile:active{transform:scale(.96);opacity:.9;}
+.home-tile .ic{font-size:48px;line-height:1;}
+.home-tile .lbl{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;line-height:1.2;}
+.tile-badge{position:absolute;top:8px;right:8px;background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:900;min-width:24px;height:24px;border-radius:12px;display:none;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+.tile-badge.vis{display:flex;}
+.t-green{background:linear-gradient(135deg,#2ea043,#1d7330);color:#fff;}
+.t-red{background:linear-gradient(135deg,#da3633,#a82825);color:#fff;}
+.t-blue{background:linear-gradient(135deg,#1f6feb,#1553b5);color:#fff;}
+.t-orange{background:linear-gradient(135deg,#d29922,#9e7419);color:#111;}
+.t-purple{background:linear-gradient(135deg,#6e40c9,#512f96);color:#fff;}
+.t-cyan{background:linear-gradient(135deg,#0d9488,#0a7068);color:#fff;}
+
+/* ── CATEGORIE ENTRATA ── */
+.cat-wrap{display:flex;flex-direction:column;gap:14px;margin-top:8px;}
+.cat-tile{width:100%;padding:28px 20px;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:14px;}
+.cat-tile:active{transform:scale(.97);}
+.cat-secco{background:var(--og);color:#111;}
+.cat-fresco{background:var(--bl);color:#fff;}
+.cat-hint{text-align:center;font-size:12px;color:var(--tx3);margin-top:-6px;font-style:italic;}
+
+/* ── FORM ── */
+.fc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;width:100%;overflow:hidden;}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+.sec-title::before,.sec-title::after{content:'';flex:1;height:1px;background:var(--bd);}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);}
+.fi{background:var(--bg);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--tx);font-size:16px;padding:13px 14px;outline:none;width:100%;-webkit-appearance:none;}
+.fi:focus{border-color:var(--bb);}
+.fi::placeholder{color:var(--tx3);}
+.fi.big{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;text-align:center;letter-spacing:2px;border:2px solid var(--bl);color:var(--bb);height:76px;}
+.fi.big::placeholder{font-size:22px;color:var(--tx3);font-weight:400;}
+.fi.big::-webkit-outer-spin-button,.fi.big::-webkit-inner-spin-button{-webkit-appearance:none;}
+.fi.big[type=number]{-moz-appearance:textfield;}
+.fi[type=number]::-webkit-outer-spin-button,.fi[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+.fi[type=number]{-moz-appearance:textfield;}
+.num-row{display:flex;gap:5px;align-items:stretch;width:100%;max-width:100%;box-sizing:border-box;}
+.pfx{width:44px;min-width:44px;max-width:44px;text-align:center;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);outline:none;-webkit-appearance:none;flex-shrink:0;padding:0;box-sizing:border-box;}
+.crow{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;}
+.cbt{width:52px;height:52px;border-radius:50%;border:2px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cbt:active{background:var(--bd);transform:scale(.93);}
+.cvl{flex:1;min-width:0;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;color:var(--ob);border:2px solid var(--og);padding:6px;height:68px;background:var(--bg);border-radius:var(--rs);outline:none;-webkit-appearance:none;box-sizing:border-box;}
+.cvl[type=number]{-moz-appearance:textfield;}
+.loc-row{display:flex;}
+.loc-row .fi{border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;flex:1;}
+.qr-btn{height:50px;width:50px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:0 var(--rs) var(--rs) 0;color:var(--tx2);font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qr-btn:active{background:var(--bl);color:#fff;border-color:var(--bl);}
+
+/* ── AUTO BADGE ── */
+.auto-badge{background:rgba(31,111,235,.1);border:1px solid var(--bl);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;width:100%;overflow:hidden;}
+.auto-badge .ic{font-size:18px;}
+.auto-badge .tx{font-size:14px;color:var(--bb);}
+.auto-badge strong{font-family:'Barlow Condensed',sans-serif;font-size:20px;}
+
+/* ── SUCCESS BOX ── */
+.success-box{background:rgba(46,160,67,.1);border:2px solid var(--gn);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:14px;display:none;}
+.success-box .ic{font-size:44px;margin-bottom:8px;}
+.success-box .tx{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--gb);}
+.success-box .sub{font-size:13px;color:var(--tx2);margin-top:4px;}
+
+/* ── TROVATO BOX ── */
+.trovato{background:var(--bg);border:1.5px solid var(--gn);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;display:none;}
+.trovato-t{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--tx2);margin-bottom:4px;}
+.trovato-i{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;}
+
+/* ── BUTTONS ── */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:17px;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:10px;}
+.btn:active{transform:scale(.97);opacity:.85;}
+.btn:last-child{margin-bottom:0;}
+.btn.sm{padding:10px 14px;font-size:13px;width:auto;border-radius:8px;margin-bottom:0;}
+.btn-row{display:flex;gap:8px;}
+.btn-row .btn{margin-bottom:0;}
+.bgn{background:var(--gn);color:#fff;}
+.brd{background:var(--rd);color:#fff;}
+.bbl{background:var(--bl);color:#fff;}
+.bcy{background:var(--cy);color:#fff;}
+.bog{background:var(--og);color:#111;}
+.bgh{background:var(--sf2);color:var(--tx2);border:1px solid var(--bd);}
+
+/* ── FOTO BTN ── */
+.foto-label{display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sf2);border:2px dashed var(--ob);border-radius:var(--r);padding:14px;width:100%;margin-bottom:8px;}
+.foto-label .ic{font-size:24px;}
+.foto-label .tx{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--ob);}
+.foto-label.done{border-color:var(--gn);background:rgba(46,160,67,.08);}
+.foto-label.done .tx{color:var(--gb);}
+.foto-prev{display:none;position:relative;margin-bottom:10px;}
+.foto-prev img{width:100%;max-height:200px;object-fit:cover;border-radius:var(--r);}
+.foto-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border:none;border-radius:50%;color:#fff;width:28px;height:28px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* ── PROG LIST ── */
+.prog-box{background:var(--sf);border:1.5px solid var(--rd);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.prog-box.blue{border-color:var(--bl);}
+.prog-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;user-select:none;background:rgba(218,54,51,.07);}
+.prog-hdr.blue{background:rgba(31,111,235,.07);}
+.prog-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--rb);letter-spacing:.5px;display:flex;align-items:center;gap:8px;}
+.prog-title.blue{color:var(--bb);}
+.prog-badge{background:var(--rd);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.prog-badge.blue{background:var(--bl);}
+.prog-chev{font-size:16px;color:var(--tx2);transition:transform .2s;}
+.prog-chev.open{transform:rotate(180deg);}
+.prog-body{border-top:1px solid rgba(218,54,51,.25);display:none;}
+.prog-body.blue{border-top-color:rgba(31,111,235,.25);}
+.prog-body.open{display:block;}
+.prog-item{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--bd);}
+.prog-item:last-child{border-bottom:none;}
+.prog-num{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;min-width:56px;}
+.prog-num small{color:var(--bb);font-size:13px;}
+.prog-col{flex:1;min-width:0;}
+.prog-loc{font-size:13px;color:var(--pb);font-weight:600;}
+.prog-ban{font-size:12px;color:var(--ob);}
+.prog-nota-txt{font-size:12px;color:var(--tx2);margin-top:3px;line-height:1.4;}
+.prog-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.prog-carica-btn{height:38px;padding:0 14px;background:var(--rd);color:#fff;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;}
+.prog-carica-btn:active{opacity:.8;}
+.prog-empty{padding:16px 14px;font-size:14px;color:var(--tx2);text-align:center;}
+
+/* ── LOG TENDINA ── */
+.log-box{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-top:12px;}
+.log-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:var(--sf2);}
+.log-hdr-t{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);letter-spacing:.5px;}
+.log-chev{font-size:16px;color:var(--tx2);transition:transform .2s;}
+.log-chev.open{transform:rotate(180deg);}
+.log-body{display:none;border-top:1px solid var(--bd);}
+.log-body.open{display:block;}
+.li{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bd);}
+.li:last-child{border-bottom:none;}
+.ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ldot.in{background:var(--gb);}.ldot.ou{background:var(--rb);}.ldot.tr{background:var(--cb);}
+.ltx{flex:1;min-width:0;}
+.lm{font-size:14px;font-weight:600;}
+.ls{font-size:12px;color:var(--tx2);margin-top:2px;}
+.lti{font-size:11px;color:var(--tx2);white-space:nowrap;flex-shrink:0;}
+.log-empty{padding:14px;font-size:13px;color:var(--tx2);text-align:center;}
+
+/* ── BILICO CARD ── */
+.bcd{background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--r);padding:14px 14px 14px 18px;position:relative;overflow:hidden;margin-bottom:10px;}
+.bcd::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gb);}
+.bcd-num{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;margin-bottom:6px;}
+.bcd-num small{color:var(--bb);}
+.bcd-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
+.bcd-f .lab{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--tx2);}
+.bcd-f .val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-top:1px;}
+.bcd-f .val.ba{color:var(--ob);}.bcd-f .val.lo{color:var(--pb);}
+.bcd-time{font-size:11px;color:var(--tx3);}
+
+/* ── CARRELLISTA ── */
+.car-grid{display:flex;flex-direction:column;gap:12px;}
+.car-tile{width:100%;padding:22px 20px;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;gap:16px;position:relative;}
+.car-tile:active{transform:scale(.97);}
+.car-tile .ic{font-size:36px;flex-shrink:0;}
+.car-tile .info{flex:1;text-align:left;}
+.car-tile .info .sub{font-size:13px;font-weight:400;letter-spacing:0;opacity:.8;margin-top:2px;font-family:'Barlow',sans-serif;}
+.car-badge{position:absolute;top:10px;right:14px;background:rgba(0,0,0,.25);color:#fff;border-radius:20px;padding:2px 10px;font-size:13px;font-weight:900;display:none;}
+.car-badge.vis{display:block;}
+
+/* ── MISSIONI ── */
+.miss-card{background:var(--sf);border:1.5px solid rgba(163,113,247,.3);border-radius:var(--r);overflow:hidden;margin-bottom:10px;}
+.miss-card-hdr{padding:14px;cursor:pointer;}
+.miss-card-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;color:var(--pb);margin-bottom:4px;}
+.miss-card-meta{font-size:13px;color:var(--tx2);}
+.miss-card-prog{background:var(--sf2);border-radius:3px;height:5px;margin-top:8px;}
+.miss-card-bar{background:var(--pb);height:100%;border-radius:3px;}
+.miss-stato{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.miss-stato.attesa{background:rgba(139,148,158,.15);color:var(--tx2);}
+.miss-stato.in_corso{background:rgba(210,153,34,.15);color:var(--ob);}
+.miss-stato.completata{background:rgba(0,191,255,.1);color:#00bfff;}
+
+/* ── MODALI ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:600;display:none;align-items:flex-end;justify-content:center;overflow:hidden;}
+.overlay.open{display:flex;}
+.overlay.center{align-items:center;}
+.sheet{background:var(--sf);border-radius:20px 20px 0 0;padding:0;width:100%;max-width:min(600px,100vw);max-height:92vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;animation:slideUp .25s ease;box-sizing:border-box;}
+.sheet.center{border-radius:16px;max-height:85vh;margin:0 16px;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:38px;height:4px;background:var(--bd);border-radius:2px;margin:12px auto 0;}
+.sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;padding:12px 16px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.sheet-body{padding:16px;}
+.sheet-close{background:none;border:none;color:var(--tx2);font-size:22px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+
+/* ── TOAST ── */
+.tst{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--sf);border:1px solid var(--bd);color:var(--tx);padding:11px 20px;border-radius:30px;font-weight:600;font-size:14px;z-index:800;white-space:nowrap;pointer-events:none;max-width:90vw;opacity:0;transition:opacity .25s ease;}
+.tst.show{opacity:1;}
+.tst.ok{border-color:var(--gn);}
+.tst.er{border-color:var(--rd);}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:32px 20px;color:var(--tx2);}
+.empty .ic{font-size:42px;margin-bottom:10px;opacity:.5;}
+.empty p{font-size:15px;}
+
+/* ── MISC ── */
+.pass-wrap{position:relative;display:flex;}
+.pass-wrap .inp{padding-right:46px;flex:1;margin-bottom:0;}
+.eye{position:absolute;right:0;top:0;bottom:0;width:46px;background:none;border:none;color:var(--tx2);font-size:18px;display:flex;align-items:center;justify-content:center;}
+.op-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;background:rgba(96,165,250,.12);color:var(--bb);border:1px solid rgba(96,165,250,.2);margin-left:4px;vertical-align:middle;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">&#x1F69B; <span>OPERATORE</span> TMP</div>
+    <div class="login-sub">Area operativa</div>
+    <label class="lbl" for="log-user">Username</label>
+    <input class="inp" id="log-user" type="text" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <label class="lbl" for="log-pass">Password</label>
+    <input class="inp" id="log-pass" type="password" placeholder="Password" onkeydown="if(event.keyCode===13)doLogin()">
+    <label class="ricorda"><input type="checkbox" id="log-ricorda"><span>Ricordami su questo dispositivo</span></label>
+    <div class="login-err" id="log-err"></div>
+    <button class="btn bbl" onclick="doLogin()" style="margin-bottom:0;">ACCEDI</button>
+  </div>
+</div>
+
+<!-- SHELL (nascosta fino a login operatore) -->
+<div id="op-shell" style="display:none;flex-direction:column;height:100%;">
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" id="back-btn" onclick="goBack()">&#x2190; INDIETRO</button>
+    <div class="topbar-title" id="topbar-title">&#x1F69B; OPERATORE TMP</div>
+  </div>
+  <span class="topbar-truck">&#x1F69B;</span>
+  <div class="topbar-right">
+    <div class="topbar-user" id="topbar-user">
+      <div class="topbar-avatar" id="topbar-avatar">?</div>
+      <span id="topbar-uname"></span>
+    </div>
+    <div class="conn-pill" id="cbg"><span class="dot"></span><span id="cbl">LOC</span></div>
+    <button id="orient-btn" class="icon-btn" onclick="toggleOrientLock()">&#x1F513;</button>
+    <button class="icon-btn" onclick="logout()">&#x23FB;</button>
+  </div>
+</div>
+
+<!-- PAGES -->
+<div class="pages">
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Seleziona operazione</div>
+  <div class="home-grid">
+
+    <!-- Entrata -->
+    <button class="home-tile t-green" onclick="goPage('entrata','ENTRATA MERCI')">
+      <span class="ic">&#x1F7E2;</span>
+      <span class="lbl">Entrata Merci</span>
+    </button>
+
+    <!-- Uscita -->
+    <button class="home-tile t-red" onclick="goPage('uscita','USCITA MERCI')" style="position:relative;">
+      <span class="ic">&#x1F534;</span>
+      <span class="lbl">Uscita Merci</span>
+      <div class="tile-badge" id="badge-uscita">0</div>
+    </button>
+
+    <!-- Trasferimento -->
+    <button class="home-tile t-blue" onclick="goPage('trasferimento','TRASFERIMENTO')">
+      <span class="ic">&#x1F504;</span>
+      <span class="lbl">Trasferisci Bilico</span>
+    </button>
+
+    <!-- Carrellista -->
+    <button class="home-tile t-orange" onclick="goPage('carrellista','CARRELLISTA')" style="position:relative;">
+      <span class="ic">
+        <svg viewBox="0 0 32 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;">
+          <!-- Forche -->
+          <line x1="1" y1="15" x2="9" y2="15"/>
+          <line x1="1" y1="18" x2="9" y2="18"/>
+          <!-- Piastra forche -->
+          <line x1="9" y1="13" x2="9" y2="20"/>
+          <!-- Mast sinistro -->
+          <line x1="9" y1="3" x2="9" y2="21"/>
+          <!-- Mast destro -->
+          <line x1="13" y1="3" x2="13" y2="21"/>
+          <!-- Traversa mast -->
+          <line x1="9" y1="3" x2="13" y2="3"/>
+          <!-- Rollbar / protezione tetto -->
+          <rect x="13" y="5" width="10" height="3.5" rx="1"/>
+          <!-- Corpo principale -->
+          <rect x="13" y="8.5" width="14" height="12.5" rx="1.5"/>
+          <!-- Finestrino laterale -->
+          <rect x="14.5" y="10" width="5" height="5" rx="0.8"/>
+          <!-- Contrappeso posteriore (curva arrotondata) -->
+          <path d="M27 9.5 C31.5 9.5 31.5 21 27 21"/>
+          <!-- Ruote -->
+          <circle cx="15" cy="24.5" r="2.5"/>
+          <circle cx="25" cy="24.5" r="2.5"/>
+        </svg>
+      </span>
+      <span class="lbl">Carrellista</span>
+      <div class="tile-badge" id="badge-carrellista">0</div>
+    </button>
+
+    <!-- Magazzino — icona 📋 (scambiata con Carico Smezzi) -->
+    <button class="home-tile t-purple" onclick="goPage('magazzino','MAGAZZINO')">
+      <span class="ic">&#x1F4CB;</span>
+      <span class="lbl">Consulta Magazzino</span>
+    </button>
+
+    <!-- Carico Smezzi — icona 🚛 (scambiata con Magazzino) -->
+    <button class="home-tile t-cyan" onclick="goPage('missioni','CARICO SMEZZI')" style="position:relative;">
+      <span class="ic">&#x1F69B;</span>
+      <span class="lbl">Carico Smezzi</span>
+      <div class="tile-badge" id="badge-missioni" style="background:var(--pb);">0</div>
+    </button>
+
+  </div>
+</div><!-- /home -->
+
+<!-- ENTRATA: SCELTA TIPO -->
+<div class="page" id="page-entrata">
+  <div class="cat-wrap">
+    <p style="font-size:14px;color:var(--tx2);text-align:center;margin-bottom:4px;">Seleziona il tipo di merce da ricevere:</p>
+    <button class="cat-tile cat-secco" onclick="goEntrata('secco')">
+      <span style="font-size:32px;">&#x2600;&#xFE0F;</span> SECCO
+    </button>
+    <p class="cat-hint">Tutte le locazioni escluso FRESCO</p>
+    <button class="cat-tile cat-fresco" onclick="goEntrata('fresco')">
+      <span style="font-size:32px;">&#x2744;&#xFE0F;</span> FRESCO
+    </button>
+    <p class="cat-hint">Solo locazione FRESCO</p>
+  </div>
+</div>
+
+<!-- ENTRATA FORM -->
+<div class="page" id="page-entrata-form">
+  <div class="success-box" id="entrata-success">
+    <div class="ic">&#x2705;</div>
+    <div class="tx" id="success-msg">Bilico registrato!</div>
+    <div class="sub" id="success-sub"></div>
+  </div>
+  <div class="auto-badge" id="auto-badge">
+    <span class="ic">&#x1F916;</span>
+    <span class="tx">Prossimo suggerito: <strong id="auto-num">—</strong></span>
+  </div>
+  <div class="fc">
+    <div class="sec-title" id="entrata-form-title">Entrata Secco</div>
+    <div class="fg">
+      <div class="fl">Numero Bilico</div>
+      <div class="num-row">
+        <input class="pfx" id="en-pfx" type="text" maxlength="1" placeholder="A"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');"
+          onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('en-bilico').focus();}">
+        <input class="fi big" id="en-bilico" type="number" placeholder="906" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0;">
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl">Numero Bancali</div>
+      <div class="crow">
+        <button class="cbt" onclick="stp('en-bancali',-1)">&#x2212;</button>
+        <input class="cvl" id="en-bancali" type="number" value="0" min="0" inputmode="numeric">
+        <button class="cbt" onclick="stp('en-bancali',1)">+</button>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl">Postazione</div>
+      <div class="loc-row">
+        <input class="fi" id="en-postazione" type="text" placeholder="es. A1, BANCHINA..." autocomplete="off" style="text-transform:uppercase;font-size:17px;font-weight:700;" oninput="this.value=this.value.toUpperCase()">
+        <button class="qr-btn" onclick="apriQR('en-postazione')">&#x1F4F7;</button>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl">Note (opzionale)</div>
+      <input class="fi" id="en-note" type="text" placeholder="Merce, cliente..." autocomplete="off">
+    </div>
+  </div>
+  <button class="btn bgn" onclick="confEntrata()">&#x2705; CONFERMA ENTRATA</button>
+  <button class="btn bgh" onclick="resetEntrata()" style="margin-top:4px;">&#x21BA; Ricomincia</button>
+  <div class="log-box">
+    <div class="log-hdr" onclick="toggleLog('log-ent-body','log-ent-chev')">
+      <span class="log-hdr-t">&#x1F4CB; ULTIME ENTRATE</span>
+      <span class="log-chev" id="log-ent-chev">&#x2304;</span>
+    </div>
+    <div class="log-body" id="log-ent-body">
+      <div id="log-ent-list" class="log-empty">Nessuna entrata recente</div>
+    </div>
+  </div>
+</div>
+
+<!-- USCITA MERCI -->
+<div class="page" id="page-uscita">
+  <!-- Prog oggi -->
+  <div class="prog-box">
+    <div class="prog-hdr" onclick="toggleProg('prog-oggi-body','prog-oggi-chev')">
+      <div class="prog-title"><span>&#x1F6A8;</span> USCITE OGGI <span class="prog-badge" id="prog-oggi-count">0</span></div>
+      <span class="prog-chev" id="prog-oggi-chev">&#x2304;</span>
+    </div>
+    <div class="prog-body open" id="prog-oggi-body">
+      <div class="prog-list" id="prog-oggi-list"><div class="prog-empty">Nessuna uscita programmata per oggi</div></div>
+    </div>
+  </div>
+  <!-- Prog domani -->
+  <div class="prog-box blue">
+    <div class="prog-hdr blue" onclick="toggleProg('prog-dom-body','prog-dom-chev')">
+      <div class="prog-title blue"><span>&#x1F4C5;</span> USCITE DOMANI <span class="prog-badge blue" id="prog-dom-count">0</span></div>
+      <span class="prog-chev" id="prog-dom-chev">&#x2304;</span>
+    </div>
+    <div class="prog-body blue" id="prog-dom-body">
+      <div class="prog-list" id="prog-dom-list"><div class="prog-empty">Nessuna uscita programmata per domani</div></div>
+    </div>
+  </div>
+  <div class="log-box">
+    <div class="log-hdr" onclick="toggleLog('log-usc-body','log-usc-chev')">
+      <span class="log-hdr-t">&#x1F4CB; ULTIMI CARICHI</span>
+      <span class="log-chev" id="log-usc-chev">&#x2304;</span>
+    </div>
+    <div class="log-body" id="log-usc-body">
+      <div id="log-usc-list" class="log-empty">Nessun carico recente</div>
+    </div>
+  </div>
+</div>
+
+<!-- TRASFERIMENTO -->
+<div class="page" id="page-trasferimento">
+  <div class="fc">
+    <div class="sec-title">Cerca Bilico da Spostare</div>
+    <div class="fg">
+      <div class="fl">Numero Bilico</div>
+      <div class="num-row">
+        <input class="pfx" id="tr-pfx" type="text" maxlength="1" placeholder="A"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');trovaBilicoTransfer();"
+          onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('tr-bilico').focus();}">
+        <input class="fi big" id="tr-bilico" type="number" placeholder="905" inputmode="numeric" autocomplete="off" oninput="trovaBilicoTransfer()" style="flex:1;min-width:0;">
+      </div>
+    </div>
+    <div class="trovato" id="tr-trovato">
+      <div class="trovato-t">&#x2705; Bilico trovato</div>
+      <div class="trovato-i">&#x1F4CD; Posizione: <span id="tr-pos-attuale" style="color:var(--pb)">-</span></div>
+    </div>
+  </div>
+  <div class="fc" id="tr-dest-box" style="display:none;">
+    <div class="sec-title">Nuova Destinazione</div>
+    <div class="fg">
+      <div class="fl">Nuova Postazione</div>
+      <div class="loc-row">
+        <input class="fi" id="tr-dest" type="text" placeholder="es. FRESCO, A2..." autocomplete="off" style="text-transform:uppercase;font-size:17px;font-weight:700;" oninput="this.value=this.value.toUpperCase()">
+        <button class="qr-btn" onclick="apriQR('tr-dest')">&#x1F4F7;</button>
+      </div>
+    </div>
+    <button class="btn bcy" onclick="confTransfer()">&#x1F504; CONFERMA TRASFERIMENTO</button>
+  </div>
+  <div class="log-box">
+    <div class="log-hdr" onclick="toggleLog('log-tr-body','log-tr-chev')">
+      <span class="log-hdr-t">&#x1F4CB; ULTIMI TRASFERIMENTI</span>
+      <span class="log-chev" id="log-tr-chev">&#x2304;</span>
+    </div>
+    <div class="log-body" id="log-tr-body">
+      <div id="log-tr-list" class="log-empty">Nessun trasferimento recente</div>
+    </div>
+  </div>
+</div>
+
+<!-- CARRELLISTA -->
+<div class="page" id="page-carrellista">
+  <div class="car-grid">
+    <button class="car-tile bog" onclick="goPage('car-stoccare','DA STOCCARE')">
+      <span class="ic">&#x1F4E6;</span>
+      <div class="info">DA STOCCARE<div class="sub">Bilici in ARRIVI da posizionare</div></div>
+      <span class="car-badge" id="badge-car-stoccare">0</span>
+    </button>
+    <button class="car-tile bgh" onclick="goPage('car-preparare','DA PREPARARE')">
+      <span class="ic">&#x2705;</span>
+      <div class="info">DA PREPARARE<div class="sub">Bilici programmati per oggi</div></div>
+      <span class="car-badge" id="badge-car-preparare" style="background:var(--og);color:#111;">0</span>
+    </button>
+    <button class="car-tile" style="background:rgba(163,113,247,.12);border:1.5px solid rgba(163,113,247,.3);color:var(--pb);" onclick="goPage('car-missioni','PICKING')">
+      <span class="ic">&#x1F69B;</span>
+      <div class="info">PICKING<div class="sub">Missioni attive</div></div>
+      <span class="car-badge" id="badge-car-missioni" style="background:var(--pb);">0</span>
+    </button>
+  </div>
+</div>
+
+<!-- CAR STOCCARE -->
+<div class="page" id="page-car-stoccare">
+  <div id="car-stoccare-list"><div class="empty"><div class="ic">📦</div><p>Caricamento...</p></div></div>
+</div>
+
+<!-- CAR PREPARARE -->
+<div class="page" id="page-car-preparare">
+  <div id="car-preparare-list"><div class="empty"><div class="ic">✅</div><p>Caricamento...</p></div></div>
+</div>
+
+<!-- CAR MISSIONI (picking) -->
+<div class="page" id="page-car-missioni">
+  <div id="car-missioni-list"><div class="empty"><div class="ic">🚛</div><p>Nessuna missione attiva</p></div></div>
+</div>
+
+<!-- MAGAZZINO -->
+<div class="page" id="page-magazzino">
+  <div class="fc" style="padding:12px;">
+    <div style="position:relative;margin-bottom:10px;">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--tx3);pointer-events:none;">&#x1F50D;</span>
+      <input class="fi" id="mag-search" type="text" placeholder="Numero bilico o postazione..." autocomplete="off" oninput="cercaMag()" style="padding-left:40px;">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn sm bbl" onclick="setMagMode('b')" id="mag-btn-b" style="flex:1;">&#x1F69B; Per Bilico</button>
+      <button class="btn sm bgh" onclick="setMagMode('p')" id="mag-btn-p" style="flex:1;">&#x1F4CD; Per Postazione</button>
+    </div>
+  </div>
+  <div id="mag-results"></div>
+</div>
+
+<!-- MISSIONI -->
+<div class="page" id="page-missioni">
+  <div id="missioni-list"><div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div></div>
+</div>
+
+<!-- DETTAGLIO MISSIONE -->
+<div class="page" id="page-missione-detail">
+  <div id="missione-detail-content"></div>
+</div>
+
+</div><!-- /pages -->
+
+<!-- ═══ MODALI / OVERLAY ═══ -->
+
+<!-- Dettaglio bilico (lente) -->
+<div class="overlay" id="sh-dettaglio-bilico">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" style="color:var(--bb);">&#x1F50D; Dettaglio Bilico <button class="sheet-close" onclick="chiO('sh-dettaglio-bilico')">&#x2715;</button></div>
+  <div class="sheet-body" id="sh-dettaglio-body"></div>
+</div>
+</div>
+
+<!-- Conferma uscita -->
+<div class="overlay" id="sh-conf">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" style="color:var(--rb);">&#x26A0;&#xFE0F; Conferma Uscita <button class="sheet-close" onclick="chiO('sh-conf')">&#x2715;</button></div>
+  <div class="sheet-body">
+    <div id="sh-conf-tx" style="font-size:14px;color:var(--tx2);line-height:1.7;margin-bottom:14px;"></div>
+    <div id="sh-conf-banc-wrap" style="display:none;" class="fg">
+      <div class="fl">Bancali in uscita</div>
+      <div class="crow">
+        <button class="cbt" onclick="stp('sh-conf-banc',-1)">&#x2212;</button>
+        <input class="cvl" id="sh-conf-banc" type="number" min="1" value="0" style="border-color:var(--rd)!important;">
+        <button class="cbt" onclick="stp('sh-conf-banc',1)">+</button>
+      </div>
+    </div>
+    <!-- Foto obbligatoria -->
+    <div id="sh-conf-foto-wrap" style="display:none;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--rd);margin-bottom:8px;">&#x1F4F7; Foto obbligatoria</div>
+      <label class="foto-label" id="sh-conf-foto-label" for="foto-input">
+        <span class="ic">&#x1F4F7;</span>
+        <span class="tx">SCATTA FOTO CARICO</span>
+      </label>
+      <div class="foto-prev" id="sh-conf-foto-prev">
+        <img id="sh-conf-foto-img" src="" alt="">
+        <button class="foto-del" onclick="clearFotoConf()">&#x2715;</button>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn bgn" id="sh-conf-ok" onclick="eseguiConf()">&#x2705; CONFERMA</button>
+      <button class="btn bgh" onclick="chiO('sh-conf')">&#x274C; ANNULLA</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Uscita coppia -->
+<div class="overlay" id="sh-coppia">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" style="color:var(--rb);">&#x1F517; Uscita Coppia <button class="sheet-close" onclick="chiO('sh-coppia')">&#x2715;</button></div>
+  <div class="sheet-body">
+    <div id="mcu-info" style="font-size:13px;color:var(--tx2);margin-bottom:14px;line-height:1.7;"></div>
+    <div style="background:var(--sf2);border:1.5px solid var(--bl);border-radius:var(--r);padding:14px;margin-bottom:10px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--bb);margin-bottom:8px;" id="mcu-numA">#—</div>
+      <div id="mcu-notaA" style="display:none;font-size:12px;color:var(--tx2);background:var(--bg);border-left:3px solid var(--bb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;"></div>
+      <div class="fg" style="margin-bottom:8px;"><div class="fl">Bancali uscita</div>
+        <div class="crow"><button class="cbt" onclick="stp('mcu-bancA',-1)">&#x2212;</button><input class="cvl" id="mcu-bancA" type="number" value="0" min="0" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancA',1)">+</button></div>
+      </div>
+      <div class="fg" style="margin-bottom:0;"><div class="fl">Note</div><input class="fi" id="mcu-ntA" type="text" placeholder="Opzionale..." autocomplete="off"></div>
+    </div>
+    <div style="background:var(--sf2);border:1.5px solid rgba(110,64,201,.4);border-radius:var(--r);padding:14px;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--pb);margin-bottom:8px;" id="mcu-numB">#—</div>
+      <div id="mcu-notaB" style="display:none;font-size:12px;color:var(--tx2);background:var(--bg);border-left:3px solid var(--pb);padding:5px 8px;border-radius:3px;margin-bottom:8px;line-height:1.4;"></div>
+      <div class="fg" style="margin-bottom:8px;"><div class="fl">Bancali uscita</div>
+        <div class="crow"><button class="cbt" onclick="stp('mcu-bancB',-1)">&#x2212;</button><input class="cvl" id="mcu-bancB" type="number" value="0" min="0" style="border-color:var(--rd)!important;"><button class="cbt" onclick="stp('mcu-bancB',1)">+</button></div>
+      </div>
+      <div class="fg" style="margin-bottom:0;"><div class="fl">Note</div><input class="fi" id="mcu-ntB" type="text" placeholder="Opzionale..." autocomplete="off"></div>
+    </div>
+    <!-- Foto obbligatoria coppia -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--rd);margin-bottom:8px;">&#x1F4F7; Foto obbligatoria</div>
+      <label class="foto-label" id="mcu-foto-label" for="foto-input">
+        <span class="ic">&#x1F4F7;</span>
+        <span class="tx">SCATTA FOTO CARICO</span>
+      </label>
+      <div class="foto-prev" id="mcu-foto-prev">
+        <img id="mcu-foto-img" src="" alt="">
+        <button class="foto-del" onclick="clearFotoCoppia()">&#x2715;</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn bgn" id="mcu-ok-btn" onclick="confUscitaCoppia()" disabled>&#x2705; CONFERMA</button>
+      <button class="btn bgh" onclick="chiO('sh-coppia')">&#x274C; ANNULLA</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Foto completa missione -->
+<div class="overlay" id="sh-miss-foto">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" style="color:var(--pb);">&#x1F4E6; Completa Missione <button class="sheet-close" onclick="chiO('sh-miss-foto')">&#x2715;</button></div>
+  <div class="sheet-body">
+    <div id="sh-miss-info" style="font-size:14px;color:var(--tx2);margin-bottom:14px;"></div>
+    <label class="foto-label" id="miss-foto-label" for="foto-input">
+      <span class="ic">&#x1F4F7;</span>
+      <span class="tx">SCATTA FOTO CARICO</span>
+    </label>
+    <div class="foto-prev" id="miss-foto-prev">
+      <img id="miss-foto-img" src="" alt="">
+      <button class="foto-del" onclick="clearFotoMiss()">&#x2715;</button>
+    </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn bpu" id="miss-foto-ok" onclick="completaMissioneFoto()" disabled>&#x2705; COMPLETA</button>
+      <button class="btn bgh" onclick="chiO('sh-miss-foto')">&#x2716; Chiudi</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Conferma PLT missione -->
+<div class="overlay center" id="sh-conf-plt">
+<div class="sheet center" style="max-width:340px;">
+  <div class="sheet-handle"></div>
+  <div style="text-align:center;margin-bottom:14px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--pb);">✋ Conferma Bilico</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--bb);margin-top:4px;" id="sh-conf-plt-num">#—</div>
+    <div style="font-size:13px;color:var(--tx2);margin-top:4px;" id="sh-conf-plt-info"></div>
+  </div>
+  <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--tx2);margin-bottom:8px;">PLT caricati</div>
+  <div class="crow" style="margin-bottom:16px;">
+    <button class="cbt" onclick="stp('sh-conf-plt-val',-1)">&#x2212;</button>
+    <input class="cvl" id="sh-conf-plt-val" type="number" min="0" inputmode="numeric" style="border-color:var(--pu)!important;">
+    <button class="cbt" onclick="stp('sh-conf-plt-val',1)">+</button>
+  </div>
+  <div id="sh-conf-plt-body"></div>
+  <div class="btn-row">
+    <button class="btn bpu" onclick="confermaConPlt()">&#x2705; CONFERMA</button>
+    <button class="btn bgh" onclick="chiO('sh-conf-plt');_pendConfBilico=null;">&#x274C; Annulla</button>
+  </div>
+</div>
+</div>
+
+<!-- Input foto nascosto (unico, riusato) -->
+<input type="file" id="foto-input" accept="image/*" capture="environment" style="display:none;" onchange="onFotoInput(this)">
+
+<!-- QR input -->
+<input type="file" id="qr-file" accept="image/*" capture="environment" style="display:none;" onchange="leggiQRdaFoto(this)">
+
+<!-- Overlay accesso negato (non operatore) -->
+<div id="overlay-no-access" style="position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1e1e2e;border-radius:16px;padding:36px 28px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.6);">
+    <div style="font-size:2.2rem;margin-bottom:12px;">&#x1F512;</div>
+    <div style="font-size:1rem;font-weight:700;color:#f87171;margin-bottom:8px;">Area operatori</div>
+    <div style="font-size:.85rem;color:#aaa;margin-bottom:22px;">Questa app è riservata agli operatori.<br>Admin e Plus devono usare Gestione TMP.</div>
+    <a href="gestione.html" style="display:inline-block;background:#2ea043;color:#fff;font-weight:700;padding:11px 26px;border-radius:10px;text-decoration:none;font-size:.9rem;">Vai a Gestione TMP →</a>
+  </div>
+</div>
+
+</div><!-- /op-shell -->
+
+<div class="tst" id="tst"></div>
+<script>
+// ═══ CONFIG ═══
+var FBC={apiKey:"AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",authDomain:"firestore-database-93749.firebaseapp.com",projectId:"firestore-database-93749",storageBucket:"firestore-database-93749.firebasestorage.app",messagingSenderId:"13697167946",appId:"1:13697167946:web:e955abfe6d0ed11a3cecb3"};
+var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
+var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE'];
+
+// ═══ STATO ═══
+var BL={},ST=[],PROG=[],PROG_DOMANI=[];
+var MISSIONI=[],PROG_PREPARATO={};
+var fdb=null,UC=false;
+var CURR_USER=null;
+var pageStack=['home'];
+var currentCat='secco';
+var pendConf=null;
+var _coppiaA=null,_coppiaB=null;
+var fotoUscitaSalvata=false;
+var fotoCaricoIdPending=null;
+var aggancioSel=null,aggancioSelD=null;
+var qrTargetId=null;
+var magMode='b';
+var _missioneAperta=null;
+var _fotoTarget=null; // 'conf' | 'coppia' | 'missione'
+var audioCtx=null;
+
+// ═══ ORIENTATION ═══
+function toggleOrientLock(){var l=document.body.classList.toggle('orient-locked');localStorage.setItem('ORIENT_LOCK_OP',l?'1':'0');_upOrient();}
+function _upOrient(){var b=document.getElementById('orient-btn');if(!b)return;var l=document.body.classList.contains('orient-locked');b.textContent=l?'🔒':'🔓';b.classList.toggle('locked',l);}
+function initOrientLock(){var p=localStorage.getItem('ORIENT_LOCK_OP');if(p===null||p==='1')document.body.classList.add('orient-locked');_upOrient();}
+
+// ═══ INIT ═══
+window.onload=function(){
+  initOrientLock();
+  try{
+    if(FBC.apiKey==='INSERISCI_API_KEY')throw new Error('no cfg');
+    if(!firebase.apps.length)firebase.initializeApp(FBC);
+    fdb=firebase.firestore();UC=true;
+    document.getElementById('cbg').classList.add('on');
+    document.getElementById('cbl').textContent='CLOUD';
+    // listeners realtime
+    fdb.collection('bilici').onSnapshot(function(s){
+      BL={};s.forEach(function(d){BL[d.id]=Object.assign({id:d.id},d.data());});
+      aggiornaBadges();
+      var cp=pageStack[pageStack.length-1];
+      if(cp==='car-stoccare')renderCarStoccare();
+      if(cp==='car-preparare')renderCarPreparare();
+      if(cp==='magazzino')cercaMag();
+    });
+    fdb.collection('storico').orderBy('ts','desc').limit(50).onSnapshot(function(s){
+      ST=[];s.forEach(function(d){ST.push(Object.assign({id:d.id},d.data()));});
+      aggiornaLog();
+    });
+    fdb.collection('missioni').onSnapshot(function(s){
+      MISSIONI=[];s.forEach(function(d){MISSIONI.push(Object.assign({id:d.id},d.data()));});
+      aggiornaBadges();
+      var cp=pageStack[pageStack.length-1];
+      if(cp==='missioni')renderMissioni();
+      if(cp==='car-missioni')renderCarMissioni();
+    });
+    fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(s){
+      PROG=[];s.forEach(function(d){PROG.push(Object.assign({id:d.id},d.data()));});
+      renderProg();aggiornaBadges();
+      var cp=pageStack[pageStack.length-1];
+      if(cp==='car-preparare')renderCarPreparare();
+    });
+    fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s){
+      PROG_DOMANI=[];s.forEach(function(d){PROG_DOMANI.push(Object.assign({id:d.id},d.data()));});
+      renderProgDomani();
+    });
+    fdb.collection('prog_preparato').onSnapshot(function(s){
+      PROG_PREPARATO={};s.forEach(function(d){PROG_PREPARATO[d.id]=true;});
+      aggiornaBadges();
+      var cp=pageStack[pageStack.length-1];
+      if(cp==='car-preparare')renderCarPreparare();
+    });
+    tentaAutoLogin();
+  }catch(e){
+    tentaAutoLogin();
+  }
+};
+
+// ═══ AUTH ═══
+function doLogin(){
+  var u=(document.getElementById('log-user').value||'').trim();
+  var p=(document.getElementById('log-pass').value||'').trim();
+  var ricorda=document.getElementById('log-ricorda').checked;
+  if(!u||!p){document.getElementById('log-err').textContent='Inserisci username e password';return;}
+  cercaUtente(u,p,function(usr){
+    if(!usr){document.getElementById('log-err').textContent='Credenziali non valide';document.getElementById('log-pass').value='';return;}
+    // Accesso: lvl 1 (operatori), lvl 2 (Plus), Leo — solo admin base (lvl 0 non Leo) → gestione.html
+    var isLeo=usr.username.toLowerCase()===ADMIN_DEFAULT.username.toLowerCase();
+    if(usr.livello===0&&!isLeo){
+      logout();
+      window.location.href='gestione.html';
+      return;
+    }
+    CURR_USER=usr;
+    if(ricorda)try{localStorage.setItem('RICORDA_OP',JSON.stringify({u:u,p:p}));}catch(x){}
+    else try{localStorage.removeItem('RICORDA_OP');}catch(x){}
+    salvaTentativo(u);
+    _mostraShellOperatore(usr);
+    tst('Benvenuto '+usr.username+'!','ok');
+  });
+}
+function tentaAutoLogin(){
+  try{
+    var s=JSON.parse(localStorage.getItem('RICORDA_OP')||'null');
+    if(!s||!s.u||!s.p)return;
+    cercaUtente(s.u,s.p,function(usr){
+      if(!usr)return;
+      var isLeoAL=usr.username.toLowerCase()===ADMIN_DEFAULT.username.toLowerCase();
+      if(usr.livello===0&&!isLeoAL){window.location.href='gestione.html';return;}
+      CURR_USER=usr;
+      salvaTentativo(s.u);
+      _mostraShellOperatore(usr);
+      tst('Bentornato '+usr.username+'!','ok');
+    });
+  }catch(x){}
+}
+function cercaUtente(u,p,cb){
+  if(u.toLowerCase()===ADMIN_DEFAULT.username.toLowerCase()&&p===ADMIN_DEFAULT.password)
+    return cb({username:ADMIN_DEFAULT.username,livello:ADMIN_DEFAULT.livello});
+  if(UC&&fdb){
+    fdb.collection('utenti').where('username_lc','==',u.toLowerCase()).get().then(function(snap){
+      var t=null;snap.forEach(function(d){var usr=d.data();if(usr.password===p)t={username:usr.username,livello:usr.livello,id:d.id};});cb(t);
+    }).catch(function(){cb(null);});
+  }else{
+    var utenti=JSON.parse(localStorage.getItem('UTENTI_v1')||'[]'),t=null;
+    for(var i=0;i<utenti.length;i++)if(utenti[i].username.toLowerCase()===u.toLowerCase()&&utenti[i].password===p){t=utenti[i];break;}
+    cb(t);
+  }
+}
+function salvaTentativo(username){
+  var ts=new Date().toISOString(),ua=navigator.userAgent,dev='Desktop';
+  if(/iPhone/.test(ua))dev='iPhone';else if(/iPad/.test(ua))dev='iPad';else if(/Android/.test(ua))dev='Android';
+  var log={username_lc:username.toLowerCase(),ts:ts,device:dev};
+  if(UC&&fdb)fdb.collection('login_log').add(log).catch(function(){});
+  else{var logs=JSON.parse(localStorage.getItem('LOGIN_LOG_v1')||'[]');logs.unshift(log);if(logs.length>200)logs=logs.slice(0,200);try{localStorage.setItem('LOGIN_LOG_v1',JSON.stringify(logs));}catch(x){}}
+}
+function _mostraShellOperatore(usr){
+  // mostra shell app
+  var shell=document.getElementById('op-shell');
+  if(shell){shell.style.display='flex';}
+  document.getElementById('login-screen').style.display='none';
+  // utente in topbar
+  var uw=document.getElementById('topbar-user'),av=document.getElementById('topbar-avatar'),nm=document.getElementById('topbar-uname');
+  if(uw)uw.style.display='flex';
+  if(av)av.textContent=usr.username.charAt(0).toUpperCase();
+  if(nm)nm.textContent=usr.username;
+}
+function logout(){
+  CURR_USER=null;
+  try{localStorage.removeItem('RICORDA_OP');}catch(x){}
+  // nasconde shell
+  var shell=document.getElementById('op-shell');if(shell)shell.style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('log-user').value='';
+  document.getElementById('log-pass').value='';
+  document.getElementById('log-ricorda').checked=false;
+  document.getElementById('log-err').textContent='';
+  var uw=document.getElementById('topbar-user');if(uw)uw.style.display='none';
+}
+
+// ═══ NAVIGAZIONE (page stack) ═══
+function goPage(pageId,title){
+  // nascondi pagina corrente
+  var currId=pageStack[pageStack.length-1];
+  var currPage=document.getElementById('page-'+currId);
+  if(currPage)currPage.classList.remove('active');
+  // mostra nuova pagina
+  pageStack.push(pageId);
+  var newPage=document.getElementById('page-'+pageId);
+  if(newPage)newPage.classList.add('active');
+  // aggiorna header
+  document.getElementById('topbar-title').textContent=title||pageId.toUpperCase();
+  document.getElementById('back-btn').style.display='flex';
+  // azioni al cambio pagina
+  if(pageId==='car-stoccare')renderCarStoccare();
+  if(pageId==='car-preparare')renderCarPreparare();
+  if(pageId==='car-missioni')renderCarMissioni();
+  if(pageId==='magazzino')cercaMag();
+  if(pageId==='missioni')renderMissioni();
+}
+function goBack(){
+  if(pageStack.length<=1)return;
+  // nascondi pagina corrente
+  var currId=pageStack.pop();
+  var currPage=document.getElementById('page-'+currId);
+  if(currPage)currPage.classList.remove('active');
+  // mostra precedente
+  var prevId=pageStack[pageStack.length-1];
+  var prevPage=document.getElementById('page-'+prevId);
+  if(prevPage)prevPage.classList.add('active');
+  // header
+  if(prevId==='home'){
+    document.getElementById('topbar-title').textContent='🚛 OPERATORE TMP';
+    document.getElementById('back-btn').style.display='none';
+  }else{
+    var titles={entrata:'ENTRATA MERCI','entrata-form':'ENTRATA MERCI',uscita:'USCITA MERCI',trasferimento:'TRASFERIMENTO',carrellista:'CARRELLISTA','car-stoccare':'DA STOCCARE','car-preparare':'DA PREPARARE','car-missioni':'PICKING',magazzino:'MAGAZZINO',missioni:'CARICO SMEZZI','missione-detail':'DETTAGLIO MISSIONE'};
+    document.getElementById('topbar-title').textContent=titles[prevId]||prevId.toUpperCase();
+    document.getElementById('back-btn').style.display='flex';
+  }
+}
+function goEntrata(cat){
+  currentCat=cat;
+  document.getElementById('entrata-form-title').textContent=cat==='fresco'?'❄️ Entrata Fresco':'☀️ Entrata Secco';
+  // precompila postazione per fresco
+  var postEl=document.getElementById('en-postazione');
+  if(cat==='fresco'){postEl.value='FRESCO';postEl.setAttribute('readonly','readonly');postEl.style.opacity='.7';}
+  else{postEl.value='ARRIVI';postEl.removeAttribute('readonly');postEl.style.opacity='1';}
+  // suggerisce prossimo bilico
+  calcolaProssimoBilico(cat);
+  goPage('entrata-form',cat==='fresco'?'ENTRATA FRESCO':'ENTRATA SECCO');
+}
+
+// ═══ OVERLAY / SHEET ═══
+function chiO(id){document.getElementById(id).classList.remove('open');}
+function aprO(id){document.getElementById(id).classList.add('open');}
+
+// ═══ UTILS ═══
+function stp(id,d){var el=document.getElementById(id);el.value=Math.max(0,(parseInt(el.value)||0)+d);}
+function datLocale(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtT(ts){if(!ts)return '-';var d=new Date(ts);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+function fmtH(ts){if(!ts)return '-';var d=new Date(ts);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+function tst(msg,tp){var t=document.getElementById('tst');t.textContent=msg;t.className='tst '+(tp||'');void t.offsetWidth;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3200);if(tp==='er')suonoErr();}
+function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
+function toggleLog(bodyId,chevId){var b=document.getElementById(bodyId),c=document.getElementById(chevId);if(!b)return;var o=b.classList.contains('open');if(o){b.classList.remove('open');if(c)c.classList.remove('open');}else{b.classList.add('open');if(c)c.classList.add('open');}}
+function toggleProg(bodyId,chevId){toggleLog(bodyId,chevId);}
+
+// ═══ AUDIO ═══
+function getAudioCtx(){if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return audioCtx;}
+function playTone(freq,type,dur,vol,t,ctx){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=type||'sine';o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(vol||0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.start(t);o.stop(t+dur);}
+function suonoOk(){var ctx=getAudioCtx();if(!ctx)return;var t=ctx.currentTime;playTone(440,'sine',.15,.25,t,ctx);playTone(554,'sine',.15,.28,t+.15,ctx);playTone(659,'sine',.3,.32,t+.30,ctx);}
+function suonoErr(){var ctx=getAudioCtx();if(!ctx)return;var t=ctx.currentTime;playTone(180,'square',.25,.2,t,ctx);playTone(140,'square',.2,.15,t+.18,ctx);}
+function suonoSirena(){var ctx=getAudioCtx();if(!ctx)return;var t=ctx.currentTime;for(var i=0;i<3;i++){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sawtooth';var s=t+i*0.28;o.frequency.setValueAtTime(880,s);o.frequency.linearRampToValueAtTime(660,s+.14);o.frequency.linearRampToValueAtTime(880,s+.28);g.gain.setValueAtTime(.18,s);g.gain.exponentialRampToValueAtTime(0.001,s+.28);o.start(s);o.stop(s+.28);}}
+
+// ═══ DB ═══
+function dbSB(id,d){if(UC)return fdb.collection('bilici').doc(id).set(d);BL[id]=d;return Promise.resolve();}
+function dbUB(id,d){if(UC)return fdb.collection('bilici').doc(id).update(d);Object.assign(BL[id],d);return Promise.resolve();}
+function dbDB(id){if(UC)return fdb.collection('bilici').doc(id).delete();delete BL[id];return Promise.resolve();}
+function dbAS(d){if(!d.operatore&&CURR_USER)d.operatore=CURR_USER.username;if(UC)return fdb.collection('storico').add(d);ST.unshift(Object.assign({id:'L'+Date.now()},d));return Promise.resolve();}
+
+// ═══ BADGES ═══
+function aggiornaBadges(){
+  // badge uscite oggi
+  var nU=PROG.length;
+  var bu=document.getElementById('badge-uscita');
+  if(bu){bu.textContent=nU;bu.classList.toggle('vis',nU>0);}
+  // badge carrellista
+  var nS=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';}).length;
+  var nP=PROG.filter(function(p){var b=BL[p.numero];return p.id&&!PROG_PREPARATO[p.id]&&(!b||(b.locazione||'').toUpperCase()!=='FRESCO');}).length;
+  var nM=MISSIONI.filter(function(m){return m.stato!=='caricata';}).length;
+  var totCar=nS+nP+nM;
+  var bc=document.getElementById('badge-carrellista');
+  if(bc){bc.textContent=totCar;bc.classList.toggle('vis',totCar>0);}
+  // badge missioni
+  var bm=document.getElementById('badge-missioni');
+  if(bm){bm.textContent=nM;bm.classList.toggle('vis',nM>0);}
+  // badge car tabs
+  var bs=document.getElementById('badge-car-stoccare');if(bs){bs.textContent=nS;bs.classList.toggle('vis',nS>0);}
+  var bp=document.getElementById('badge-car-preparare');if(bp){bp.textContent=nP;bp.classList.toggle('vis',nP>0);}
+  var bmc=document.getElementById('badge-car-missioni');if(bmc){bmc.textContent=nM;bmc.classList.toggle('vis',nM>0);}
+}
+
+// ═══ CALCOLA PROSSIMO BILICO ═══
+function calcolaProssimoBilico(cat){
+  var el=document.getElementById('auto-num');if(!el)return;
+  // raccoglie tutti i numeri visti: magazzino + storico entrate
+  var numeri=new Set();
+  Object.values(BL).forEach(function(b){
+    var n=String(b.numero||'');
+    if(/[a-zA-Z]/.test(n))return; // salta Marchesi
+    var num=parseInt(n);if(!num)return;
+    var isFresco=(b.locazione||'').toUpperCase()==='FRESCO';
+    if(cat==='fresco'&&isFresco)numeri.add(num);
+    else if(cat==='secco'&&!isFresco)numeri.add(num);
+  });
+  ST.filter(function(m){
+    if(m.tipo!=='ENTRATA')return false;
+    if(/[a-zA-Z]/.test(String(m.numero||'')))return false;
+    var isFresco=(m.locazione||'').toUpperCase()==='FRESCO';
+    return cat==='fresco'?isFresco:!isFresco;
+  }).forEach(function(m){var n=parseInt(m.numero);if(n)numeri.add(n);});
+  if(!numeri.size){el.textContent='—';return;}
+  var arr=Array.from(numeri).sort(function(a,b){return a-b;});
+  var max=arr[arr.length-1];
+  // cerca il primo gap nella sequenza (es. 900,901,903 → suggerisce 902)
+  var suggerito=max+1;
+  for(var i=0;i<arr.length-1;i++){
+    if(arr[i+1]-arr[i]>1){suggerito=arr[i]+1;break;}
+  }
+  el.textContent='#'+suggerito;
+}
+
+// ═══ ENTRATA ═══
+function confEntrata(){
+  var pfx=String(document.getElementById('en-pfx').value||'').trim().toUpperCase();
+  var num=String(document.getElementById('en-bilico').value||'').trim();
+  var n=pfx+num;
+  var b=parseInt(document.getElementById('en-bancali').value)||0;
+  var pos=document.getElementById('en-postazione').value.trim().toUpperCase();
+  var note=document.getElementById('en-note').value.trim();
+  if(!n)return tst('Inserisci il numero bilico','er');
+  if(b<=0)return tst('Inserisci almeno 1 bancale','er');
+  if(!pos)return tst('Inserisci la postazione','er');
+  if(BL[n])return tst('Bilico '+n+' già presente in magazzino','er');
+  if(!isIllimitata(pos)){
+    var occ=null;Object.values(BL).forEach(function(x){if(x.locazione===pos)occ=x;});
+    if(occ)return tst('Postazione '+pos+' occupata da #'+occ.numero,'er');
+  }
+  var ts=new Date().toISOString();
+  dbSB(n,{numero:n,locazione:pos,bancali:b,note:note,ts:ts});
+  dbAS({tipo:'ENTRATA',numero:n,locazione:pos,bancali:b,note:note,ts:ts});
+  suonoOk();
+  // mostra successo
+  var sb=document.getElementById('entrata-success');
+  document.getElementById('success-msg').textContent='Bilico #'+n+' registrato!';
+  document.getElementById('success-sub').textContent=pos+' — '+b+' bancali'+(note?' — '+note:'');
+  sb.style.display='block';
+  // reset form
+  document.getElementById('en-pfx').value='';
+  document.getElementById('en-bilico').value='';
+  document.getElementById('en-bancali').value='0';
+  document.getElementById('en-note').value='';
+  tst('Bilico '+n+' entrato in '+pos,'ok');
+  // aggiorna log
+  setTimeout(function(){aggiornaLog();calcolaProssimoBilico(currentCat);},400);
+}
+function resetEntrata(){
+  document.getElementById('en-pfx').value='';
+  document.getElementById('en-bilico').value='';
+  document.getElementById('en-bancali').value='0';
+  document.getElementById('en-note').value='';
+  document.getElementById('en-note').value='';
+  document.getElementById('entrata-success').style.display='none';
+  calcolaProssimoBilico(currentCat);
+}
+
+// ═══ DETTAGLIO BILICO ═══
+function apriDettaglioBilico(numero, notaProg){
+  var b=BL[numero];
+  var el=document.getElementById('sh-dettaglio-body');
+  if(!el)return;
+  var html='';
+  // numero grande
+  html+='<div style="text-align:center;margin-bottom:20px;">';
+  html+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:72px;font-weight:900;color:var(--bb);line-height:1;">#'+numero+'</div>';
+  if(b){
+    html+='<div style="display:inline-block;background:var(--gn);color:#fff;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;padding:3px 14px;border-radius:20px;margin-top:6px;">IN MAGAZZINO</div>';
+  }else{
+    html+='<div style="display:inline-block;background:var(--og);color:#111;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;padding:3px 14px;border-radius:20px;margin-top:6px;">NON IN MAGAZZINO</div>';
+  }
+  html+='</div>';
+  if(b){
+    // locazione
+    html+='<div style="background:var(--sf2);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">';
+    html+='<span style="font-size:32px;">&#x1F4CD;</span>';
+    html+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx2);margin-bottom:3px;">Locazione</div>';
+    html+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:32px;font-weight:900;color:var(--pb);">'+b.locazione+'</div></div>';
+    html+='</div>';
+    // bancali
+    html+='<div style="background:var(--sf2);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">';
+    html+='<span style="font-size:32px;">&#x1F4E6;</span>';
+    html+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx2);margin-bottom:3px;">Bancali presenti</div>';
+    html+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:40px;font-weight:900;color:var(--ob);">'+b.bancali+'</div></div>';
+    html+='</div>';
+    // data entrata
+    html+='<div style="background:var(--sf2);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">';
+    html+='<span style="font-size:28px;">&#x1F4C5;</span>';
+    html+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx2);margin-bottom:3px;">Entrato il</div>';
+    html+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;color:var(--tx);">'+fmtT(b.ts)+'</div></div>';
+    html+='</div>';
+    // note bilico
+    if(b.note){
+      html+='<div style="background:rgba(56,139,253,.1);border:1px solid rgba(56,139,253,.3);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;">';
+      html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--bb);margin-bottom:5px;">&#x1F4DD; Note bilico</div>';
+      html+='<div style="font-size:16px;color:var(--tx);line-height:1.5;">'+b.note+'</div>';
+      html+='</div>';
+    }
+  }
+  // nota programmazione
+  if(notaProg){
+    html+='<div style="background:rgba(218,54,51,.1);border:1px solid rgba(218,54,51,.3);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;">';
+    html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--rb);margin-bottom:5px;">&#x1F6A8; Nota uscita programmata</div>';
+    html+='<div style="font-size:16px;color:var(--tx);line-height:1.5;">'+notaProg+'</div>';
+    html+='</div>';
+  }
+  // bottone carica se in magazzino
+  if(b){
+    html+='<button onclick="chiO(\'sh-dettaglio-bilico\');apriUscitaVeloce(\''+numero+'\',0)" class="btn brd" style="margin-top:4px;">&#x1F534; CARICA QUESTO BILICO</button>';
+  }
+  el.innerHTML=html;
+  aprO('sh-dettaglio-bilico');
+}
+
+// ═══ USCITA — RENDER PROG ═══
+var _progCache={};
+function renderProg(){
+  var el=document.getElementById('prog-oggi-list');
+  var badge=document.getElementById('prog-oggi-count');
+  if(badge)badge.textContent=PROG.length;
+  if(!el)return;
+  if(!PROG.length){el.innerHTML='<div class="prog-empty">Nessuna uscita programmata per oggi</div>';return;}
+  _progCache={};
+  var rAgg={};
+  el.innerHTML=PROG.map(function(p){
+    if(p.aggancioId&&rAgg[p.aggancioId])return '';
+    var b=BL[p.numero],inMag=!!b,docId=p.id||'';
+    var partner=null,bilB=null;
+    if(p.aggancioId){partner=PROG.find(function(x){return x.aggancioId===p.aggancioId&&x.id!==p.id;});if(partner){rAgg[p.aggancioId]=true;bilB=BL[partner.numero];}}
+    var isPaired=!!partner;
+    // salvo in cache per evitare problemi con apostrofi/virgolette
+    var cacheKey='p_'+(p.id||p.numero);
+    _progCache[cacheKey]={numero:p.numero,nota:p.nota||'',docId:docId,isPaired:isPaired,bancaliProg:p.bancaliProg||0};
+    var s='<div class="prog-item">';
+    s+='<div class="prog-num"><small>#</small>'+p.numero;
+    if(isPaired)s+='<div style="color:var(--pb);font-size:14px;font-weight:900;line-height:1;margin:2px 0;">&#x1F517;</div><div style="font-size:14px;font-weight:900;color:var(--pb);">#'+partner.numero+'</div>';
+    s+='</div><div class="prog-col">';
+    if(inMag){var bnd=(p.bancaliProg&&p.bancaliProg<b.bancali)?p.bancaliProg+' / '+b.bancali:b.bancali;s+='<div class="prog-loc">&#x1F4CD; '+b.locazione+'</div><div class="prog-ban">&#x1F4E6; '+bnd+' bancali</div>';}
+    else s+='<div style="font-size:12px;color:var(--tx3);">Non in magazzino</div>';
+    if(isPaired&&bilB){s+='<div style="border-top:1px dashed rgba(163,113,247,.3);margin:4px 0;"></div>';var bndB=(partner.bancaliProg&&partner.bancaliProg<bilB.bancali)?partner.bancaliProg+' / '+bilB.bancali:bilB.bancali;s+='<div class="prog-loc" style="color:var(--pb);">&#x1F4CD; '+bilB.locazione+'</div><div class="prog-ban" style="color:var(--pb);">&#x1F4E6; '+bndB+' bancali</div>';}
+    if(p.nota)s+='<div class="prog-nota-txt">&#x1F4DD; '+p.nota+'</div>';
+    s+='<div class="prog-actions">';
+    if(isPaired){
+      if(inMag||bilB)s+='<button class="prog-carica-btn" onclick="apriUscitaCoppia(\''+docId+'\')">&#x1F534; COPPIA</button>';
+    }else{
+      if(inMag)s+='<button class="prog-carica-btn" onclick="apriUscitaVeloce(\''+p.numero+'\','+(p.bancaliProg||0)+')">&#x1F534; CARICA</button>';
+    }
+    // bottone lente — usa la cache key
+    s+='<button onclick="apriDettaglioDaCache(\''+cacheKey+'\')" style="height:38px;width:38px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx2);font-size:18px;">&#x1F50D;</button>';
+    s+='</div></div></div>';
+    return s;
+  }).join('');
+}
+function apriDettaglioDaCache(key){
+  var p=_progCache[key];if(!p)return;
+  apriDettaglioBilico(p.numero,p.nota);
+}
+function renderProgDomani(){
+  var el=document.getElementById('prog-dom-list');
+  var badge=document.getElementById('prog-dom-count');
+  if(badge)badge.textContent=PROG_DOMANI.length;
+  if(!el)return;
+  if(!PROG_DOMANI.length){el.innerHTML='<div class="prog-empty">Nessuna uscita programmata per domani</div>';return;}
+  el.innerHTML=PROG_DOMANI.map(function(p){
+    var b=BL[p.numero];
+    var cacheKey='pd_'+(p.id||p.numero);
+    _progCache[cacheKey]={numero:p.numero,nota:p.nota||''};
+    var s='<div class="prog-item">';
+    s+='<div class="prog-num"><small>#</small>'+p.numero+'</div>';
+    s+='<div class="prog-col">';
+    if(b){s+='<div class="prog-loc">&#x1F4CD; '+b.locazione+'</div><div class="prog-ban">&#x1F4E6; '+b.bancali+' bancali</div>';}
+    else s+='<div style="font-size:12px;color:var(--tx3);">Non ancora in magazzino</div>';
+    if(p.nota)s+='<div class="prog-nota-txt">&#x1F4DD; '+p.nota+'</div>';
+    s+='<div class="prog-actions">';
+    s+='<button onclick="apriDettaglioDaCache(\''+cacheKey+'\')" style="height:38px;width:38px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx2);font-size:18px;">&#x1F50D;</button>';
+    s+='</div>';
+    s+='</div></div>';
+    return s;
+  }).join('');
+}
+
+// ═══ USCITA VELOCE (da prog) ═══
+function apriUscitaVeloce(numero,bancaliProg){
+  var b=BL[numero];
+  if(!b){tst('Bilico #'+numero+' non in magazzino','er');return;}
+  var banc=(bancaliProg&&bancaliProg<=b.bancali)?bancaliProg:b.bancali;
+  var rim=b.bancali-banc;
+  var txt='Bilico <strong style="color:var(--bb)">#'+numero+'</strong><br>📍 '+b.locazione+' — 📦 '+b.bancali+' bancali<br><br>';
+  if(rim===0)txt+='Uscita <strong>totale</strong> — locazione verrà liberata.';
+  else{var destLoc=(b.locazione.toUpperCase()==='SMEZZI'||b.locazione.toUpperCase()==='FRESCO')?b.locazione.toUpperCase():'SMEZZI';txt+='Rimangono <strong style="color:var(--ob)">'+rim+'</strong> bancali → <strong>'+destLoc+'</strong>';}
+  document.getElementById('sh-conf-tx').innerHTML=txt;
+  document.getElementById('sh-conf-banc-wrap').style.display='block';
+  document.getElementById('sh-conf-banc').value=banc;
+  document.getElementById('sh-conf-foto-wrap').style.display='block';
+  clearFotoConf();
+  document.getElementById('sh-conf-ok').disabled=false;
+  pendConf={tipo:'uscita',numero:numero,b:b};
+  _fotoTarget='conf';
+  aprO('sh-conf');
+}
+function apriUscitaCoppia(docId){
+  var itemA=PROG.find(function(p){return p.id===docId;});
+  if(!itemA||!itemA.aggancioId){if(itemA)apriUscitaVeloce(itemA.numero,itemA.bancaliProg);return;}
+  var itemB=PROG.find(function(p){return p.aggancioId===itemA.aggancioId&&p.id!==docId;});
+  if(!itemB){apriUscitaVeloce(itemA.numero,itemA.bancaliProg);return;}
+  var bilA=BL[itemA.numero],bilB=BL[itemB.numero];
+  _coppiaA={item:itemA,bilico:bilA};_coppiaB={item:itemB,bilico:bilB};
+  document.getElementById('mcu-numA').textContent='#'+itemA.numero;
+  document.getElementById('mcu-numB').textContent='#'+itemB.numero;
+  document.getElementById('mcu-bancA').value=(itemA.bancaliProg&&bilA&&itemA.bancaliProg<=bilA.bancali)?itemA.bancaliProg:(bilA?bilA.bancali:0);
+  document.getElementById('mcu-bancB').value=(itemB.bancaliProg&&bilB&&itemB.bancaliProg<=bilB.bancali)?itemB.bancaliProg:(bilB?bilB.bancali:0);
+  document.getElementById('mcu-ntA').value='';document.getElementById('mcu-ntB').value='';
+  var elNA=document.getElementById('mcu-notaA');if(itemA.nota){elNA.textContent='📝 '+itemA.nota;elNA.style.display='block';}else elNA.style.display='none';
+  var elNB=document.getElementById('mcu-notaB');if(itemB.nota){elNB.textContent='📝 '+itemB.nota;elNB.style.display='block';}else elNB.style.display='none';
+  var infoA=bilA?(bilA.locazione+' — '+bilA.bancali+' bancali'):'Non in magazzino';
+  var infoB=bilB?(bilB.locazione+' — '+bilB.bancali+' bancali'):'Non in magazzino';
+  document.getElementById('mcu-info').innerHTML='<strong style="color:var(--bb)">#'+itemA.numero+'</strong>: '+infoA+'<br><strong style="color:var(--pb)">#'+itemB.numero+'</strong>: '+infoB;
+  clearFotoCoppia();
+  document.getElementById('mcu-ok-btn').disabled=true;
+  _fotoTarget='coppia';
+  aprO('sh-coppia');
+}
+function eseguiConf(){
+  if(!pendConf)return;
+  var bu=parseInt(document.getElementById('sh-conf-banc').value)||0;
+  var b=pendConf.b,n=pendConf.numero;
+  if(bu<=0)return tst('Inserisci bancali in uscita','er');
+  if(bu>b.bancali)return tst('Bancali superiori ai presenti ('+b.bancali+')','er');
+  if(!fotoUscitaSalvata)return tst('📷 Scatta la foto prima di confermare','er');
+  chiO('sh-conf');
+  var rim=b.bancali-bu,ts=new Date().toISOString();
+  // usa lo stesso caricoId generato quando è stata scattata la foto
+  var caricoId=fotoCaricoIdPending||('C'+Date.now());
+  if(rim===0){dbDB(n);}
+  else{var loc=(b.locazione.toUpperCase()==='SMEZZI'||b.locazione.toUpperCase()==='FRESCO')?b.locazione.toUpperCase():'SMEZZI';dbUB(n,{bancali:rim,locazione:loc});}
+  dbAS({tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:rim,note:'',ts:ts,caricoId:caricoId,fotoSalvata:true});
+  // rimuovi da prog
+  rimuoviDaProg(n);
+  suonoOk();
+  tst(rim===0?'Bilico '+n+' uscito ✅':'Usciti '+bu+' bancali — rimasti '+rim,'ok');
+  pendConf=null;fotoUscitaSalvata=false;fotoCaricoIdPending=null;
+  setTimeout(aggiornaLog,400);
+}
+function confUscitaCoppia(){
+  if(!_coppiaA||!_coppiaB)return;
+  if(!fotoUscitaSalvata)return tst('📷 Scatta la foto prima di confermare','er');
+  var buA=parseInt(document.getElementById('mcu-bancA').value)||0;
+  var buB=parseInt(document.getElementById('mcu-bancB').value)||0;
+  var ntA=document.getElementById('mcu-ntA').value.trim();
+  var ntB=document.getElementById('mcu-ntB').value.trim();
+  var itemA=_coppiaA.item,bilA=_coppiaA.bilico,itemB=_coppiaB.item,bilB=_coppiaB.bilico;
+  if(bilA&&buA<=0)return tst('Inserisci bancali per #'+itemA.numero,'er');
+  if(bilB&&buB<=0)return tst('Inserisci bancali per #'+itemB.numero,'er');
+  if(bilA&&buA>bilA.bancali)return tst('Bancali #'+itemA.numero+' superano i presenti','er');
+  if(bilB&&buB>bilB.bancali)return tst('Bancali #'+itemB.numero+' superano i presenti','er');
+  chiO('sh-coppia');
+  var caricoId='C'+Date.now(),ts=new Date().toISOString();
+  if(bilA){var rimA=bilA.bancali-buA;if(rimA===0)dbDB(itemA.numero);else{var lA=bilA.locazione.toUpperCase();dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'});}dbAS({tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId,fotoSalvata:true});}
+  if(bilB){var rimB=bilB.bancali-buB;if(rimB===0)dbDB(itemB.numero);else{var lB=bilB.locazione.toUpperCase();dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'});}dbAS({tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId,fotoSalvata:true});}
+  if(UC&&fdb){if(itemA.id)fdb.collection('prog').doc(itemA.id).delete();if(itemB.id)fdb.collection('prog').doc(itemB.id).delete();}
+  suonoOk();tst('Coppia #'+itemA.numero+' + #'+itemB.numero+' caricata! ✅','ok');
+  _coppiaA=null;_coppiaB=null;fotoUscitaSalvata=false;fotoCaricoIdPending=null;
+  setTimeout(aggiornaLog,400);
+}
+function rimuoviDaProg(numero){
+  if(!UC||!fdb)return;
+  var item=PROG.find(function(p){return p.numero===numero;});
+  if(item&&item.id){
+    if(item.aggancioId){var partner=PROG.find(function(p){return p.aggancioId===item.aggancioId&&p.id!==item.id;});if(partner&&partner.id)fdb.collection('prog').doc(partner.id).update({aggancioId:firebase.firestore.FieldValue.delete()}).catch(function(){});}
+    fdb.collection('prog').doc(item.id).delete().catch(function(){});
+  }
+}
+
+// ═══ FOTO OBBLIGATORIA ═══
+function onFotoInput(input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  // genera il caricoId PRIMA della compressione così è coerente con lo storico
+  var caricoId='C'+Date.now();
+  fotoCaricoIdPending=caricoId;
+  compressaFoto(file,function(base64){
+    if(UC&&fdb){
+      fdb.collection('foto_uscite').doc(caricoId).set({
+        base64:base64,
+        ts:Date.now(),
+        operatore:CURR_USER?CURR_USER.username:''
+      }).then(function(){
+        fotoUscitaSalvata=true;
+        tst('📷 Foto salvata ✅','ok');
+        _aggiornaFotoUI(base64);
+        _abilitaConfirm();
+      }).catch(function(e){
+        tst('Errore salvataggio foto: '+e.message,'er');
+        // anche senza cloud, salvo in memoria e abilito
+        fotoUscitaSalvata=true;
+        _aggiornaFotoUI(base64);
+        _abilitaConfirm();
+      });
+    }else{
+      // modalità locale: salvo base64 in memoria
+      fotoUscitaSalvata=true;
+      _aggiornaFotoUI(base64);
+      _abilitaConfirm();
+    }
+  });
+}
+function _aggiornaFotoUI(base64){
+  if(_fotoTarget==='conf'){
+    var lbl=document.getElementById('sh-conf-foto-label');if(lbl){lbl.classList.add('done');lbl.querySelector('.tx').textContent='✅ FOTO SALVATA';}
+    var prev=document.getElementById('sh-conf-foto-prev');var img=document.getElementById('sh-conf-foto-img');
+    if(prev&&img){img.src=base64;prev.style.display='block';}
+  }else if(_fotoTarget==='coppia'){
+    var lbl=document.getElementById('mcu-foto-label');if(lbl){lbl.classList.add('done');lbl.querySelector('.tx').textContent='✅ FOTO SALVATA';}
+    var prev=document.getElementById('mcu-foto-prev');var img=document.getElementById('mcu-foto-img');
+    if(prev&&img){img.src=base64;prev.style.display='block';}
+  }else if(_fotoTarget==='missione'){
+    var lbl=document.getElementById('miss-foto-label');if(lbl){lbl.classList.add('done');lbl.querySelector('.tx').textContent='✅ FOTO SALVATA';}
+    var prev=document.getElementById('miss-foto-prev');var img=document.getElementById('miss-foto-img');
+    if(prev&&img){img.src=base64;prev.style.display='block';}
+  }
+}
+function _abilitaConfirm(){
+  if(_fotoTarget==='conf'){var btn=document.getElementById('sh-conf-ok');if(btn)btn.disabled=false;}
+  else if(_fotoTarget==='coppia'){var btn=document.getElementById('mcu-ok-btn');if(btn)btn.disabled=false;}
+  else if(_fotoTarget==='missione'){var btn=document.getElementById('miss-foto-ok');if(btn)btn.disabled=false;}
+}
+function clearFotoConf(){fotoUscitaSalvata=false;fotoCaricoIdPending=null;var lbl=document.getElementById('sh-conf-foto-label');if(lbl){lbl.classList.remove('done');lbl.querySelector('.tx').textContent='SCATTA FOTO CARICO';}var prev=document.getElementById('sh-conf-foto-prev');if(prev)prev.style.display='none';var btn=document.getElementById('sh-conf-ok');if(btn)btn.disabled=false;}
+function clearFotoCoppia(){fotoUscitaSalvata=false;fotoCaricoIdPending=null;var lbl=document.getElementById('mcu-foto-label');if(lbl){lbl.classList.remove('done');lbl.querySelector('.tx').textContent='SCATTA FOTO CARICO';}var prev=document.getElementById('mcu-foto-prev');if(prev)prev.style.display='none';var btn=document.getElementById('mcu-ok-btn');if(btn)btn.disabled=true;}
+function clearFotoMiss(){fotoUscitaSalvata=false;fotoCaricoIdPending=null;var lbl=document.getElementById('miss-foto-label');if(lbl){lbl.classList.remove('done');lbl.querySelector('.tx').textContent='SCATTA FOTO CARICO';}var prev=document.getElementById('miss-foto-prev');if(prev)prev.style.display='none';var btn=document.getElementById('miss-foto-ok');if(btn)btn.disabled=true;}
+// I label con for="foto-input" aprono nativamente il file picker.
+function compressaFoto(file,cb){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var MAX=700,w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      cb(canvas.toDataURL('image/jpeg',0.6));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══ TRASFERIMENTO ═══
+function trovaBilicoTransfer(){
+  var pfx=String(document.getElementById('tr-pfx').value||'').trim().toUpperCase();
+  var num=String(document.getElementById('tr-bilico').value||'').trim();
+  var n=pfx+num;
+  var b=BL[n];
+  var trovato=document.getElementById('tr-trovato');
+  var destBox=document.getElementById('tr-dest-box');
+  if(b){trovato.style.display='block';document.getElementById('tr-pos-attuale').textContent=b.locazione;destBox.style.display='block';}
+  else{trovato.style.display='none';destBox.style.display='none';}
+}
+function confTransfer(){
+  var pfx=String(document.getElementById('tr-pfx').value||'').trim().toUpperCase();
+  var num=String(document.getElementById('tr-bilico').value||'').trim();
+  var n=pfx+num;
+  var dest=document.getElementById('tr-dest').value.trim().toUpperCase();
+  if(!n)return tst('Inserisci il numero bilico','er');
+  var b=BL[n];if(!b)return tst('Bilico non trovato','er');
+  if(!dest)return tst('Inserisci la nuova postazione','er');
+  if(dest===b.locazione.toUpperCase())return tst('La postazione è già '+dest,'er');
+  if(!isIllimitata(dest)){var occ=null;Object.values(BL).forEach(function(x){if(x.locazione.toUpperCase()===dest&&x.numero!==n)occ=x;});if(occ)return tst('Postazione '+dest+' occupata da #'+occ.numero,'er');}
+  var locDa=b.locazione;
+  dbUB(n,{locazione:dest});
+  dbAS({tipo:'TRASFERIMENTO',numero:n,locazioneDa:locDa,locazioneA:dest,bancali:b.bancali,ts:new Date().toISOString()});
+  suonoOk();tst('Bilico #'+n+' → '+dest+' ✅','ok');
+  document.getElementById('tr-pfx').value='';
+  document.getElementById('tr-bilico').value='';
+  document.getElementById('tr-trovato').style.display='none';
+  document.getElementById('tr-dest').value='';
+  document.getElementById('tr-dest-box').style.display='none';
+  setTimeout(aggiornaLog,400);
+}
+
+// ═══ MAGAZZINO ═══
+function setMagMode(m){
+  magMode=m;
+  document.getElementById('mag-btn-b').className=m==='b'?'btn sm bbl':'btn sm bgh';
+  document.getElementById('mag-btn-p').className=m==='p'?'btn sm bpu':'btn sm bgh';
+  cercaMag();
+}
+function cercaMag(){
+  var el=document.getElementById('mag-results');if(!el)return;
+  var q=(document.getElementById('mag-search').value||'').trim().toUpperCase();
+  var lst=Object.values(BL).sort(function(a,b){return a.numero.localeCompare(b.numero);});
+  var tr=q?lst.filter(function(b){return magMode==='b'?String(b.numero).toUpperCase().includes(q):(b.locazione||'').toUpperCase().includes(q);}):lst;
+  if(!tr.length){el.innerHTML='<div class="empty"><div class="ic">🚛</div><p>'+(q?'Nessun risultato':'Magazzino vuoto')+'</p></div>';return;}
+  el.innerHTML=tr.map(function(b){
+    return '<div class="bcd"><div class="bcd-num"><small>#</small>'+b.numero+'</div>'+
+      '<div class="bcd-info"><div class="bcd-f"><div class="lab">Bancali</div><div class="val ba">'+b.bancali+'</div></div>'+
+      '<div class="bcd-f"><div class="lab">Locazione</div><div class="val lo">'+b.locazione+'</div></div></div>'+
+      (b.note?'<div style="font-size:12px;color:var(--tx2);margin-bottom:4px;">📝 '+b.note+'</div>':'')+
+      '<div class="bcd-time">Entrato: '+fmtT(b.ts)+'</div></div>';
+  }).join('');
+}
+
+// ═══ LOG ═══
+function aggiornaLog(){
+  // log entrate
+  var elE=document.getElementById('log-ent-list');
+  if(elE){var ent=ST.filter(function(m){return m.tipo==='ENTRATA';}).slice(0,8);elE.innerHTML=ent.length?ent.map(lgRow).join(''):'<div class="log-empty">Nessuna entrata recente</div>';}
+  // log uscite
+  var elU=document.getElementById('log-usc-list');
+  if(elU){var usc=ST.filter(function(m){return m.tipo==='USCITA';}).slice(0,8);elU.innerHTML=usc.length?usc.map(lgRow).join(''):'<div class="log-empty">Nessun carico recente</div>';}
+  // log trasferimenti
+  var elT=document.getElementById('log-tr-list');
+  if(elT){var tr=ST.filter(function(m){return m.tipo==='TRASFERIMENTO';}).slice(0,8);elT.innerHTML=tr.length?tr.map(lgRow).join(''):'<div class="log-empty">Nessun trasferimento recente</div>';}
+}
+function lgRow(m){
+  var isIn=m.tipo==='ENTRATA',isTr=m.tipo==='TRASFERIMENTO';
+  var dotCls=isIn?'in':(isTr?'tr':'ou');
+  var ico=isIn?'🟢':(isTr?'🔄':'🔴');
+  var label=isIn?'Entrato':(isTr?'Trasferito':'Uscito');
+  var det;
+  if(isTr)det='Da: '+(m.locazioneDa||'-')+' → '+(m.locazioneA||'-')+' ('+( m.bancali||0)+' PLT)';
+  else if(isIn)det='Loc: '+(m.locazione||'—')+' — '+(m.bancali||0)+' PLT';
+  else det='Loc: '+(m.locazione||'—')+' — Usciti: '+(m.bancaliUsciti||0)+' — Rimasti: '+(m.bancaliRimasti||0);
+  return '<div class="li"><div class="ldot '+dotCls+'"></div><div class="ltx"><div class="lm">'+ico+' <strong>#'+m.numero+'</strong> '+label+'</div><div class="ls">'+det+(m.note?' — '+m.note:'')+'</div></div><div class="lti">'+fmtH(m.ts)+'</div></div>';
+}
+
+// ═══ CARRELLISTA ═══
+function renderCarStoccare(){
+  var el=document.getElementById('car-stoccare-list');if(!el)return;
+  var arrivi=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';});
+  if(!arrivi.length){el.innerHTML='<div class="empty"><div class="ic">🎉</div><p>Nessuna merce da stoccare</p></div>';return;}
+  el.innerHTML=arrivi.map(function(b){
+    return '<div style="display:flex;align-items:center;gap:12px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;">'+
+      '<div style="flex:1;">'+
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;">Bilico #'+b.numero+'</div>'+
+      '<div style="font-size:13px;color:var(--ob);margin-top:3px;">📦 '+b.bancali+' bancali · 📍 ARRIVI</div>'+
+      (b.note?'<div style="font-size:12px;color:var(--tx2);margin-top:2px;">📝 '+b.note+'</div>':'')+
+      '</div>'+
+      '<button onclick="sistemaArrivo(\''+b.numero+'\')" style="width:52px;height:52px;background:var(--gn);color:#fff;border:none;border-radius:50%;font-size:24px;flex-shrink:0;">✅</button>'+
+      '</div>';
+  }).join('');
+}
+
+function sistemaArrivo(numero){
+  var b=BL[numero];if(!b)return;
+  var nuovaPos=prompt('Stocca bilico #'+numero+'\nInserisci la postazione definitiva:','');
+  if(nuovaPos===null)return;nuovaPos=nuovaPos.trim().toUpperCase();if(!nuovaPos)return;
+  if(!isIllimitata(nuovaPos)){
+    var occ=Object.values(BL).find(function(x){return(x.locazione||'').toUpperCase()===nuovaPos&&x.numero!==numero;});
+    if(occ)return tst('Postazione '+nuovaPos+' occupata da #'+occ.numero,'er');
+  }
+  if(UC&&fdb){
+    fdb.collection('bilici').doc(numero).update({locazione:nuovaPos}).then(function(){
+      dbAS({tipo:'TRASFERIMENTO',numero:numero,locazioneDa:'ARRIVI',locazioneA:nuovaPos,bancali:b.bancali,ts:new Date().toISOString()});
+      suonoOk();tst('Bilico #'+numero+' → '+nuovaPos+' ✅','ok');
+    }).catch(function(e){tst('Errore: '+e.message,'er');});
+  }else{b.locazione=nuovaPos;suonoOk();tst('Bilico #'+numero+' → '+nuovaPos,'ok');}
+}
+
+function renderCarPreparare(){
+  var el=document.getElementById('car-preparare-list');if(!el)return;
+  var lista=PROG.filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">✅</div><p>Nessun bilico da preparare oggi</p></div>';return;}
+  el.innerHTML=lista.map(function(p){
+    var preparato=!!(p.id&&PROG_PREPARATO[p.id]);
+    var b=BL[p.numero];
+    var bancNote=b?('📦 '+b.bancali+(p.bancaliProg?' · ord. '+p.bancaliProg:'')+' · 📍 '+b.locazione):'Non in magazzino';
+    return '<div style="display:flex;align-items:center;gap:12px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;'+(preparato?'opacity:.4;':'')+'">' +
+      '<div style="flex:1;">'+
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;'+(preparato?'text-decoration:line-through;':'')+'">Bilico #'+p.numero+'</div>'+
+      '<div style="font-size:13px;color:var(--ob);margin-top:3px;">'+bancNote+'</div>'+
+      (p.nota?'<div style="font-size:12px;color:var(--tx2);margin-top:2px;">📝 '+p.nota+'</div>':'')+
+      '</div>'+
+      '<button onclick="segnaPreparato(\''+(p.id||'')+'\','+preparato+')" style="width:52px;height:52px;background:'+(preparato?'var(--bd)':'var(--gn)')+';color:#fff;border:none;border-radius:50%;font-size:24px;flex-shrink:0;">'+(preparato?'↩':'✅')+'</button>'+
+      '</div>';
+  }).join('');
+}
+
+function segnaPreparato(docId,giaSegnato){
+  if(!docId)return tst('ID non disponibile','er');
+  if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
+  var progItem=PROG.find(function(p){return p.id===docId;});
+  if(giaSegnato){
+    fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});
+    tst('Preparazione annullata','ok');
+  }else{
+    fdb.collection('prog_preparato').doc(docId).set({ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});
+    if(progItem){
+      var bPar=BL[progItem.numero];
+      if(bPar){
+        var vecchiaLoc=bPar.locazione;
+        fdb.collection('bilici').doc(progItem.numero).update({locazione:'PARTENZE'}).then(function(){
+          dbAS({tipo:'TRASFERIMENTO',numero:progItem.numero,locazioneDa:vecchiaLoc,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});
+        }).catch(function(){});
+      }
+    }
+    suonoOk();tst('Bilico preparato ✅','ok');
+  }
+}
+
+function renderCarMissioni(){
+  var el=document.getElementById('car-missioni-list');if(!el)return;
+  var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';});
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
+  el.innerHTML=lista.map(function(m){
+    var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot=(m.bilici||[]).length;
+    var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var pltConf=(m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
+    var lbl=m.tipo==='locazione'?('📍 SMEZZI '+(m.locazione?'— '+m.locazione:'')):'✋ Picking Manuale';
+    var statoCol=m.stato==='completata'?'#00bfff':(m.stato==='in_corso'?'var(--ob)':'var(--tx2)');
+    var statoIco=m.stato==='completata'?'🟢':(m.stato==='in_corso'?'🟡':'⏳');
+    var prog=tot>0?Math.round(conf/tot*100):0;
+    return '<div style="background:var(--sf);border:1.5px solid rgba(163,113,247,.3);border-radius:var(--r);padding:14px;margin-bottom:10px;cursor:pointer;" onclick="apriDettaglioMissione(\''+m.id+'\')">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;">'+
+      '<strong style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;color:var(--pb);">'+lbl+'</strong>'+
+      '<span style="font-size:13px;color:'+statoCol+';">'+statoIco+'</span></div>'+
+      '<div style="font-size:13px;color:var(--tx2);margin-bottom:6px;">📅 '+(m.data||'—')+' · 🚛 '+conf+'/'+tot+' · 📦 '+pltConf+'/'+pltTot+' PLT</div>'+
+      (m.nota?'<div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">📝 '+m.nota+'</div>':'')+
+      '<div style="background:var(--sf2);border-radius:3px;height:5px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>'+
+      '</div>';
+  }).join('');
+}
+
+// ═══ MISSIONI ═══
+function renderMissioni(){
+  var el=document.getElementById('missioni-list');if(!el)return;
+  var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';})
+    .sort(function(a,b){return(a.ts||0)-(b.ts||0);});
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
+  el.innerHTML=lista.map(function(m){
+    var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length;
+    var tot=(m.bilici||[]).length;
+    var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var pltConf=(m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
+    var lbl=m.tipo==='locazione'?('📍 Carico Smezzi'+(m.locazione?' — '+m.locazione:'')):'✋ Picking Manuale';
+    var statoLbl=m.stato==='completata'?'🟢 Completata':(m.stato==='in_corso'?'🟡 In corso':'⏳ Attesa');
+    var prog=tot>0?Math.round(conf/tot*100):0;
+    var s='<div class="miss-card" onclick="apriDettaglioMissione(\''+m.id+'\')">';
+    s+='<div class="miss-card-hdr">';
+    s+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">';
+    s+='<div class="miss-card-title">'+lbl+'</div>';
+    s+='<span class="miss-stato '+(m.stato||'attesa')+'">'+statoLbl+'</span>';
+    s+='</div>';
+    s+='<div class="miss-card-meta">📅 '+(m.data||'—')+' · 🚛 '+conf+'/'+tot+' bilici · 📦 '+pltConf+'/'+pltTot+' PLT</div>';
+    if(m.nota)s+='<div style="font-size:12px;color:var(--tx2);margin-top:3px;">📝 '+m.nota+'</div>';
+    s+='<div class="miss-card-prog"><div class="miss-card-bar" style="width:'+prog+'%;"></div></div>';
+    s+='</div></div>';
+    return s;
+  }).join('');
+}
+
+function apriDettaglioMissione(id){
+  var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;
+  _missioneAperta=m;
+  var lbl=m.tipo==='locazione'?('📍 Carico Smezzi'+(m.locazione?' — '+m.locazione:'')):'✋ Picking Manuale';
+  var statoLbl=m.stato==='completata'?'🟢 Completata':(m.stato==='in_corso'?'🟡 In corso':'⏳ Attesa');
+  var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;
+  var html='<div style="background:var(--sf);border:1.5px solid rgba(163,113,247,.3);border-radius:var(--r);padding:14px;margin-bottom:12px;">';
+  html+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;color:var(--pb);margin-bottom:4px;">'+lbl+'</div>';
+  html+='<div style="font-size:13px;color:var(--tx2);">📅 '+(m.data||'—')+' · '+statoLbl+'</div>';
+  if(m.nota)html+='<div style="font-size:12px;color:var(--tx2);margin-top:4px;">📝 '+m.nota+'</div>';
+  html+='</div>';
+  // lista bilici
+  (m.bilici||[]).forEach(function(b,i){
+    var bPlt=b.confermato?(b.bancaliConfermati||b.bancaliProg||0):(b.bancaliProg||0);
+    var bInMag=BL[b.numero];
+    html+='<div style="display:flex;align-items:center;gap:10px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:8px;">';
+    html+='<div style="flex:1;">';
+    html+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;">Bilico #'+b.numero+'</div>';
+    if(bInMag)html+='<div style="font-size:13px;color:var(--tx2);margin-top:2px;">📍 '+bInMag.locazione+' · 📦 '+bInMag.bancali+' PLT</div>';
+    html+='<div style="font-size:12px;color:var(--ob);margin-top:2px;">Previsti: '+bPlt+' PLT</div>';
+    html+='</div>';
+    if(b.confermato){
+      html+='<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">';
+      html+='<span style="font-size:26px;">✅</span>';
+      if(m.stato!=='caricata')html+='<button onclick="togliFlg(\''+id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:7px;color:var(--rb);padding:2px 8px;font-size:11px;">↩</button>';
+      html+='</div>';
+    }else{
+      html+='<button onclick="confermaBilico(\''+id+'\','+i+')" style="width:52px;height:52px;background:var(--pu);color:#fff;border:none;border-radius:50%;font-size:22px;">✋</button>';
+    }
+    html+='</div>';
+  });
+  // azioni
+  html+='<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">';
+  if(conf>0&&m.stato!=='caricata'){
+    html+='<button onclick="apriCompletaMissione(\''+id+'\')" style="width:100%;padding:15px;background:var(--gn);border:none;border-radius:var(--r);color:#fff;font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;cursor:pointer;">✅ SEGNA COMPLETATA</button>';
+  }
+  html+='<button onclick="goBack()" style="width:100%;padding:13px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx2);font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">← INDIETRO</button>';
+  html+='</div>';
+  document.getElementById('missione-detail-content').innerHTML=html;
+  goPage('missione-detail','DETTAGLIO MISSIONE');
+}
+
+// cache per conferma bilico missione
+var _pendConfBilico=null;
+
+function confermaBilico(missioneId,bilIdx){
+  if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
+  var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m)return;
+  var b=m.bilici[bilIdx];var bInMag=BL[b.numero];
+  var pltSuggerito=bInMag?bInMag.bancali:(b.bancaliProg||0);
+  _pendConfBilico={missioneId:missioneId,bilIdx:bilIdx,numero:b.numero};
+  // apri sheet per inserire PLT
+  var el=document.getElementById('sh-conf-plt-body');
+  if(!el){_eseguiConfBilico(pltSuggerito);return;}
+  document.getElementById('sh-conf-plt-num').textContent='#'+b.numero;
+  document.getElementById('sh-conf-plt-info').textContent=(bInMag?'📍 '+bInMag.locazione+' — ':'')+(b.bancaliProg?'Previsti: '+b.bancaliProg+' PLT':'');
+  document.getElementById('sh-conf-plt-val').value=pltSuggerito;
+  aprO('sh-conf-plt');
+}
+function _eseguiConfBilico(pltConf){
+  if(!_pendConfBilico)return;
+  var missioneId=_pendConfBilico.missioneId,bilIdx=_pendConfBilico.bilIdx,numero=_pendConfBilico.numero;
+  _pendConfBilico=null;
+  var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m)return;
+  var newBilici=(m.bilici||[]).map(function(bil,i){
+    return i===bilIdx?Object.assign({},bil,{confermato:true,bancaliConfermati:parseInt(pltConf)||0}):bil;
+  });
+  var confCount=newBilici.filter(function(bil){return bil.confermato;}).length;
+  var nuovoStato=confCount===newBilici.length?'completata':confCount>0?'in_corso':'attesa';
+  fdb.collection('missioni').doc(missioneId).update({bilici:newBilici,stato:nuovoStato}).then(function(){
+    suonoSirena();tst('Bilico #'+numero+' confermato ✅','ok');
+    var m2=MISSIONI.find(function(x){return x.id===missioneId;});if(m2){m2.bilici=newBilici;m2.stato=nuovoStato;}
+    apriDettaglioMissione(missioneId);
+  }).catch(function(e){tst('Errore: '+e.message,'er');});
+}
+function confermaConPlt(){
+  var val=parseInt(document.getElementById('sh-conf-plt-val').value)||0;
+  if(val<=0)return tst('Inserisci almeno 1 PLT','er');
+  chiO('sh-conf-plt');
+  _eseguiConfBilico(val);
+}
+
+function togliFlg(missioneId,bilIdx){
+  if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
+  var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m||m.stato==='caricata')return;
+  var newBilici=(m.bilici||[]).map(function(b,i){return i===bilIdx?Object.assign({},b,{confermato:false,bancaliConfermati:0}):b;});
+  var confCount=newBilici.filter(function(b){return b.confermato;}).length;
+  var nuovoStato=confCount===newBilici.length&&newBilici.length>0?'completata':confCount>0?'in_corso':'attesa';
+  fdb.collection('missioni').doc(missioneId).update({bilici:newBilici,stato:nuovoStato}).then(function(){
+    tst('Flag rimosso','ok');
+    var m2=MISSIONI.find(function(x){return x.id===missioneId;});if(m2){m2.bilici=newBilici;m2.stato=nuovoStato;}
+    apriDettaglioMissione(missioneId);
+  }).catch(function(e){tst('Errore: '+e.message,'er');});
+}
+
+function apriCompletaMissione(id){
+  var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;
+  _missioneAperta=m;
+  var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length;
+  var tot=(m.bilici||[]).length;
+  var pltConf=(m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
+  document.getElementById('sh-miss-info').innerHTML='<strong style="color:var(--pb);">'+(m.tipo==='locazione'?'Carico Smezzi':'Picking')+'</strong><br>📦 '+pltConf+' PLT confermati su '+tot+' bilici';
+  clearFotoMiss();
+  document.getElementById('miss-foto-ok').disabled=true;
+  _fotoTarget='missione';
+  // collega foto-label
+  var lbl=document.getElementById('miss-foto-label');
+  if(lbl){lbl.onclick=function(){document.getElementById('foto-input').value='';document.getElementById('foto-input').click();};}
+  aprO('sh-miss-foto');
+}
+
+function completaMissioneFoto(){
+  if(!_missioneAperta||!fotoUscitaSalvata)return tst('📷 Scatta la foto prima di confermare','er');
+  var m=_missioneAperta,id=m.id;
+  if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
+  fdb.collection('missioni').doc(id).update({
+    stato:'completata',
+    operatoreChiusura:CURR_USER?CURR_USER.username:'',
+    tsChiusura:Date.now()
+  }).then(function(){
+    chiO('sh-miss-foto');
+    suonoOk();tst('Missione completata ✅','ok');
+    fotoUscitaSalvata=false;fotoCaricoIdPending=null;_missioneAperta=null;
+    goBack();
+  }).catch(function(e){tst('Errore: '+e.message,'er');});
+}
+
+// ═══ QR SCANNER ═══
+function apriQR(inputId){
+  qrTargetId=inputId;
+  document.getElementById('qr-file').value='';
+  document.getElementById('qr-file').click();
+}
+function leggiQRdaFoto(input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  var img=new Image();var url=URL.createObjectURL(file);
+  img.onload=function(){
+    var canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;
+    var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0);URL.revokeObjectURL(url);
+    if(window.BarcodeDetector){
+      var detector=new BarcodeDetector({formats:['qr_code','code_128','code_39','ean_13','ean_8','data_matrix']});
+      detector.detect(canvas).then(function(codes){
+        if(codes&&codes.length>0){var val=codes[0].rawValue.trim().toUpperCase();if(qrTargetId){var el=document.getElementById(qrTargetId);if(el){el.value=val;el.dispatchEvent(new Event('input'));}}tst('Locazione: '+val,'ok');}
+        else tst('Codice non riconosciuto','er');
+      }).catch(function(){tst('Errore lettura codice','er');});
+    }else tst('Scanner non supportato su questo dispositivo','er');
+  };
+  img.onerror=function(){tst('Errore caricamento foto','er');};
+  img.src=url;
+}
+</script>
+</body>
+</html>

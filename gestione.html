@@ -944,6 +944,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <div class="sheet-title">
     &#x1F4E6; Missioni
     <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="expMissioni()" style="background:rgba(46,160,67,.15);border:1px solid rgba(46,160,67,.4);border-radius:8px;color:var(--gb);padding:6px 12px;font-size:13px;font-weight:700;">⬇ Excel</button>
       <button onclick="apriCreaMissione()" style="background:rgba(163,113,247,.15);border:1px solid rgba(163,113,247,.4);border-radius:8px;color:var(--pb);padding:6px 12px;font-size:13px;font-weight:700;">+ Nuova</button>
       <button class="close" onclick="chiO('sh-missioni')">&#x2715;</button>
     </div>
@@ -1392,7 +1393,6 @@ function aggProg(val,nota,bancProg){
 }
 function rimuoviProg(num){if(UC&&fdb){var item=PROG.find(function(p){return p.numero===num;});if(item&&item.id){if(item.aggancioId){var partner=PROG.find(function(p){return p.aggancioId===item.aggancioId&&p.id!==item.id;});if(partner&&partner.id)fdb.collection('prog').doc(partner.id).update({aggancioId:firebase.firestore.FieldValue.delete()}).catch(function(){});}fdb.collection('prog').doc(item.id).delete().catch(function(){});}}else{PROG=PROG.filter(function(p){return p.numero!==num;});salvaProg();renderProg();}}
 function rimuoviProgById(docId){if(!docId)return;var item=PROG.find(function(p){return p.id===docId;});if(!item)return;if(item.aggancioId){var partner=PROG.find(function(p){return p.aggancioId===item.aggancioId&&p.id!==docId;});var info=partner?' + #'+partner.numero:'';if(!confirm('Rimuovere '+item.numero+info+'?'))return;if(UC&&fdb){fdb.collection('prog').doc(docId).delete().catch(function(){});if(partner&&partner.id)fdb.collection('prog').doc(partner.id).delete().catch(function(){});}else{var pid=partner?partner.id:null;PROG=PROG.filter(function(p){return p.id!==docId&&p.id!==pid;});salvaProg();renderProg();}}else{if(!confirm('Rimuovere #'+item.numero+'?'))return;if(UC&&fdb)fdb.collection('prog').doc(docId).delete();else{PROG=PROG.filter(function(p){return p.id!==docId;});salvaProg();renderProg();}}}
-function sganciaProg(docId){if(!docId)return;var item=PROG.find(function(p){return p.id===docId;});if(!item||!item.aggancioId)return;var partner=PROG.find(function(p){return p.aggancioId===item.aggancioId&&p.id!==docId;});if(UC&&fdb){fdb.collection('prog').doc(docId).update({aggancioId:firebase.firestore.FieldValue.delete()}).catch(function(){});if(partner&&partner.id)fdb.collection('prog').doc(partner.id).update({aggancioId:firebase.firestore.FieldValue.delete()}).catch(function(){});}else{delete item.aggancioId;if(partner)delete partner.aggancioId;salvaProg();renderProg();}tst('Aggancio sciolto','ok');}
 function caricaVeloce(num){
   aprO('sh-uscita');
   var s=String(num).trim().toUpperCase(),m=s.match(/^([A-Za-z]?)(\d+)$/);
@@ -1418,7 +1418,6 @@ function aggProgDomani(val,nota,bancProg){
   });
 }
 function rimuoviProgDomaniById(docId){if(!docId)return;var item=PROG_DOMANI.find(function(p){return p.id===docId;});if(!item)return;if(item.aggancioId){var partner=PROG_DOMANI.find(function(p){return p.aggancioId===item.aggancioId&&p.id!==docId;});var info=partner?' + #'+partner.numero:'';if(!confirm('Rimuovere '+item.numero+info+'?'))return;if(UC&&fdb){fdb.collection('prog_domani').doc(docId).delete();if(partner&&partner.id)fdb.collection('prog_domani').doc(partner.id).delete();}else{var pid=partner?partner.id:null;PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==docId&&p.id!==pid;});salvaProgDomani();renderProgDomani();}}else{if(!confirm('Rimuovere #'+item.numero+'?'))return;if(UC&&fdb)fdb.collection('prog_domani').doc(docId).delete();else{PROG_DOMANI=PROG_DOMANI.filter(function(p){return p.id!==docId;});salvaProgDomani();renderProgDomani();}}}
-function sganciaProgDomani(docId){if(!docId)return;var item=PROG_DOMANI.find(function(p){return p.id===docId;});if(!item||!item.aggancioId)return;var partner=PROG_DOMANI.find(function(p){return p.aggancioId===item.aggancioId&&p.id!==docId;});if(UC&&fdb){fdb.collection('prog_domani').doc(docId).update({aggancioId:firebase.firestore.FieldValue.delete()}).catch(function(){});if(partner&&partner.id)fdb.collection('prog_domani').doc(partner.id).update({aggancioId:firebase.firestore.FieldValue.delete()}).catch(function(){});}else{delete item.aggancioId;if(partner)delete partner.aggancioId;salvaProgDomani();renderProgDomani();}tst('Aggancio sciolto','ok');}
 
 // ═══ AGGIUNGI USCITA (sheet) ═══
 function apriSheetAggProg(target){
@@ -1740,16 +1739,11 @@ function renderMagazzino(){
 function apriAzioniBilico(key){
   var cache=window._magCache||{};var p=cache[key];if(!p)return;
   var b=BL[p.numero];if(!b)return;
-  // usa il modal sh-azioni-ordine già esistente
+  // usa il modal sh-azioni-ordine già presente nell'HTML
   var numH=document.getElementById('sh-az-num');
   var metaH=document.getElementById('sh-az-meta');
   var el=document.getElementById('sh-az-actions');
-  if(!el){
-    var mo=document.createElement('div');mo.className='overlay';mo.id='sh-azioni-ordine';
-    mo.innerHTML='<div class="sheet"><div class="sheet-handle"></div><div id="sh-az-num" style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;color:var(--bb);text-align:center;margin-bottom:3px;padding:12px 16px 0;"></div><div id="sh-az-meta" style="font-size:13px;color:var(--tx2);text-align:center;margin-bottom:12px;padding:0 16px;"></div><div style="padding:0 12px 20px;display:flex;flex-direction:column;gap:6px;" id="sh-az-actions"></div></div>';
-    document.body.appendChild(mo);
-    numH=document.getElementById('sh-az-num');metaH=document.getElementById('sh-az-meta');el=document.getElementById('sh-az-actions');
-  }
+  if(!el)return;
   if(numH)numH.textContent='#'+b.numero;
   if(metaH)metaH.textContent='📍 '+b.locazione+' · 📦 '+b.bancali+' bancali';
   var aStyle='display:flex;align-items:center;gap:12px;padding:14px;background:var(--sf2);border-radius:12px;border:none;color:var(--tx);font-size:16px;font-weight:600;width:100%;text-align:left;cursor:pointer;';
@@ -2501,9 +2495,6 @@ function ui(){
   _s('s-bilici-secco',biliciDispSecco);_s('s-marchesi',pltMarchesi);
   var dDispS=document.getElementById('s-disp-secco');if(dDispS)dDispS.textContent=postiDispSecco!==null?postiDispSecco+' PLT liberi':'— (non configurato)';
   var dDispF=document.getElementById('s-disp-fresco');if(dDispF)dDispF.textContent=postiDispFresc!==null?postiDispFresc+' PLT liberi':'— (non configurato)';
-  // ultimi entrati
-  var lst2=ST.filter(function(m){return m.tipo==='ENTRATA';});
-  var ultS=null,ultF=null;for(var i=0;i<lst2.length;i++){if((lst2[i].locazione||'').toUpperCase()==='FRESCO'){if(!ultF)ultF=lst2[i];}else{if(!ultS)ultS=lst2[i];}if(ultS&&ultF)break;}
   var mc=document.getElementById('menu-mag-sub');if(mc)mc.textContent=lst.length+' bilici in magazzino';
   aggiornaBadgeCarrellista();aggiornaBadgeMissioni();
   aggiornaBoxAttesi();

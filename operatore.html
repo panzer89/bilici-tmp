@@ -416,7 +416,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);overfl
         <input class="pfx" id="en-pfx" type="text" maxlength="1" placeholder="A"
           oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');"
           onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('en-bilico').focus();}">
-        <input class="fi big" id="en-bilico" type="number" placeholder="906" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0;">
+        <input class="fi big" id="en-bilico" type="number" placeholder="N°" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0;">
       </div>
     </div>
     <div class="fg">
@@ -951,7 +951,10 @@ function goEntrata(cat){
   var postEl=document.getElementById('en-postazione');
   if(cat==='fresco'){postEl.value='FRESCO';postEl.setAttribute('readonly','readonly');postEl.style.opacity='.7';}
   else{postEl.value='ARRIVI';postEl.removeAttribute('readonly');postEl.style.opacity='1';}
-  // suggerisce prossimo bilico
+  // azzera il numero così l'auto-suggerimento popola il valore giusto per la categoria
+  document.getElementById('en-pfx').value='';
+  document.getElementById('en-bilico').value='';
+  // suggerisce e auto-popola il prossimo bilico
   calcolaProssimoBilico(cat);
   goPage('entrata-form',cat==='fresco'?'ENTRATA FRESCO':'ENTRATA SECCO');
 }
@@ -962,7 +965,6 @@ function aprO(id){document.getElementById(id).classList.add('open');}
 
 // ═══ UTILS ═══
 function stp(id,d){var el=document.getElementById(id);el.value=Math.max(0,(parseInt(el.value)||0)+d);}
-function datLocale(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function fmtT(ts){if(!ts)return '-';var d=new Date(ts);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
 function fmtH(ts){if(!ts)return '-';var d=new Date(ts);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
 function tst(msg,tp){var t=document.getElementById('tst');t.textContent=msg;t.className='tst '+(tp||'');void t.offsetWidth;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3200);if(tp==='er')suonoErr();}
@@ -1026,13 +1028,13 @@ function calcolaProssimoBilico(cat){
   }).forEach(function(m){var n=parseInt(m.numero);if(n)numeri.add(n);});
   if(!numeri.size){el.textContent='—';return;}
   var arr=Array.from(numeri).sort(function(a,b){return a-b;});
-  var max=arr[arr.length-1];
-  // cerca il primo gap nella sequenza (es. 900,901,903 → suggerisce 902)
-  var suggerito=max+1;
-  for(var i=0;i<arr.length-1;i++){
-    if(arr[i+1]-arr[i]>1){suggerito=arr[i]+1;break;}
-  }
+  // prossimo = ultimo numero usato + 1 (sequenza in avanti, no recupero buchi)
+  var suggerito=arr[arr.length-1]+1;
   el.textContent='#'+suggerito;
+  // auto-popola il campo numero se ancora vuoto (e azzera il prefisso Marchesi)
+  var inp=document.getElementById('en-bilico');
+  var pfx=document.getElementById('en-pfx');
+  if(inp&&!inp.value){inp.value=suggerito;if(pfx)pfx.value='';}
 }
 
 // ═══ ENTRATA ═══

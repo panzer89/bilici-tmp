@@ -3632,7 +3632,7 @@ function ui() {
   var postiFresc     = parseInt(localStorage.getItem('MAG_POSTI_FRESCO')        || '0') || 0;
   var pltBilico      = parseInt(localStorage.getItem('MAG_PLT_BILICO')          || '0') || 0;
   var pltBilicoFresc = parseInt(localStorage.getItem('MAG_PLT_BILICO_FRESCO')   || '0') || 0;
-  var postiDispSecco  = postiSecco > 0 ? postiSecco - stockSecco  : null;
+  var postiDispSecco  = postiSecco > 0 ? postiSecco - stockSecco - pltMarchesi : null;
   var postiDispFresc  = postiFresc > 0 ? postiFresc - stockFresco : null;
   var biliciDispSecco = (postiSecco > 0 && pltBilico > 0) ? Math.floor((postiSecco - stockSecco + partenzePlt - pltMarchesi) / pltBilico) : null;
   function _s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val !== null ? val : '—'; }

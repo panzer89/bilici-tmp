@@ -748,6 +748,10 @@ input, select, textarea { font-family: inherit; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <span class="sb-item-label">Scarica Foto</span>
       </button>
+      <button class="sb-item" id="sb-foto-del" onclick="chiPin('cancellaFoto',null)" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        <span class="sb-item-label">Cancella Foto</span>
+      </button>
     </nav>
 
     <div class="sb-footer">
@@ -1791,7 +1795,7 @@ function applicaLivello(lvl){
   document.body.setAttribute('data-lvl',String(lvl));
   var isAdm=(lvl===0||lvl===2);
   var isMaster=CURR_USER&&CURR_USER.username.toLowerCase()===ADMIN_DEFAULT.username.toLowerCase();
-  ['sb-export','sb-importa','sb-foto'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isAdm?'':'none';});
+  ['sb-export','sb-importa','sb-foto','sb-foto-del'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isAdm?'':'none';});
   var sbPianif=document.getElementById('sb-sect-pianif');
   if(sbPianif)sbPianif.style.display=isAdm?'':'none';
   var locInp=document.getElementById('in-l'),locEdit=document.getElementById('edit-l');
@@ -1874,13 +1878,14 @@ function pkd(){pbuf=pbuf.slice(0,-1);updD();}
 function updD(st){for(var i=0;i<4;i++){var el=document.getElementById('pd'+i);el.className='pd';if(st==='e')el.classList.add('e');else if(i<pbuf.length)el.classList.add('f');}}
 function chkP(){
   var ok=(pbuf===PIN);
-  var soloSolo=['azzeraDB','svuota'];
+  var soloSolo=['azzeraDB','svuota','cancellaFoto'];
   if(!ok&&CURR_USER&&CURR_USER.livello===2&&CURR_USER.pin&&(!paz||soloSolo.indexOf(paz.az)===-1))ok=(pbuf===CURR_USER.pin);
   if(ok){chiM('mo-p');doPin();}else{updD('e');document.getElementById('perr').textContent='PIN errato, riprova';pbuf='';setTimeout(function(){updD();},600);}
 }
 function doPin(){
   if(!paz)return;var az=paz.az,id=paz.id;paz=null;
   if(az==='azzeraDB'){eseguiAzzeraDB();return;}
+  if(az==='cancellaFoto'){cancellaTutteFoto();return;}
   if(az==='elimBilico'&&id){dbDB(id);tst('Bilico '+id+' eliminato','ok');}
   else if(az==='del'&&id){dbDS(id);setTimeout(filtraStorico,300);tst('Movimento eliminato','ok');}
   else if(az==='svuota'){dbCS().then(function(){filtraStorico();tst('Storico svuotato','ok');});}
@@ -1926,12 +1931,14 @@ function leggiQRdaFoto(input){if(!input.files||!input.files[0])return;var file=i
 function prevFotoDesk(inp,imgId,prevId,lblId){if(!inp.files||!inp.files[0])return;var r=new FileReader();r.onload=function(e){document.getElementById(imgId).src=e.target.result;document.getElementById(prevId).style.display='block';document.getElementById(lblId).textContent='✅ Foto allegata';};r.readAsDataURL(inp.files[0]);}
 function clearFotoDesk(inpId,prevId,lblId){document.getElementById(inpId).value='';document.getElementById(prevId).style.display='none';document.getElementById(lblId).textContent='Foto carico (opzionale)';}
 function compressaFoto(file,cb){var reader=new FileReader();reader.onload=function(e){var img=new Image();img.onload=function(){var MAX=700,w=img.width,h=img.height;if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);cb(canvas.toDataURL('image/jpeg',0.6));};img.src=e.target.result;};reader.readAsDataURL(file);}
-function vediFoto(caricoId){if(!caricoId||!UC||!fdb){tst('Connessione cloud necessaria','er');return;}var imgEl=document.getElementById('foto-uscita-img'),vuotaEl=document.getElementById('foto-uscita-vuota');imgEl.style.display='none';imgEl.src='';vuotaEl.style.display='block';vuotaEl.textContent='Caricamento...';aprM('mo-foto-uscita');fdb.collection('foto_uscite').doc(caricoId).get().then(function(doc){if(doc.exists&&doc.data().base64){imgEl.src=doc.data().base64;imgEl.style.display='block';vuotaEl.style.display='none';}else{var stor=ST.find(function(m){return m.caricoId===caricoId;});if(stor&&stor.foto){imgEl.src=stor.foto;imgEl.style.display='block';vuotaEl.style.display='none';}else vuotaEl.textContent='Nessuna foto disponibile';}}).catch(function(){vuotaEl.textContent='Errore caricamento foto';});}
+function vediFoto(caricoId){if(!caricoId||!UC||!fdb){tst('Connessione cloud necessaria','er');return;}var imgEl=document.getElementById('foto-uscita-img'),vuotaEl=document.getElementById('foto-uscita-vuota');imgEl.style.display='none';imgEl.src='';vuotaEl.style.display='block';vuotaEl.textContent='Caricamento...';aprM('mo-foto-uscita');fdb.collection('foto_uscite').doc(caricoId).get().then(function(doc){if(doc.exists&&doc.data().base64){imgEl.src=doc.data().base64;imgEl.style.display='block';vuotaEl.style.display='none';}else{var stor=ST.find(function(m){return m.caricoId===caricoId;});if(stor&&stor.foto){imgEl.src=stor.foto;imgEl.style.display='block';vuotaEl.style.display='none';}else vuotaEl.innerHTML='📦 Foto non più nel cloud<br><span style="font-size:12px;color:var(--tx3);">Probabilmente già archiviata in un vecchio ZIP scaricato.</span>';}}).catch(function(){vuotaEl.textContent='Errore caricamento foto';});}
 
 // ═══ CHECK FOTO REMINDER ═══
 function checkFotoReminder(){if(!UC||!fdb)return;var isLeo=CURR_USER&&CURR_USER.username.toLowerCase()==='leo',isPlus=CURR_USER&&CURR_USER.livello===2;if(!isLeo&&!isPlus)return;var oggi=new Date();if(oggi.getDate()!==1)return;var chiave='FOTO_REM_'+oggi.getFullYear()+'_'+(oggi.getMonth()+1);try{if(localStorage.getItem(chiave))return;}catch(x){}fdb.collection('foto_uscite').get().then(function(snap){if(snap.size>0){document.getElementById('mo-foto-reminder-count').textContent=snap.size;setTimeout(function(){aprM('mo-foto-reminder');},2000);}}).catch(function(){});}
 function rispondiFotoReminder(scarica){chiM('mo-foto-reminder');if(scarica)scaricaTutteFoto(true);else{var oggi=new Date(),chiave='FOTO_REM_'+oggi.getFullYear()+'_'+(oggi.getMonth()+1);try{localStorage.setItem(chiave,'1');}catch(x){}}}
-function scaricaTutteFoto(segnaVisto){if(!UC||!fdb){tst('Connessione cloud necessaria','er');return;}tst('Raccolta foto in corso...','ok');fdb.collection('foto_uscite').get().then(function(snap){if(snap.empty){tst('Nessuna foto da scaricare','er');return;}var zip=new JSZip(),folder=zip.folder('foto_carichi');snap.forEach(function(doc){var d=doc.data();if(d.base64){var b64=d.base64.split(',')[1]||d.base64;folder.file(doc.id+'.jpg',b64,{base64:true});}});zip.generateAsync({type:'blob'}).then(function(content){var a=document.createElement('a');a.href=URL.createObjectURL(content);a.download='foto_carichi_'+new Date().toLocaleDateString('it-IT').split('/').join('-')+'.zip';a.click();URL.revokeObjectURL(a.href);tst('ZIP scaricato — '+snap.size+' foto','ok');if(segnaVisto){var oggi=new Date(),chiave='FOTO_REM_'+oggi.getFullYear()+'_'+(oggi.getMonth()+1);try{localStorage.setItem(chiave,'1');}catch(x){}}Promise.all(snap.docs.map(function(doc){return fdb.collection('foto_uscite').doc(doc.id).delete();})).then(function(){tst('Foto eliminate da Firestore','ok');});});}).catch(function(e){tst('Errore: '+e.message,'er');});}
+function scaricaTutteFoto(segnaVisto){if(!UC||!fdb){tst('Connessione cloud necessaria','er');return;}tst('Raccolta foto in corso...','ok');fdb.collection('foto_uscite').get().then(function(snap){if(snap.empty){tst('Nessuna foto da scaricare','er');return;}var zip=new JSZip(),folder=zip.folder('foto_carichi');snap.forEach(function(doc){var d=doc.data();if(d.base64){var b64=d.base64.split(',')[1]||d.base64;folder.file(doc.id+'.jpg',b64,{base64:true});}});zip.generateAsync({type:'blob'}).then(function(content){var a=document.createElement('a');a.href=URL.createObjectURL(content);a.download='foto_carichi_'+new Date().toLocaleDateString('it-IT').split('/').join('-')+'.zip';a.click();URL.revokeObjectURL(a.href);tst('ZIP scaricato — '+snap.size+' foto','ok');if(segnaVisto){var oggi=new Date(),chiave='FOTO_REM_'+oggi.getFullYear()+'_'+(oggi.getMonth()+1);try{localStorage.setItem(chiave,'1');}catch(x){}}});}).catch(function(e){tst('Errore: '+e.message,'er');});}
+// Cancellazione manuale di TUTTE le foto dal cloud (libera spazio). Rimuove anche il flag 📷 dai movimenti.
+function cancellaTutteFoto(){if(!UC||!fdb){tst('Connessione cloud necessaria','er');return;}fdb.collection('foto_uscite').get().then(function(snap){if(snap.empty){tst('Nessuna foto da cancellare','er');return;}tst('Cancellazione in corso...','ok');Promise.all(snap.docs.map(function(doc){return fdb.collection('foto_uscite').doc(doc.id).delete();})).then(function(){ST.forEach(function(m){if(m.fotoSalvata&&m.id)fdb.collection('storico').doc(m.id).update({fotoSalvata:false}).catch(function(){});});tst('Eliminate '+snap.size+' foto dal cloud','ok');});}).catch(function(e){tst('Errore: '+e.message,'er');});}
 
 // ═══ STRUTTURA ═══
 function apriStruttura(){document.getElementById('str-posti-plt').value=localStorage.getItem('MAG_POSTI_PLT')||'';document.getElementById('str-posti-fresco').value=localStorage.getItem('MAG_POSTI_FRESCO')||'';document.getElementById('str-plt-bilico').value=localStorage.getItem('MAG_PLT_BILICO')||'';document.getElementById('str-plt-bilico-fresco').value=localStorage.getItem('MAG_PLT_BILICO_FRESCO')||'';aprM('mo-struttura');}

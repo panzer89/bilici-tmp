@@ -1632,7 +1632,7 @@ function confermaBilico(missioneId,bilIdx){
   if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
   var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m)return;
   var b=m.bilici[bilIdx];var bInMag=BL[b.numero];
-  var pltSuggerito=bInMag?bInMag.bancali:(b.bancaliProg||0);
+  var pltSuggerito=(b.bancaliProg||0)||(bInMag?bInMag.bancali:0);
   _pendConfBilico={missioneId:missioneId,bilIdx:bilIdx,numero:b.numero};
   // apri sheet per inserire PLT
   var el=document.getElementById('sh-conf-plt-body');

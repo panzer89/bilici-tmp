@@ -846,6 +846,14 @@ input, select, textarea { font-family: inherit; }
   <!-- Corpo dashboard: 2 colonne -->
   <div class="left-main">
     <div>
+      <!-- Missioni attive (sopra OGGI/DOMANI) -->
+      <div class="card" id="dash-miss-card" style="display:none;margin-bottom:14px;">
+        <div class="card-hdr">
+          <div class="card-title" style="color:var(--pb);">📦 Missioni Attive</div>
+          <span id="dash-miss-count" style="font-size:11px;color:var(--tx2);">0</span>
+        </div>
+        <div class="card-body" style="padding:0;"><div id="dash-miss-list"></div></div>
+      </div>
       <!-- Prog oggi + domani -->
       <div class="two-col" style="margin-bottom:14px;">
         <div>
@@ -898,15 +906,6 @@ input, select, textarea { font-family: inherit; }
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Missioni attive -->
-      <div class="card" id="dash-miss-card" style="display:none;">
-        <div class="card-hdr">
-          <div class="card-title" style="color:var(--pb);">📦 Missioni Attive</div>
-          <span id="dash-miss-count" style="font-size:11px;color:var(--tx2);">0</span>
-        </div>
-        <div class="card-body" style="padding:0;"><div id="dash-miss-list"></div></div>
       </div>
     </div>
 
@@ -1637,7 +1636,7 @@ input, select, textarea { font-family: inherit; }
 <script>
 // ═══ CONFIG ═══
 var FBC={apiKey:"AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",authDomain:"firestore-database-93749.firebaseapp.com",projectId:"firestore-database-93749",storageBucket:"firestore-database-93749.firebasestorage.app",messagingSenderId:"13697167946",appId:"1:13697167946:web:e955abfe6d0ed11a3cecb3"};
-var LOC_ILLIMITATE=['M-ARCHESI','BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE'];
+var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE'];
 var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
 var PIN='4114';
 
@@ -2284,8 +2283,27 @@ function controllaPltBilico(numero,nuoviPlt,onProceed){
 }
 
 // ═══ PROG OGGI ═══
-function caricaProg(){if(!UC){try{PROG=JSON.parse(localStorage.getItem('PROG_v1')||'[]');}catch(x){PROG=[];}renderProg();return;}fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(snap){PROG=[];snap.forEach(function(d){PROG.push(Object.assign({id:d.id},d.data()));});renderProg();aggiornaBadgeProg();aggTuttiOrdini();renderCalendario();aggiornaBadgeCarrellista();var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-carrellista')renderCarrellista();_andamentoLive();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});}
+function caricaProg(){if(!UC){try{PROG=JSON.parse(localStorage.getItem('PROG_v1')||'[]');}catch(x){PROG=[];}renderProg();return;}fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(snap){PROG=[];snap.forEach(function(d){PROG.push(Object.assign({id:d.id},d.data()));});reconcileOrdini();renderProg();aggiornaBadgeProg();aggTuttiOrdini();renderCalendario();aggiornaBadgeCarrellista();var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-carrellista')renderCarrellista();_andamentoLive();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});}
 function salvaProg(){if(!UC)try{localStorage.setItem('PROG_v1',JSON.stringify(PROG));}catch(x){}}
+// ═══ AUTO-RIALLINEAMENTO ORDINI (self-healing) ═══
+// sposta ogni ordine nel contenitore giusto in base alla sua data: oggi→prog, domani→prog_domani, resto→prog_calendario
+var _reconcileBusy={};
+function reconcileOrdini(){
+  if(!UC||!fdb)return;
+  var oggiS=datLocale(new Date());var _d=new Date();_d.setDate(_d.getDate()+1);var domS=datLocale(_d);
+  var bucketOf=function(data){return data===oggiS?'prog':(data===domS?'prog_domani':'prog_calendario');};
+  var moves=[];
+  (PROG||[]).forEach(function(p){if(p.id&&p.data){var t=bucketOf(p.data);if(t!=='prog')moves.push({from:'prog',id:p.id,it:p,to:t});}});
+  (PROG_DOMANI||[]).forEach(function(p){if(p.id&&p.data){var t=bucketOf(p.data);if(t!=='prog_domani')moves.push({from:'prog_domani',id:p.id,it:p,to:t});}});
+  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){if(p.id&&p.data){var t=bucketOf(p.data);if(t!=='prog_calendario')moves.push({from:'prog_calendario',id:p.id,it:p,to:t});}});});
+  moves.forEach(function(mv){
+    if(_reconcileBusy[mv.id])return;_reconcileBusy[mv.id]=true;
+    var s=mv.it;var nuovo={numero:s.numero,nota:s.nota||'',data:s.data,ts:s.ts||Date.now(),operatore:s.operatore||''};
+    if(s.bancaliProg)nuovo.bancaliProg=s.bancaliProg;if(s.aggancioId)nuovo.aggancioId=s.aggancioId;
+    // stesso id nel contenitore di destinazione → idempotente, niente duplicati tra dispositivi
+    fdb.collection(mv.to).doc(mv.id).set(nuovo).then(function(){return fdb.collection(mv.from).doc(mv.id).delete();}).then(function(){delete _reconcileBusy[mv.id];}).catch(function(){delete _reconcileBusy[mv.id];});
+  });
+}
 function aggProg(){
   var val=String(document.getElementById('prog-inp').value||'').trim().toUpperCase();
   var nota=document.getElementById('prog-nota-inp').value.trim();
@@ -2322,7 +2340,7 @@ function completaAggancio(docId2,numero2){var aggId='AG'+Date.now(),docId1=aggan
 function agganciaEsterno(){if(!aggancioSel)return tst("Nessun bilico selezionato",'er');var num=String(document.getElementById('prog-agg-ext-n').value||'').trim().toUpperCase();var plt=parseInt(document.getElementById('prog-agg-ext-plt').value)||0;if(!num)return tst('Inserisci il numero bilico','er');if(plt<=0)return tst('Inserisci i plt','er');var b=BL[num];if(!b)return tst('Bilico #'+num+' non trovato','er');if(plt>b.bancali)return tst('Plt superano i disponibili','er');if(PROG.find(function(p){return p.numero===num;}))return tst('Bilico #'+num+' già in lista','er');var aggId='AG'+Date.now(),docId1=aggancioSel.docId,numero1=aggancioSel.numero;aggancioSel=null;var extR=document.getElementById('prog-agg-ext-row');if(extR){extR.style.display='none';document.getElementById('prog-agg-ext-n').value='';document.getElementById('prog-agg-ext-plt').value='';}var _d0=new Date();_d0.setHours(0,0,0,0);var dati={numero:num,nota:'',bancaliProg:plt,ts:Date.now(),aggancioId:aggId,operatore:CURR_USER?CURR_USER.username:'',data:datLocale(_d0)};if(UC&&fdb)fdb.collection('prog').add(dati).then(function(){fdb.collection('prog').doc(docId1).update({aggancioId:aggId}).catch(function(){});}).catch(function(e){tst('Errore: '+e.message,'er');});else{dati.id='local_'+Date.now();PROG.push(dati);var p1=PROG.find(function(p){return p.id===docId1;});if(p1)p1.aggancioId=aggId;salvaProg();renderProg();}tst('Bilico #'+num+' ('+plt+' plt) agganciato a #'+numero1+'!','ok');}
 
 // ═══ PROG DOMANI ═══
-function caricaProgDomani(){if(!UC){try{PROG_DOMANI=JSON.parse(localStorage.getItem('PROG_DOMANI_v1')||'[]');}catch(x){PROG_DOMANI=[];}renderProgDomani();return;}fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(snap){PROG_DOMANI=[];snap.forEach(function(d){PROG_DOMANI.push(Object.assign({id:d.id},d.data()));});renderProgDomani();aggTuttiOrdini();controllaGiorno();renderCalendario();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(snap){CAL_DATA={};snap.forEach(function(doc){var item=Object.assign({id:doc.id},doc.data());if(!item.data)return;if(!CAL_DATA[item.data])CAL_DATA[item.data]=[];CAL_DATA[item.data].push(item);});renderCalendario();aggTuttiOrdini();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});}
+function caricaProgDomani(){if(!UC){try{PROG_DOMANI=JSON.parse(localStorage.getItem('PROG_DOMANI_v1')||'[]');}catch(x){PROG_DOMANI=[];}renderProgDomani();return;}fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(snap){PROG_DOMANI=[];snap.forEach(function(d){PROG_DOMANI.push(Object.assign({id:d.id},d.data()));});controllaGiorno();reconcileOrdini();renderProgDomani();aggTuttiOrdini();renderCalendario();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(snap){CAL_DATA={};snap.forEach(function(doc){var item=Object.assign({id:doc.id},doc.data());if(!item.data)return;if(!CAL_DATA[item.data])CAL_DATA[item.data]=[];CAL_DATA[item.data].push(item);});reconcileOrdini();renderCalendario();aggTuttiOrdini();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});}
 function salvaProgDomani(){if(!UC)try{localStorage.setItem('PROG_DOMANI_v1',JSON.stringify(PROG_DOMANI));}catch(x){}}
 function aggProgDomani(){
   var val=String(document.getElementById('prog-domani-inp').value||'').trim().toUpperCase();
@@ -2640,7 +2658,11 @@ function salvaOrdine(){if(!_editOrdineObj)return;var nd=document.getElementById(
   if((_editOrdineObj.dataOld||'')!==nd)_diff.push({campo:'Data consegna',da:_fmtD(_editOrdineObj.dataOld),a:_fmtD(nd)});
   if((_editOrdineObj.pltOld||0)!==(np>0?np:0))_diff.push({campo:'PLT pianif.',da:String(_editOrdineObj.pltOld||0),a:String(np>0?np:0)});
   if((_editOrdineObj.notaOld||'')!==nn&&(nn||_editOrdineObj.notaOld))_diff.push({campo:'Nota',da:_editOrdineObj.notaOld||'—',a:nn||'—'});
-  if(_diff.length)dbAS({tipo:'MODIFICA',numero:_editOrdineObj.numero,ts:new Date().toISOString(),diff:_diff,operatore:CURR_USER?CURR_USER.username:''});if(UC&&fdb&&_editOrdineObj.id)fdb.collection(_editOrdineObj.fonte).doc(_editOrdineObj.id).update(upd);else{function agg(arr){var it=arr.find(function(p){return p.id===_editOrdineObj.id;});if(it){it.nota=nn;it.data=nd;it.bancaliProg=np;}}if(_editOrdineObj.fonte==='prog'){agg(PROG);salvaProg();renderProg();}else if(_editOrdineObj.fonte==='prog_domani'){agg(PROG_DOMANI);salvaProgDomani();renderProgDomani();}else{Object.keys(CAL_DATA).forEach(function(dt){agg(CAL_DATA[dt]||[]);});renderCalendario();}}chiM('mo-ordine');_editOrdineObj=null;tst('Ordine aggiornato','ok');setTimeout(renderTuttiOrdini,300);}
+  if(_diff.length)dbAS({tipo:'MODIFICA',numero:_editOrdineObj.numero,ts:new Date().toISOString(),diff:_diff,operatore:CURR_USER?CURR_USER.username:''});var _oggiS=datLocale(new Date());var _domD=new Date();_domD.setDate(_domD.getDate()+1);var _domS=datLocale(_domD);var _target=(nd===_oggiS)?'prog':(nd===_domS)?'prog_domani':'prog_calendario';
+  if(UC&&fdb&&_editOrdineObj.id){
+    if(_target===_editOrdineObj.fonte){fdb.collection(_editOrdineObj.fonte).doc(_editOrdineObj.id).update(upd);}
+    else{var _orig=null;if(_editOrdineObj.fonte==='prog')_orig=PROG.find(function(p){return p.id===_editOrdineObj.id;});else if(_editOrdineObj.fonte==='prog_domani')_orig=PROG_DOMANI.find(function(p){return p.id===_editOrdineObj.id;});else Object.keys(CAL_DATA).forEach(function(dt){var f=(CAL_DATA[dt]||[]).find(function(x){return x.id===_editOrdineObj.id;});if(f)_orig=f;});var _nuovo={numero:_editOrdineObj.numero,nota:nn,data:nd,bancaliProg:np>0?np:0,ts:(_orig&&_orig.ts)||Date.now(),operatore:(_orig&&_orig.operatore)||(CURR_USER?CURR_USER.username:'')};if(_orig&&_orig.aggancioId)_nuovo.aggancioId=_orig.aggancioId;var _vf=_editOrdineObj.fonte,_vi=_editOrdineObj.id;fdb.collection(_target).doc(_vi).set(_nuovo).then(function(){if(_vf!==_target)fdb.collection(_vf).doc(_vi).delete().catch(function(){});}).catch(function(e){tst('Errore: '+e.message,'er');});}
+  }else{var _ag=function(arr){var it=arr.find(function(p){return p.id===_editOrdineObj.id;});if(it){it.nota=nn;it.data=nd;it.bancaliProg=np;}};if(_target===_editOrdineObj.fonte){if(_editOrdineObj.fonte==='prog'){_ag(PROG);salvaProg();}else if(_editOrdineObj.fonte==='prog_domani'){_ag(PROG_DOMANI);salvaProgDomani();}else{Object.keys(CAL_DATA).forEach(function(dt){_ag(CAL_DATA[dt]||[]);});}}else{var _o=null;if(_editOrdineObj.fonte==='prog'){PROG=PROG.filter(function(p){if(p.id===_editOrdineObj.id){_o=p;return false;}return true;});salvaProg();}else if(_editOrdineObj.fonte==='prog_domani'){PROG_DOMANI=PROG_DOMANI.filter(function(p){if(p.id===_editOrdineObj.id){_o=p;return false;}return true;});salvaProgDomani();}else{Object.keys(CAL_DATA).forEach(function(dt){CAL_DATA[dt]=(CAL_DATA[dt]||[]).filter(function(p){if(p.id===_editOrdineObj.id){_o=p;return false;}return true;});});}var _n={id:'local_'+Date.now(),numero:_editOrdineObj.numero,nota:nn,data:nd,bancaliProg:np,ts:(_o&&_o.ts)||Date.now(),operatore:(_o&&_o.operatore)||''};if(_o&&_o.aggancioId)_n.aggancioId=_o.aggancioId;if(_target==='prog'){PROG.push(_n);salvaProg();}else if(_target==='prog_domani'){PROG_DOMANI.push(_n);salvaProgDomani();}else{if(!CAL_DATA[nd])CAL_DATA[nd]=[];CAL_DATA[nd].push(_n);}}renderProg();renderProgDomani();renderCalendario();}chiM('mo-ordine');_editOrdineObj=null;tst('Ordine aggiornato','ok');setTimeout(renderTuttiOrdini,300);}
 function expOrdini(){var wb=XLSX.utils.book_new();var r=[['N° BILICO','PLT PIANIF','PLT MAG','NOTA','DATA CARICO','OPERATORE','FONTE']];getAllOrdini().forEach(function(p){var b=BL[p.numero],pltMag=b?b.bancali:'',df=p.data?p.data.split('-').reverse().join('/'):'',fonte=p.fonte==='prog'?'Oggi':p.fonte==='prog_domani'?'Domani':'Calendario';r.push([p.numero,p.bancaliProg||'',pltMag,p.nota||'',df,p.operatore||'',fonte]);if(p.partner){var bB=BL[p.partner.numero];r.push([p.partner.numero,p.partner.bancaliProg||'',bB?bB.bancali:'',p.partner.nota||'',df,p.partner.operatore||'',fonte]);}});var ws=XLSX.utils.aoa_to_sheet(r);XLSX.utils.book_append_sheet(wb,ws,'Ordini');var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');XLSX.writeFile(wb,'Ordini_'+dt+'.xlsx');tst('Excel ordini esportato!','ok');}
 
 // ═══ LOG ROWS ═══
@@ -2892,7 +2914,7 @@ function renderMissioniDesk(){
       s+='<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 10px;">';
       s+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;">#'+b.numero+'</div>';
       if(bInMag)s+='<div style="font-size:11px;color:var(--ob);">📦 '+bPlt+' PLT · 📍 '+bInMag.locazione+'</div>';
-      else s+='<div style="font-size:11px;color:var(--og);">📦 '+bPlt+' PLT (prev.)</div>';
+      else s+='<div style="font-size:11px;color:var(--rb);">📦 '+bPlt+' PLT · 📍 fuori magazzino</div>';
       if(b.nota)s+='<div style="font-size:11px;color:var(--bb);margin-top:3px;">📝 '+b.nota+'</div>';
       s+='<div style="font-size:13px;margin-top:4px;">'+(b.confermato?'✅ Confermato':'⏳ In attesa')+'</div>';
       if(b.confermato&&m.stato!=='caricata')s+='<button onclick="togliFlgDesk(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:2px 7px;font-size:10px;margin-top:4px;cursor:pointer;">↩ Togli</button>';
@@ -2938,10 +2960,10 @@ var _currDtlMissId=null;
 function apriDettaglioMissione(id){_currDtlMissId=id;var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);var df=m.data?m.data.split('-').reverse().join('/'):'—';var tipoLbl=m.tipo==='locazione'?'📍 Carico Smezzi'+(m.locazione?' — '+m.locazione:''):'✋ Picking Manuale';var statoLbl={attesa:'⏳ Attesa',in_corso:'🟡 In corso',completata:'🟢 Completata',caricata:'✅ Caricata'}[m.stato]||m.stato;var html='<div style="margin-bottom:12px;"><strong style="color:var(--pb);">'+tipoLbl+'</strong> · <span class="miss-stato '+(m.stato||'attesa')+'">'+statoLbl+'</span><br><span style="font-size:12px;color:var(--tx2);">📅 '+df+' · 🚛 '+conf+'/'+tot+' bilici · 📦 '+pltTot+' PLT'+(m.nota?' · 📝 '+m.nota:'')+'</span></div>';if(m.operatoreChiusura)html+='<div style="font-size:12px;color:var(--tx2);margin-bottom:8px;">👤 Chiusa da: <strong>'+m.operatoreChiusura+'</strong></div>';html+='<div style="max-height:48vh;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="color:var(--tx2);font-size:10px;text-transform:uppercase;"><th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--bd);">#Bilico</th><th style="padding:4px 8px;border-bottom:1px solid var(--bd);">PLT</th><th style="padding:4px 8px;border-bottom:1px solid var(--bd);">Stato</th></tr></thead><tbody>';(m.bilici||[]).forEach(function(b){var bPlt=b.confermato?(b.bancaliConfermati||b.bancaliProg||0):(b.bancaliProg||0);html+='<tr style="border-bottom:1px solid var(--bd);"><td style="padding:6px 8px;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:900;">#'+b.numero+'</td><td style="padding:6px 8px;text-align:center;color:var(--ob);font-weight:700;">'+bPlt+'</td><td style="padding:6px 8px;">'+(b.confermato?'<span style="color:var(--gb);">✅ Confermato</span>':'<span style="color:var(--og);">⏳ In attesa</span>')+'</td></tr>';});html+='</tbody></table></div>';document.getElementById('miss-dtl-body').innerHTML=html;aprM('mo-miss-dtl');}
 function apriConfermaEvasa(id){_pendEvasaId=id;var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;var pltConf=(m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);var html='<p>Conferma che la missione <strong style="color:var(--pb);">'+(m.tipo==='locazione'?'Carico Smezzi — '+m.locazione:'Picking Manuale')+'</strong> è stata caricata sul bilico.</p><br>';(m.bilici||[]).forEach(function(b){html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);"><span style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:900;">#'+b.numero+'</span><span style="color:var(--ob);font-size:12px;">'+(b.bancaliConfermati||b.bancaliProg||0)+' PLT</span><span style="color:'+(b.confermato?'var(--gb)':'var(--og)')+';">'+(b.confermato?'✅':'⏳')+'</span></div>';});document.getElementById('mo-evasa-body').innerHTML=html;aprM('mo-evasa-conf');}
 function eseguiEvasa(){if(!_pendEvasaId)return;if(UC&&fdb){fdb.collection('missioni').doc(_pendEvasaId).update({stato:'caricata',operatoreChiusura:CURR_USER?CURR_USER.username:'',tsChiusura:Date.now()}).then(function(){tst('Missione segnata come caricata','ok');chiM('mo-evasa-conf');_pendEvasaId=null;renderMissioniDesk();}).catch(function(e){tst('Errore: '+e.message,'er');});}else tst('Connessione cloud necessaria','er');}
-function stampaMissione(id){var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var html='<html><head><title>Missione</title><style>body{font-family:Arial,sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}td,th{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#eee;}</style></head><body>';html+='<h2>📦 Missione — '+(m.tipo==='locazione'?'Carico Smezzi — '+(m.locazione||''):'Picking Manuale')+'</h2>';html+='<p><strong>Data:</strong> '+(m.data||'—')+'</p>';if(m.nota)html+='<p><strong>Nota:</strong> '+m.nota+'</p>';html+='<table><tr><th>#Bilico</th><th>PLT Pianificati</th><th>Nota</th><th>Confermato</th></tr>';(m.bilici||[]).forEach(function(b){html+='<tr><td>#'+b.numero+'</td><td>'+(b.bancaliProg||0)+'</td><td>'+(b.nota||'')+'</td><td>'+(b.confermato?'✅':'—')+'</td></tr>';});html+='</table></body></html>';var w=window.open('','_blank','width=700,height=600');if(w){w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},500);}}
+function stampaMissione(id){var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var html='<html><head><title>Missione</title><style>body{font-family:Arial,sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}td,th{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#eee;}</style></head><body>';html+='<h2>📦 Missione — '+(m.tipo==='locazione'?'Carico Smezzi — '+(m.locazione||''):'Picking Manuale')+'</h2>';html+='<p><strong>Data:</strong> '+(m.data||'—')+'</p>';if(m.nota)html+='<p><strong>Nota:</strong> '+m.nota+'</p>';html+='<table><tr><th>#Bilico</th><th>Locazione</th><th>PLT Pianificati</th><th>Nota</th><th>Confermato</th></tr>';(m.bilici||[]).forEach(function(b){var bl=BL[b.numero];html+='<tr><td>#'+b.numero+'</td><td>'+(bl?bl.locazione:'—')+'</td><td>'+(b.bancaliProg||0)+'</td><td>'+(b.nota||'')+'</td><td>'+(b.confermato?'✅':'—')+'</td></tr>';});html+='</table></body></html>';var w=window.open('','_blank','width=700,height=600');if(w){w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},500);}}
 function expMissioni(){var wb=XLSX.utils.book_new();var r=[['TIPO','LOCAZIONE','DATA','BILICI TOT','CONF.','PLT','STATO','OPERATORE','CREATO']];MISSIONI.forEach(function(m){var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length,plt=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);r.push([m.tipo==='locazione'?'Carico Smezzi':'Picking',m.locazione||'',m.data||'',tot,conf,plt,m.stato||'',m.operatoreChiusura||'',m.ts?new Date(m.ts).toLocaleString('it-IT'):'']);});var ws=XLSX.utils.aoa_to_sheet(r);XLSX.utils.book_append_sheet(wb,ws,'Missioni');
   // foglio dettaglio con NOTE per ogni bilico
-  var rd=[['MISSIONE','DATA','#BILICO','PLT','NOTA','CONFERMATO']];MISSIONI.forEach(function(m){var mlbl=m.tipo==='locazione'?'Carico Smezzi'+(m.locazione?' '+m.locazione:''):'Picking';(m.bilici||[]).forEach(function(b){rd.push([mlbl,m.data||'',b.numero,b.bancaliProg||0,b.nota||'',b.confermato?'Sì':'No']);});});var wsd=XLSX.utils.aoa_to_sheet(rd);wsd['!cols']=[{wch:22},{wch:12},{wch:10},{wch:8},{wch:30},{wch:12}];XLSX.utils.book_append_sheet(wb,wsd,'Dettaglio Bilici');
+  var rd=[['MISSIONE','DATA','#BILICO','LOCAZIONE','PLT','NOTA','CONFERMATO']];MISSIONI.forEach(function(m){var mlbl=m.tipo==='locazione'?'Carico Smezzi'+(m.locazione?' '+m.locazione:''):'Picking';(m.bilici||[]).forEach(function(b){var bl=BL[b.numero];rd.push([mlbl,m.data||'',b.numero,bl?bl.locazione:'—',b.bancaliProg||0,b.nota||'',b.confermato?'Sì':'No']);});});var wsd=XLSX.utils.aoa_to_sheet(rd);wsd['!cols']=[{wch:22},{wch:12},{wch:10},{wch:14},{wch:8},{wch:30},{wch:12}];XLSX.utils.book_append_sheet(wb,wsd,'Dettaglio Bilici');
   var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');XLSX.writeFile(wb,'Missioni_'+dt+'.xlsx');tst('Excel missioni esportato!','ok');}
 
 // ═══ CARRELLISTA ═══

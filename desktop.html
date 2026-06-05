@@ -513,6 +513,9 @@ input, select, textarea { font-family: inherit; }
 .sf-grp { display: flex; flex-direction: column; gap: 3px; }
 .sf-lbl { font-size: 10px; font-weight: 700; color: var(--tx2); text-transform: uppercase; letter-spacing: .5px; }
 .sf-inp { height: 32px; background: var(--bg); border: 1px solid var(--bd); border-radius: var(--rs); color: var(--tx); font-size: 13px; padding: 0 8px; outline: none; }
+.ms-opt { display:flex; align-items:center; gap:8px; padding:6px 8px; font-size:13px; color:var(--tx); cursor:pointer; border-radius:6px; white-space:nowrap; }
+.ms-opt:hover { background:var(--sf2); }
+.ms-opt input { width:15px; height:15px; cursor:pointer; }
 .sf-inp:focus { border-color: var(--bl); }
 .sf-count { font-size: 12px; color: var(--tx2); align-self: flex-end; padding-bottom: 4px; }
 
@@ -732,10 +735,6 @@ input, select, textarea { font-family: inherit; }
         <span class="sb-item-label">Missioni</span>
         <span class="sb-badge pu" id="sb-miss-badge">0</span>
       </button>
-      <button class="sb-item" id="sb-andamento" onclick="goP('andamento')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"/><polyline points="4 14 9 9 13 13 20 6"/><polyline points="20 10 20 6 16 6"/></svg>
-        <span class="sb-item-label">Andamento</span>
-      </button>
 
       <div class="sb-section">STRUMENTI</div>
       <button class="sb-item" id="sb-storico" onclick="goP('storico')">
@@ -847,7 +846,7 @@ input, select, textarea { font-family: inherit; }
   <div class="left-main">
     <div>
       <!-- Missioni attive (sopra OGGI/DOMANI) -->
-      <div class="card" id="dash-miss-card" style="display:none;margin-bottom:14px;">
+      <div class="card" id="dash-miss-card" style="margin-bottom:14px;">
         <div class="card-hdr">
           <div class="card-title" style="color:var(--pb);">📦 Missioni Attive</div>
           <span id="dash-miss-count" style="font-size:11px;color:var(--tx2);">0</span>
@@ -1087,9 +1086,9 @@ input, select, textarea { font-family: inherit; }
         📋 Tutti gli ordini
         <span style="background:rgba(31,111,235,.15);color:var(--bb);font-size:11px;font-weight:800;padding:1px 7px;border-radius:10px;" id="tutti-ordini-count">0</span>
       </div>
-      <div id="tutti-ordini-chev" style="color:var(--tx2);font-size:18px;transition:transform .25s;">▾</div>
+      <div id="tutti-ordini-chev" style="color:var(--tx2);font-size:18px;transition:transform .25s;transform:rotate(180deg);">▾</div>
     </div>
-    <div id="tutti-ordini-body" style="display:none;">
+    <div id="tutti-ordini-body" style="">
       <div style="padding:10px 14px;border-bottom:1px solid var(--bd);display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
         <div class="sf-grp"><div class="sf-lbl">N° Bilico</div><input class="sf-inp" id="to-fn" type="text" placeholder="es. 839" oninput="renderTuttiOrdini()" style="width:120px;"></div>
         <div class="sf-grp"><div class="sf-lbl">Data Carico</div><input class="sf-inp" id="to-fd" type="date" oninput="renderTuttiOrdini()" onclick="try{this.showPicker()}catch(e){}" style="width:140px;"></div>
@@ -1116,43 +1115,6 @@ input, select, textarea { font-family: inherit; }
     </div>
   </div>
 
-  <!-- Prog oggi + domani nella pagina programmazione (duplicati) -->
-  <div class="two-col">
-    <div>
-      <div class="prog-box">
-        <div class="prog-hdr" onclick="toggleProgDesk('pb2','pc2')">
-          <div class="prog-title"><span>🚨</span> OGGI <span class="prog-badge" id="prog-count2">0</span></div>
-          <span class="prog-chev" id="pc2">▾</span>
-        </div>
-        <div class="prog-body" id="pb2">
-          <div class="prog-add">
-            <input type="number" id="prog-inp2" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgFromInput('prog-inp2','prog-banc-inp2','prog-nota-inp2')" style="width:110px;">
-            <input type="number" id="prog-banc-inp2" placeholder="Plt..." min="1" inputmode="numeric" autocomplete="off" style="width:65px;">
-            <input type="text" id="prog-nota-inp2" class="prog-nota-inp" placeholder="Nota opzionale..." autocomplete="off">
-            <button class="prog-add-btn" onclick="aggProgFromInput('prog-inp2','prog-banc-inp2','prog-nota-inp2')" style="background:var(--rd);">+ AGGIUNGI</button>
-          </div>
-          <div class="prog-list" id="prog-list2"><div class="prog-empty">Nessuna uscita programmata</div></div>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div class="prog-box blue">
-        <div class="prog-hdr blue" onclick="toggleProgDesk('pb-dom2','pc-dom2')">
-          <div class="prog-title blue"><span>📅</span> DOMANI <span class="prog-badge blue" id="prog-domani-count2">0</span></div>
-          <span class="prog-chev" id="pc-dom2">▾</span>
-        </div>
-        <div class="prog-body blue" id="pb-dom2">
-          <div class="prog-add">
-            <input type="number" id="prog-domani-inp2" placeholder="N° bilico..." inputmode="numeric" autocomplete="off" onkeydown="if(event.keyCode===13)aggProgDomaniFromInput('prog-domani-inp2','prog-domani-banc-inp2','prog-domani-nota-inp2')" style="width:110px;" class="blue">
-            <input type="number" id="prog-domani-banc-inp2" placeholder="Plt..." min="1" inputmode="numeric" autocomplete="off" style="width:65px;" class="blue">
-            <input type="text" id="prog-domani-nota-inp2" class="prog-nota-inp" placeholder="Nota opzionale..." autocomplete="off">
-            <button class="prog-add-btn" onclick="aggProgDomaniFromInput('prog-domani-inp2','prog-domani-banc-inp2','prog-domani-nota-inp2')" style="background:var(--bl);">+ AGGIUNGI</button>
-          </div>
-          <div class="prog-list" id="prog-domani-list2"><div class="prog-empty">Nessuna uscita programmata</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- ══════════ STORICO ══════════ -->
@@ -1231,14 +1193,14 @@ input, select, textarea { font-family: inherit; }
           <option value="manuale">✋ Picking Manuale</option>
         </select>
       </div>
-      <div class="sf-grp"><div class="sf-lbl">Stato</div>
-        <select id="miss-f-stato" onchange="renderMissioniDesk()" class="sf-inp" style="width:140px;">
-          <option value="">Tutti gli stati</option>
-          <option value="attesa">⏳ Attesa</option>
-          <option value="in_corso">🟡 In corso</option>
-          <option value="completata">🟢 Completata</option>
-          <option value="caricata">✅ Caricata</option>
-        </select>
+      <div class="sf-grp" style="position:relative;"><div class="sf-lbl">Stato</div>
+        <button type="button" id="miss-stato-btn" onclick="toggleMissStatoDrop(event)" class="sf-inp" style="width:150px;text-align:left;cursor:pointer;">Tutti gli stati ▾</button>
+        <div id="miss-stato-drop" style="display:none;position:absolute;z-index:60;top:100%;left:0;margin-top:4px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:5px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.45);">
+          <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="attesa" onchange="renderMissioniDesk()"> ⏳ Attesa</label>
+          <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="in_corso" onchange="renderMissioniDesk()"> 🟡 In corso / prelievo</label>
+          <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="completata" onchange="renderMissioniDesk()"> 🟢 Completata</label>
+          <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="caricata" onchange="renderMissioniDesk()"> ✅ Caricata</label>
+        </div>
       </div>
       <div style="display:flex;align-items:flex-end;"><button onclick="resetFiltriMissioni()" class="btn bgh" style="padding:5px 10px;font-size:11px;">↺ Reset</button></div>
     </div>
@@ -1246,34 +1208,6 @@ input, select, textarea { font-family: inherit; }
   <div id="miss-desk-list"><div class="empty"><div class="ic">📦</div><p>Nessuna missione</p></div></div>
 </div>
 
-<!-- ══════════ ANDAMENTO (sola consultazione) ══════════ -->
-<div class="page" id="page-andamento">
-  <!-- contatori riassuntivi -->
-  <div id="and-counters" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;"></div>
-  <!-- griglia riquadri -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;">
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div style="padding:11px 14px;border-bottom:1px solid var(--bd);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--bb);">📅 Uscite pianificate <span id="and-usc-cnt" style="color:var(--tx2);font-size:13px;"></span></div>
-      <div id="and-uscite" style="max-height:340px;overflow-y:auto;padding:6px 10px;"></div>
-    </div>
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div style="padding:11px 14px;border-bottom:1px solid var(--bd);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--pb);">🎯 Tutte le missioni <span id="and-miss-cnt" style="color:var(--tx2);font-size:13px;"></span></div>
-      <div id="and-missioni" style="max-height:340px;overflow-y:auto;padding:6px 10px;"></div>
-    </div>
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div style="padding:11px 14px;border-bottom:1px solid var(--bd);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--gb);">⭐ Missioni di oggi</div>
-      <div id="and-oggi" style="max-height:340px;overflow-y:auto;padding:6px 10px;"></div>
-    </div>
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div style="padding:11px 14px;border-bottom:1px solid var(--bd);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--ob);">📦 Carrellista — Da Stoccare <span id="and-stoc-cnt" style="color:var(--tx2);font-size:13px;"></span></div>
-      <div id="and-stoccare" style="max-height:340px;overflow-y:auto;padding:6px 10px;"></div>
-    </div>
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div style="padding:11px 14px;border-bottom:1px solid var(--bd);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--gb);">✅ Carrellista — Da Preparare <span id="and-prep-cnt" style="color:var(--tx2);font-size:13px;"></span></div>
-      <div id="and-preparare" style="max-height:340px;overflow-y:auto;padding:6px 10px;"></div>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════ CARRELLISTA ══════════ -->
 <div class="page" id="page-carrellista">
@@ -1500,8 +1434,9 @@ input, select, textarea { font-family: inherit; }
   <div class="mdl" style="max-width:440px;">
     <div class="mha"></div>
     <div class="mtt" style="color:var(--gb);">&#x1F69B; Conferma Evasa / Caricata</div>
-    <div id="mo-evasa-body" style="font-size:13px;max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
-    <div class="btn-row"><button class="btn bgn" id="mo-evasa-ok-btn" onclick="eseguiEvasa()">&#x2705; CONFERMA</button><button class="btn bgh" onclick="chiM('mo-evasa-conf');_pendEvasaId=null;">&#x274C; Annulla</button></div>
+    <div id="mo-evasa-body" style="font-size:13px;max-height:42vh;overflow-y:auto;margin-bottom:10px;"></div>
+    <div class="fg"><label class="foto-label" for="ev-foto-inp"><span>&#x1F4F7;</span> <span id="ev-foto-lbl">Foto carico (opzionale)</span></label><input type="file" id="ev-foto-inp" accept="image/*" style="display:none;" onchange="prevFotoDesk(this,'ev-foto-img','ev-foto-prev','ev-foto-lbl')"><div class="foto-prev" id="ev-foto-prev"><img id="ev-foto-img"><button class="foto-del" onclick="clearFotoDesk('ev-foto-inp','ev-foto-prev','ev-foto-lbl')">&#x2715;</button></div></div>
+    <div class="btn-row"><button class="btn bgn" id="mo-evasa-ok-btn" onclick="eseguiEvasa()">&#x1F69B; CARICA E CONCLUDI</button><button class="btn bgh" onclick="chiM('mo-evasa-conf');_pendEvasaId=null;">&#x274C; Annulla</button></div>
   </div>
 </div>
 
@@ -1543,6 +1478,18 @@ input, select, textarea { font-family: inherit; }
     <div class="fg"><label class="fl">PLT pianificati</label><div class="crow"><button class="cbt" onclick="stp('mo-ord-plt',-1)">&#x2212;</button><input class="cvl" id="mo-ord-plt" type="number" min="0" inputmode="numeric" placeholder="0"><button class="cbt" onclick="stp('mo-ord-plt',1)">+</button></div></div>
     <div class="fg"><label class="fl">Nota</label><input class="fi" id="mo-ord-nota" type="text" placeholder="Nota opzionale..." autocomplete="off"></div>
     <div class="btn-row"><button class="btn bgn" onclick="salvaOrdine()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-ordine')">&#x2716; Annulla</button></div>
+  </div>
+</div>
+
+<!-- Conferma PLT bilico missione -->
+<div class="mo" id="mo-conf-miss">
+  <div class="mdl" style="max-width:340px;">
+    <div class="mha"></div>
+    <div class="mtt" style="text-align:center;color:var(--pb);">&#x270B; Conferma Bilico</div>
+    <div style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:var(--bb);" id="cmd-num">#&#x2014;</div>
+    <div style="text-align:center;font-size:13px;color:var(--tx2);margin-bottom:12px;" id="cmd-info"></div>
+    <div class="fg"><label class="fl">PLT caricati</label><div class="crow"><button class="cbt" onclick="stp('cmd-val',-1)">&#x2212;</button><input class="cvl" id="cmd-val" type="number" min="0" inputmode="numeric" placeholder="0"><button class="cbt" onclick="stp('cmd-val',1)">+</button></div></div>
+    <div class="btn-row"><button class="btn bgn" onclick="confermaConPltDesk()">&#x2713; CONFERMA</button><button class="btn bgh" onclick="chiM('mo-conf-miss');_pendConfMissD=null;">&#x2716; Annulla</button></div>
   </div>
 </div>
 
@@ -1738,15 +1685,13 @@ window.onload=function(){
       ui();aggiornaBadgeCarrellista();controllaArriviNotifiche();
       var cp=document.querySelector('.page.active');
       if(cp){if(cp.id==='page-magazzino')cerca();if(cp.id==='page-carrellista')renderCarrellista();}
-      _andamentoLive();
-    });
+          });
     fdb.collection('missioni').onSnapshot(function(s){
       MISSIONI=[];s.forEach(function(d){MISSIONI.push(Object.assign({id:d.id},d.data()));});
       aggiornaBadgeMissioni();renderDashMissioni();
       var cp=document.querySelector('.page.active');
       if(cp&&cp.id==='page-missioni')renderMissioniDesk();
-      if(cp&&cp.id==='page-carrellista')renderCarrellista();_andamentoLive();
-    });
+      if(cp&&cp.id==='page-carrellista')renderCarrellista();    });
     fdb.collection('storico').orderBy('ts','desc').onSnapshot(function(s){
       ST=[];s.forEach(function(d){ST.push(Object.assign({id:d.id},d.data()));});
       ui();
@@ -1762,8 +1707,7 @@ window.onload=function(){
       PROG_PREPARATO={};s.forEach(function(d){PROG_PREPARATO[d.id]=true;});
       aggiornaBadgeCarrellista();
       var cp=document.querySelector('.page.active');
-      if(cp&&cp.id==='page-carrellista')renderCarrellista();_andamentoLive();
-    });
+      if(cp&&cp.id==='page-carrellista')renderCarrellista();    });
     setTimeout(controllaGiorno,2000);
     tentaAutoLogin();
   }catch(e){
@@ -1855,9 +1799,9 @@ function goP(n){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.sb-item').forEach(function(t){t.classList.remove('active');});
   var page=document.getElementById('page-'+n);if(page)page.classList.add('active');
-  var mapSb={home:'sb-home',entrata:'sb-entrata',uscita:'sb-uscita',magazzino:'sb-magazzino',programmazione:'sb-programmazione',storico:'sb-storico',missioni:'sb-missioni',andamento:'sb-andamento',carrellista:'sb-carrellista'};
+  var mapSb={home:'sb-home',entrata:'sb-entrata',uscita:'sb-uscita',magazzino:'sb-magazzino',programmazione:'sb-programmazione',storico:'sb-storico',missioni:'sb-missioni',carrellista:'sb-carrellista'};
   if(mapSb[n]){var sb=document.getElementById(mapSb[n]);if(sb)sb.classList.add('active');}
-  var titles={home:'Dashboard',entrata:'Entrata Bilico',uscita:'Uscita / Carico',magazzino:'Magazzino',programmazione:'Programmazione Uscite',storico:'Storico Movimenti',missioni:'Missioni',andamento:'Andamento',carrellista:'Carrellista'};
+  var titles={home:'Dashboard',entrata:'Entrata Bilico',uscita:'Uscita / Carico',magazzino:'Magazzino',programmazione:'Programmazione Uscite',storico:'Storico Movimenti',missioni:'Missioni',carrellista:'Carrellista'};
   var tt=document.getElementById('topbar-title');if(tt)tt.textContent=titles[n]||n;
   // topbar info button (solo home)
   var ib=document.getElementById('topbar-info-btn');if(ib)ib.style.display=(n==='home')?'flex':'none';
@@ -1866,7 +1810,6 @@ function goP(n){
   if(n==='programmazione'){setTimeout(function(){renderCalendario();aggTuttiOrdini();},80);}
   if(n==='storico'){resetFiltriStorico();}
   if(n==='missioni'){renderMissioniDesk();}
-  if(n==='andamento'){renderAndamento();}
   if(n==='magazzino'){cerca();}
   if(n==='carrellista'){renderCarrellista();}
   if(n!=='programmazione')aggTOSel=null;
@@ -2283,7 +2226,7 @@ function controllaPltBilico(numero,nuoviPlt,onProceed){
 }
 
 // ═══ PROG OGGI ═══
-function caricaProg(){if(!UC){try{PROG=JSON.parse(localStorage.getItem('PROG_v1')||'[]');}catch(x){PROG=[];}renderProg();return;}fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(snap){PROG=[];snap.forEach(function(d){PROG.push(Object.assign({id:d.id},d.data()));});reconcileOrdini();renderProg();aggiornaBadgeProg();aggTuttiOrdini();renderCalendario();aggiornaBadgeCarrellista();var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-carrellista')renderCarrellista();_andamentoLive();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});}
+function caricaProg(){if(!UC){try{PROG=JSON.parse(localStorage.getItem('PROG_v1')||'[]');}catch(x){PROG=[];}renderProg();return;}fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(snap){PROG=[];snap.forEach(function(d){PROG.push(Object.assign({id:d.id},d.data()));});reconcileOrdini();renderProg();aggiornaBadgeProg();aggTuttiOrdini();renderCalendario();aggiornaBadgeCarrellista();var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-carrellista')renderCarrellista();var moC=document.getElementById('cal-day-panel');if(CAL_GIORNO_SEL&&moC)renderCalPanelList();});}
 function salvaProg(){if(!UC)try{localStorage.setItem('PROG_v1',JSON.stringify(PROG));}catch(x){}}
 // ═══ AUTO-RIALLINEAMENTO ORDINI (self-healing) ═══
 // sposta ogni ordine nel contenitore giusto in base alla sua data: oggi→prog, domani→prog_domani, resto→prog_calendario
@@ -2532,7 +2475,7 @@ function aggCalendario(){
 }
 
 // ═══ TUTTI GLI ORDINI ═══
-function getAllOrdini(){var oggiD=new Date();oggiD.setHours(0,0,0,0);var domaniD=new Date(oggiD.getTime()+86400000);var oggiStr=datLocale(oggiD),domaniStr=datLocale(domaniD),lista=[];(PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||oggiStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog'});});(PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||domaniStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_domani'});});Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:dt,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_calendario'});});});lista.sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:0;});var seenAgg={},merged=[];lista.forEach(function(p){if(p.aggancioId){if(seenAgg[p.aggancioId])return;var partner=lista.find(function(x){return x.aggancioId===p.aggancioId&&x.id!==p.id;});if(partner){seenAgg[p.aggancioId]=true;merged.push(Object.assign({},p,{partner:partner}));return;}}merged.push(p);});return merged;}
+function getAllOrdini(){var oggiD=new Date();oggiD.setHours(0,0,0,0);var domaniD=new Date(oggiD.getTime()+86400000);var oggiStr=datLocale(oggiD),domaniStr=datLocale(domaniD),lista=[];(PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||oggiStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,prepVis:p.prepVis,fonte:'prog'});});(PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||domaniStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,prepVis:p.prepVis,fonte:'prog_domani'});});Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:dt,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,prepVis:p.prepVis,fonte:'prog_calendario'});});});lista.sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:0;});var seenAgg={},merged=[];lista.forEach(function(p){if(p.aggancioId){if(seenAgg[p.aggancioId])return;var partner=lista.find(function(x){return x.aggancioId===p.aggancioId&&x.id!==p.id;});if(partner){seenAgg[p.aggancioId]=true;merged.push(Object.assign({},p,{partner:partner}));return;}}merged.push(p);});return merged;}
 function aggTuttiOrdini(){var c=document.getElementById('tutti-ordini-count');if(c)c.textContent=getAllOrdini().length;aggiornaBadgeProg();var body=document.getElementById('tutti-ordini-body');if(body&&body.style.display!=='none')renderTuttiOrdini();}
 var _ordiniCache={};
 // ═══ MESE SELEZIONATO (PLT box) ═══
@@ -2847,8 +2790,8 @@ function renderDashMissioni(){
   var card=document.getElementById('dash-miss-card'),el=document.getElementById('dash-miss-list'),cnt=document.getElementById('dash-miss-count');
   if(!el||!card)return;
   var attive=MISSIONI.filter(function(m){return m.stato!=='caricata';});
-  card.style.display=attive.length?'block':'none';if(cnt)cnt.textContent=attive.length;
-  if(!attive.length)return;
+  card.style.display='block';if(cnt)cnt.textContent=attive.length;
+  if(!attive.length){el.innerHTML='<div style="padding:18px;text-align:center;color:var(--tx2);font-size:13px;">🎉 Nessuna missione attiva</div>';return;}
   attive.sort(function(a,b){return(a.ts||0)-(b.ts||0);});
   el.innerHTML=attive.map(function(m){
     var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;
@@ -2867,18 +2810,23 @@ function renderDashMissioni(){
       '</div>';
   }).join('');
 }
-function resetFiltriMissioni(){var ids=['miss-f-dal','miss-f-al'];ids.forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var t=document.getElementById('miss-f-tipo');if(t)t.value='';var s=document.getElementById('miss-f-stato');if(s)s.value='';renderMissioniDesk();}
+// ── filtro stato missioni multi-selezione ──
+function toggleMissStatoDrop(e){if(e)e.stopPropagation();var d=document.getElementById('miss-stato-drop');if(d)d.style.display=d.style.display==='none'?'block':'none';}
+function _missStatiSel(){return Array.prototype.slice.call(document.querySelectorAll('.miss-stato-chk:checked')).map(function(c){return c.value;});}
+function _aggMissStatoBtn(){var sel=_missStatiSel();var b=document.getElementById('miss-stato-btn');if(b)b.textContent=(sel.length===0?'Tutti gli stati':sel.length===1?sel[0]:sel.length+' selezionati')+' ▾';}
+document.addEventListener('click',function(e){var d=document.getElementById('miss-stato-drop'),b=document.getElementById('miss-stato-btn');if(d&&d.style.display==='block'&&!d.contains(e.target)&&e.target!==b)d.style.display='none';});
+function resetFiltriMissioni(){var ids=['miss-f-dal','miss-f-al'];ids.forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var t=document.getElementById('miss-f-tipo');if(t)t.value='';document.querySelectorAll('.miss-stato-chk').forEach(function(c){c.checked=false;});_aggMissStatoBtn();renderMissioniDesk();}
 function renderMissioniDesk(){
   var el=document.getElementById('miss-desk-list');if(!el)return;
   var fDal=(document.getElementById('miss-f-dal')||{}).value||'';
   var fAl=(document.getElementById('miss-f-al')||{}).value||'';
   var fTipo=(document.getElementById('miss-f-tipo')||{}).value||'';
-  var fStato=(document.getElementById('miss-f-stato')||{}).value||'';
+  var fStati=_missStatiSel();_aggMissStatoBtn();
   var lista=MISSIONI.slice().sort(function(a,b){return(b.ts||0)-(a.ts||0);});
   if(fDal)lista=lista.filter(function(m){return(m.data||'')>=fDal;});
   if(fAl)lista=lista.filter(function(m){return(m.data||'')<=fAl;});
   if(fTipo)lista=lista.filter(function(m){return m.tipo===fTipo;});
-  if(fStato)lista=lista.filter(function(m){return m.stato===fStato;});
+  if(fStati.length)lista=lista.filter(function(m){return fStati.indexOf(m.stato)!==-1;});
   if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📦</div><p>Nessuna missione trovata</p></div>';return;}
   el.innerHTML=lista.map(function(m){
     var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;
@@ -2913,8 +2861,9 @@ function renderMissioniDesk(){
       var bInMag=BL[b.numero];
       s+='<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 10px;">';
       s+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;">#'+b.numero+'</div>';
-      if(bInMag)s+='<div style="font-size:11px;color:var(--ob);">📦 '+bPlt+' PLT · 📍 '+bInMag.locazione+'</div>';
-      else s+='<div style="font-size:11px;color:var(--rb);">📦 '+bPlt+' PLT · 📍 fuori magazzino</div>';
+      // confermato → posizione congelata alla conferma; non confermato → posizione dal vivo
+      var _loc=b.confermato?(b.locazioneConfermata||''):(bInMag?bInMag.locazione:'');
+      s+='<div style="font-size:11px;color:'+(_loc?'var(--ob)':'var(--rb)')+';">📦 '+bPlt+' PLT · 📍 '+(_loc||'fuori magazzino')+'</div>';
       if(b.nota)s+='<div style="font-size:11px;color:var(--bb);margin-top:3px;">📝 '+b.nota+'</div>';
       s+='<div style="font-size:13px;margin-top:4px;">'+(b.confermato?'✅ Confermato':'⏳ In attesa')+'</div>';
       if(m.stato!=='caricata'){if(b.confermato)s+='<button onclick="togliFlgDesk(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:2px 7px;font-size:10px;margin-top:4px;cursor:pointer;">↩ Togli</button>';else s+='<button onclick="confermaBilicoDesk(\''+m.id+'\','+i+')" style="background:var(--gn);border:none;border-radius:4px;color:#fff;padding:3px 10px;font-size:10px;margin-top:4px;cursor:pointer;font-weight:700;">✋ Conferma</button>';}
@@ -2956,11 +2905,28 @@ function confDelCaricata(){var pin1=document.getElementById('dmc-pin1').value.tr
 function apriModificaMissione(id){var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;apriCreaMissione();_editMissioneId=id;// impostato DOPO apriCreaMissione che lo resettava a null
 document.getElementById('miss-modal-title').innerHTML='✏️ Modifica Missione';document.getElementById('miss-modal-btn').innerHTML='✏️ SALVA';setTipoMissione(m.tipo);if(m.tipo==='locazione'){var locEl=document.getElementById('miss-loc-sel');if(locEl){locEl.value=m.locazione||'';populaLocazioneMissione();(m.bilici||[]).forEach(function(b){var ni=document.getElementById('loc-nota-'+b.numero);if(ni)ni.value=b.nota||'';var pi=document.getElementById('loc-plt-'+b.numero);if(pi&&b.bancaliProg!=null)pi.value=b.bancaliProg;});}}if(m.tipo==='manuale'){_missBiliciMan=(m.bilici||[]).map(function(b){return{numero:b.numero,plt:b.bancaliProg||0,nota:b.nota||''};});renderMissManList();}var dataEl=document.getElementById('miss-data');if(dataEl&&m.data)dataEl.value=m.data;var notaEl=document.getElementById('miss-nota');if(notaEl)notaEl.value=m.nota||'';}
 function togliFlgDesk(mId,bilIdx){if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===mId;});if(!m||m.stato==='caricata')return;var nB=(m.bilici||[]).map(function(b,i){return i===bilIdx?Object.assign({},b,{confermato:false,bancaliConfermati:0}):b;});var confCount=nB.filter(function(b){return b.confermato;}).length;var ns=(confCount===nB.length&&nB.length>0)?'completata':confCount>0?'in_corso':'attesa';fdb.collection('missioni').doc(mId).update({bilici:nB,stato:ns}).then(function(){tst('Flag rimosso','ok');renderMissioniDesk();}).catch(function(e){tst('Errore: '+e.message,'er');});}
-function confermaBilicoDesk(mId,bilIdx){if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===mId;});if(!m||m.stato==='caricata')return;var b=m.bilici[bilIdx];if(!b)return;var bInMag=BL[b.numero];var sugg=(b.bancaliProg||0)||(bInMag?bInMag.bancali:0);var p=prompt('Conferma #'+b.numero+' — PLT confermati:',sugg);if(p===null)return;var plt=parseInt(p)||0;if(plt<=0)return tst('Inserisci almeno 1 PLT','er');var nB=(m.bilici||[]).map(function(x,i){return i===bilIdx?Object.assign({},x,{confermato:true,bancaliConfermati:plt}):x;});var confCount=nB.filter(function(x){return x.confermato;}).length;var ns=(confCount===nB.length&&nB.length>0)?'completata':confCount>0?'in_corso':'attesa';fdb.collection('missioni').doc(mId).update({bilici:nB,stato:ns}).then(function(){tst('Bilico #'+b.numero+' confermato ✅','ok');renderMissioniDesk();}).catch(function(e){tst('Errore: '+e.message,'er');});}
+var _pendConfMissD=null;
+function confermaBilicoDesk(mId,bilIdx){if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===mId;});if(!m||m.stato==='caricata')return;var b=m.bilici[bilIdx];if(!b)return;var bInMag=BL[b.numero];var sugg=(b.bancaliProg||0)||(bInMag?bInMag.bancali:0);_pendConfMissD={mId:mId,bilIdx:bilIdx,numero:b.numero};var nE=document.getElementById('cmd-num');if(nE)nE.textContent='#'+b.numero;var iE=document.getElementById('cmd-info');if(iE)iE.textContent=(bInMag?'📍 '+bInMag.locazione+' — ':'')+(b.bancaliProg?'Ordinati: '+b.bancaliProg+' PLT':'');var vE=document.getElementById('cmd-val');if(vE)vE.value=sugg;aprM('mo-conf-miss');}
+function confermaConPltDesk(){if(!_pendConfMissD)return;var plt=parseInt(document.getElementById('cmd-val').value);if(isNaN(plt)||plt<0)return tst('Valore non valido','er');var mId=_pendConfMissD.mId,bilIdx=_pendConfMissD.bilIdx,numero=_pendConfMissD.numero;_pendConfMissD=null;chiM('mo-conf-miss');var m=MISSIONI.find(function(x){return x.id===mId;});if(!m)return;var nB=(m.bilici||[]).map(function(x,i){return i===bilIdx?Object.assign({},x,{confermato:true,bancaliConfermati:plt,locazioneConfermata:(BL[x.numero]?BL[x.numero].locazione:'')}):x;});var confCount=nB.filter(function(x){return x.confermato;}).length;var ns=(confCount===nB.length&&nB.length>0)?'completata':confCount>0?'in_corso':'attesa';fdb.collection('missioni').doc(mId).update({bilici:nB,stato:ns}).then(function(){tst('Bilico #'+numero+' confermato ✅','ok');renderMissioniDesk();}).catch(function(e){tst('Errore: '+e.message,'er');});}
 var _currDtlMissId=null;
 function apriDettaglioMissione(id){_currDtlMissId=id;var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);var df=m.data?m.data.split('-').reverse().join('/'):'—';var tipoLbl=m.tipo==='locazione'?'📍 Carico Smezzi'+(m.locazione?' — '+m.locazione:''):'✋ Picking Manuale';var statoLbl={attesa:'⏳ Attesa',in_corso:'🟡 In corso',completata:'🟢 Completata',caricata:'✅ Caricata'}[m.stato]||m.stato;var html='<div style="margin-bottom:12px;"><strong style="color:var(--pb);">'+tipoLbl+'</strong> · <span class="miss-stato '+(m.stato||'attesa')+'">'+statoLbl+'</span><br><span style="font-size:12px;color:var(--tx2);">📅 '+df+' · 🚛 '+conf+'/'+tot+' bilici · 📦 '+pltTot+' PLT'+(m.nota?' · 📝 '+m.nota:'')+'</span></div>';if(m.operatoreChiusura)html+='<div style="font-size:12px;color:var(--tx2);margin-bottom:8px;">👤 Chiusa da: <strong>'+m.operatoreChiusura+'</strong></div>';html+='<div style="max-height:48vh;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="color:var(--tx2);font-size:10px;text-transform:uppercase;"><th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--bd);">#Bilico</th><th style="padding:4px 8px;border-bottom:1px solid var(--bd);">PLT</th><th style="padding:4px 8px;border-bottom:1px solid var(--bd);">Stato</th></tr></thead><tbody>';(m.bilici||[]).forEach(function(b){var bPlt=b.confermato?(b.bancaliConfermati||b.bancaliProg||0):(b.bancaliProg||0);html+='<tr style="border-bottom:1px solid var(--bd);"><td style="padding:6px 8px;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:900;">#'+b.numero+'</td><td style="padding:6px 8px;text-align:center;color:var(--ob);font-weight:700;">'+bPlt+'</td><td style="padding:6px 8px;">'+(b.confermato?'<span style="color:var(--gb);">✅ Confermato</span>':'<span style="color:var(--og);">⏳ In attesa</span>')+'</td></tr>';});html+='</tbody></table></div>';document.getElementById('miss-dtl-body').innerHTML=html;aprM('mo-miss-dtl');}
 function apriConfermaEvasa(id){_pendEvasaId=id;var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;var pltConf=(m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);var html='<p>Conferma che la missione <strong style="color:var(--pb);">'+(m.tipo==='locazione'?'Carico Smezzi — '+m.locazione:'Picking Manuale')+'</strong> è stata caricata sul bilico.</p><br>';(m.bilici||[]).forEach(function(b){html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);"><span style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:900;">#'+b.numero+'</span><span style="color:var(--ob);font-size:12px;">'+(b.bancaliConfermati||b.bancaliProg||0)+' PLT</span><span style="color:'+(b.confermato?'var(--gb)':'var(--og)')+';">'+(b.confermato?'✅':'⏳')+'</span></div>';});document.getElementById('mo-evasa-body').innerHTML=html;aprM('mo-evasa-conf');}
-function eseguiEvasa(){if(!_pendEvasaId)return;if(UC&&fdb){fdb.collection('missioni').doc(_pendEvasaId).update({stato:'caricata',operatoreChiusura:CURR_USER?CURR_USER.username:'',tsChiusura:Date.now()}).then(function(){tst('Missione segnata come caricata','ok');chiM('mo-evasa-conf');_pendEvasaId=null;renderMissioniDesk();}).catch(function(e){tst('Errore: '+e.message,'er');});}else tst('Connessione cloud necessaria','er');}
+// scarico stock + registrazione uscite per i bilici di una missione (una sola volta, grazie a m.scaricato)
+function caricaMissioneEsegui(m,foto){
+  var caricoId=m.caricoIdSpedizione||('SP'+Date.now());
+  if(!m.scaricato){
+    (m.bilici||[]).forEach(function(b,idx){
+      if(!b.confermato)return;var shipped=(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0));if(shipped<=0)return;
+      var cur=BL[b.numero];var rimasti=cur?(cur.bancali-shipped):0;
+      if(cur){if(rimasti<=0)dbDB(b.numero);else{var L=(cur.locazione||'').toUpperCase();dbUB(b.numero,{bancali:rimasti,locazione:(L==='SMEZZI'||L==='FRESCO')?L:'SMEZZI'});}}
+      var rec={tipo:'USCITA',numero:b.numero,locazione:cur?cur.locazione:'—',bancaliUsciti:shipped,bancaliRimasti:Math.max(0,rimasti),note:'Spedizione missione',ts:new Date(Date.now()+idx).toISOString(),caricoId:caricoId,spedizioneMiss:true};
+      if(foto){rec.foto=foto;rec.fotoSalvata=true;}
+      dbAS(rec);
+    });
+  }
+  if(UC&&fdb)fdb.collection('missioni').doc(m.id).update({stato:'caricata',scaricato:true,caricoIdSpedizione:caricoId,operatoreChiusura:CURR_USER?CURR_USER.username:'',tsChiusura:Date.now()}).then(function(){suonoUscita();tst('Missione caricata — uscite registrate ✅','ok');chiM('mo-evasa-conf');_pendEvasaId=null;clearFotoDesk('ev-foto-inp','ev-foto-prev','ev-foto-lbl');renderMissioniDesk();}).catch(function(e){tst('Errore: '+e.message,'er');});
+}
+function eseguiEvasa(){if(!_pendEvasaId)return;if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===_pendEvasaId;});if(!m)return;var fi=document.getElementById('ev-foto-inp');if(fi&&fi.files&&fi.files[0]){var caricoId='SP'+Date.now();m.caricoIdSpedizione=caricoId;compressaFoto(fi.files[0],function(base64){fdb.collection('foto_uscite').doc(caricoId).set({base64:base64,ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});caricaMissioneEsegui(m,base64);});}else{caricaMissioneEsegui(m,null);}}
 function stampaMissione(id){var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var html='<html><head><title>Missione</title><style>body{font-family:Arial,sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}td,th{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#eee;}</style></head><body>';html+='<h2>📦 Missione — '+(m.tipo==='locazione'?'Carico Smezzi — '+(m.locazione||''):'Picking Manuale')+'</h2>';html+='<p><strong>Data:</strong> '+(m.data||'—')+'</p>';if(m.nota)html+='<p><strong>Nota:</strong> '+m.nota+'</p>';html+='<table><tr><th>#Bilico</th><th>Locazione</th><th>PLT Pianificati</th><th>Nota</th><th>Confermato</th></tr>';(m.bilici||[]).forEach(function(b){var bl=BL[b.numero];html+='<tr><td>#'+b.numero+'</td><td>'+(bl?bl.locazione:'—')+'</td><td>'+(b.bancaliProg||0)+'</td><td>'+(b.nota||'')+'</td><td>'+(b.confermato?'✅':'—')+'</td></tr>';});html+='</table></body></html>';var w=window.open('','_blank','width=700,height=600');if(w){w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},500);}}
 function expMissioni(){var wb=XLSX.utils.book_new();var r=[['TIPO','LOCAZIONE','DATA','BILICI TOT','CONF.','PLT','STATO','OPERATORE','CREATO']];MISSIONI.forEach(function(m){var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length,plt=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);r.push([m.tipo==='locazione'?'Carico Smezzi':'Picking',m.locazione||'',m.data||'',tot,conf,plt,m.stato||'',m.operatoreChiusura||'',m.ts?new Date(m.ts).toLocaleString('it-IT'):'']);});var ws=XLSX.utils.aoa_to_sheet(r);XLSX.utils.book_append_sheet(wb,ws,'Missioni');
   // foglio dettaglio con NOTE per ogni bilico
@@ -2977,43 +2943,6 @@ function selCarrellistaTab(tab){
   });
   renderCarrellista();
 }
-// ═══ ANDAMENTO (sola consultazione) ═══
-function renderAndamento(){
-  var oggiStr=datLocale(new Date());
-  var fmtD=function(s){return s?s.split('-').reverse().join('/'):'—';};
-  var rs='padding:8px 6px;border-bottom:1px solid var(--bd);';
-  var statoLbl={attesa:'⏳ Attesa',in_corso:'🟡 In corso',completata:'🟢 Completata',caricata:'✅ Caricata'};
-  // 1) Uscite pianificate
-  var ordini=getAllOrdini();
-  var eU=document.getElementById('and-uscite');
-  if(eU)eU.innerHTML=ordini.length?ordini.map(function(p){var b=BL[p.numero];var partner=p.partner?' + #'+p.partner.numero:'';return '<div style="'+rs+'"><div style="display:flex;justify-content:space-between;"><strong style="color:var(--bb);">#'+p.numero+partner+'</strong><span style="font-size:12px;color:var(--tx2);">'+fmtD(p.data)+'</span></div><div style="font-size:12px;color:var(--tx2);">📦 '+(p.bancaliProg||0)+' PLT'+(b?' · 📍 '+b.locazione:' · non in mag.')+(p.nota?' · 📝 '+p.nota:'')+'</div></div>';}).join(''):'<div class="empty" style="padding:18px;"><p>Nessuna uscita pianificata</p></div>';
-  var c1=document.getElementById('and-usc-cnt');if(c1)c1.textContent='('+ordini.length+')';
-  // 2) Tutte le missioni
-  var miss=MISSIONI.slice().sort(function(a,b){return(b.ts||0)-(a.ts||0);});
-  var rowMiss=function(m){var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;var plt=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);var lbl=m.tipo==='locazione'?'📍 Smezzi'+(m.locazione?' '+m.locazione:''):'✋ Picking';return '<div style="'+rs+'"><div style="display:flex;justify-content:space-between;gap:6px;"><strong style="color:var(--pb);">'+lbl+'</strong><span style="font-size:11px;white-space:nowrap;">'+(statoLbl[m.stato]||m.stato||'')+'</span></div><div style="font-size:12px;color:var(--tx2);">📅 '+fmtD(m.data)+' · 🚛 '+conf+'/'+tot+' · 📦 '+plt+' PLT</div></div>';};
-  var eM=document.getElementById('and-missioni');
-  if(eM)eM.innerHTML=miss.length?miss.map(rowMiss).join(''):'<div class="empty" style="padding:18px;"><p>Nessuna missione</p></div>';
-  var c2=document.getElementById('and-miss-cnt');if(c2)c2.textContent='('+miss.length+')';
-  // 3) Missioni di oggi (smezzi + manuali)
-  var oggiMiss=miss.filter(function(m){return(m.data||'')===oggiStr;});
-  var smezzi=oggiMiss.filter(function(m){return m.tipo==='locazione';}),manuali=oggiMiss.filter(function(m){return m.tipo!=='locazione';});
-  var eO=document.getElementById('and-oggi');
-  if(eO){var h='<div style="font-size:11px;font-weight:800;color:var(--ob);text-transform:uppercase;padding:6px 4px 2px;">📍 Carico Smezzi ('+smezzi.length+')</div>';h+=smezzi.length?smezzi.map(rowMiss).join(''):'<div style="font-size:12px;color:var(--tx3);padding:4px 6px;">—</div>';h+='<div style="font-size:11px;font-weight:800;color:var(--pb);text-transform:uppercase;padding:8px 4px 2px;">✋ Picking Manuale ('+manuali.length+')</div>';h+=manuali.length?manuali.map(rowMiss).join(''):'<div style="font-size:12px;color:var(--tx3);padding:4px 6px;">—</div>';eO.innerHTML=h;}
-  // 4) Da stoccare (ARRIVI)
-  var arrivi=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';});
-  var eS=document.getElementById('and-stoccare');
-  if(eS)eS.innerHTML=arrivi.length?arrivi.map(function(b){return '<div style="'+rs+'"><strong>#'+b.numero+'</strong> <span style="font-size:12px;color:var(--tx2);">📦 '+b.bancali+' bancali'+(b.note?' · 📝 '+b.note:'')+'</span></div>';}).join(''):'<div class="empty" style="padding:18px;"><p>Niente da stoccare 🎉</p></div>';
-  var c4=document.getElementById('and-stoc-cnt');if(c4)c4.textContent='('+arrivi.length+')';
-  // 5) Da preparare (PROG escluso FRESCO)
-  var prep=PROG.filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
-  var eP=document.getElementById('and-preparare');
-  if(eP)eP.innerHTML=prep.length?prep.map(function(p){var b=BL[p.numero];var done=!!(p.id&&PROG_PREPARATO[p.id]);return '<div style="'+rs+(done?'opacity:.45;':'')+'"><strong'+(done?' style="text-decoration:line-through;"':'')+'>#'+p.numero+'</strong> <span style="font-size:12px;color:var(--tx2);">'+(b?'📦 '+b.bancali+' · 📍 '+b.locazione:'non in mag.')+(done?' · ✅ preparato':'')+'</span></div>';}).join(''):'<div class="empty" style="padding:18px;"><p>Niente da preparare</p></div>';
-  var c5=document.getElementById('and-prep-cnt');if(c5)c5.textContent='('+prep.length+')';
-  // contatori in alto
-  var cc=document.getElementById('and-counters');
-  if(cc){var box=function(n,l,col){return '<div class="card" style="padding:12px;text-align:center;"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:30px;font-weight:900;color:'+col+';line-height:1;">'+n+'</div><div style="font-size:11px;color:var(--tx2);text-transform:uppercase;margin-top:3px;">'+l+'</div></div>';};cc.innerHTML=box(ordini.length,'Uscite pianif.','var(--bb)')+box(miss.length,'Missioni','var(--pb)')+box(oggiMiss.length,'Missioni oggi','var(--gb)')+box(arrivi.length,'Da stoccare','var(--ob)')+box(prep.length,'Da preparare','var(--gb)');}
-}
-function _andamentoLive(){var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-andamento')renderAndamento();}
 function renderCarrellista(){renderCarrellistaStoccare();renderCarrellistaPreparare();renderCarrellistaMissioni();}
 function renderCarrellistaStoccare(){
   var el=document.getElementById('car-stoccare-list');if(!el)return;
@@ -3027,22 +2956,40 @@ function renderCarrellistaStoccare(){
   }).join('');
 }
 function sistemaArrivoDesk(numero){var b=BL[numero];if(!b)return;var nuovaPos=prompt('Stocca bilico #'+numero+'\nInserisci la postazione definitiva:','');if(nuovaPos===null)return;nuovaPos=nuovaPos.trim().toUpperCase();if(!nuovaPos)return;if(!isIllimitata(nuovaPos)){var occ=Object.values(BL).find(function(x){return(x.locazione||'').toUpperCase()===nuovaPos&&x.numero!==numero;});if(occ)return tst('Postazione '+nuovaPos+' occupata da #'+occ.numero,'er');}if(UC&&fdb){fdb.collection('bilici').doc(numero).update({locazione:nuovaPos}).then(function(){dbAS({tipo:'TRASFERIMENTO',numero:numero,locazioneDa:'ARRIVI',locazioneA:nuovaPos,bancali:b.bancali,ts:new Date().toISOString()});suonoEntrata();tst('Bilico #'+numero+' → '+nuovaPos,'ok');}).catch(function(e){tst('Errore: '+e.message,'er');});}else{b.locazione=nuovaPos;svLoc();suonoEntrata();tst('Bilico #'+numero+' → '+nuovaPos,'ok');}}
+// effettiva visibilità all'operatore: oggi auto-visibile (salvo deselezione), altre date solo se spuntate
+function _carPrepVisibile(p,oggiStr){if(p.prepVis===true)return true;if(p.prepVis===false)return false;return (p.data||'')===oggiStr;}
 function renderCarrellistaPreparare(){
   var el=document.getElementById('car-preparare-list');if(!el)return;
-  // escludi bilici in FRESCO dalla lista di preparazione
-  var lista=PROG.filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
-  if(!lista.length){el.innerHTML='<div class="empty"><p>Nessun bilico da preparare oggi</p></div>';return;}
-  el.innerHTML=lista.map(function(p){
-    var preparato=!!(p.id&&PROG_PREPARATO[p.id]),b=BL[p.numero];
-    var bancNote=b?('📦 '+b.bancali+(p.bancaliProg?' · ord. '+p.bancaliProg:'')+' bancali · 📍 '+b.locazione):'Non in magazzino';
-    return '<div class="car-row" style="'+(preparato?'opacity:.4;':'')+'">'+
-      '<div class="car-num'+(preparato?'" style="text-decoration:line-through;':'"')+'><small>#</small>'+p.numero+'</div>'+
-      '<div class="car-info"><div style="font-size:13px;font-weight:600;">'+bancNote+'</div>'+(p.nota?'<div class="car-note">📝 '+p.nota+'</div>':'')+'</div>'+
-      '<button onclick="segnaPreparatoDesk(\''+(p.id||'')+'\','+preparato+')" style="height:36px;padding:0 14px;background:'+(preparato?'var(--bd)':'var(--gn)')+';color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;">'+(preparato?'↩':'✅')+'</button>'+
-      '</div>';
+  var oggiStr=datLocale(new Date());
+  // TUTTI gli ordini di tutte le date, escluso FRESCO
+  var lista=getAllOrdini().filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
+  if(!lista.length){el.innerHTML='<div class="empty"><p>Nessun bilico da preparare</p></div>';return;}
+  lista.sort(function(a,b){return (a.data||'')<(b.data||'')?-1:((a.data||'')>(b.data||'')?1:0);});
+  var rows=lista.map(function(p){
+    var b=BL[p.numero];
+    var preparato=!!(p.id&&PROG_PREPARATO[p.id]);
+    var vis=_carPrepVisibile(p,oggiStr);
+    var df=p.data?p.data.split('-').reverse().join('/'):'—';
+    var oggiB=(p.data||'')===oggiStr?' <span style="font-size:9px;background:rgba(46,160,67,.2);color:var(--gb);padding:1px 6px;border-radius:8px;font-weight:700;">OGGI</span>':'';
+    return '<tr style="'+(preparato?'opacity:.5;':'')+'">'+
+      '<td style="text-align:center;"><input type="checkbox" '+(vis?'checked':'')+' onchange="toggleCarPrepVis(\''+p.fonte+'\',\''+(p.id||'')+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;" title="Visibile all\'operatore"></td>'+
+      '<td><strong'+(preparato?' style="text-decoration:line-through;color:var(--tx3);"':'')+'>#'+p.numero+'</strong></td>'+
+      '<td>'+(b?b.locazione:'<span style="color:var(--tx3);">non in mag.</span>')+'</td>'+
+      '<td style="text-align:center;color:var(--ob);">'+(p.bancaliProg||(b?b.bancali:'-'))+'</td>'+
+      '<td style="white-space:nowrap;">'+df+oggiB+'</td>'+
+      '<td style="text-align:right;"><button onclick="segnaPreparatoDesk(\''+(p.id||'')+'\','+preparato+',\''+p.numero+'\')" class="btn '+(preparato?'bgh':'tgn')+'" style="padding:4px 10px;font-size:11px;white-space:nowrap;">'+(preparato?'↩ Annulla':'✅ Preparato')+'</button></td>'+
+      '</tr>';
   }).join('');
+  el.innerHTML='<div style="overflow-x:auto;background:#111214;border-radius:var(--r);"><table class="tbl" style="width:100%;"><thead><tr><th style="text-align:center;">👁</th><th>Bilico</th><th>Locazione</th><th style="text-align:center;">PLT</th><th>Data Carico</th><th style="text-align:right;">Preparato</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
-function segnaPreparatoDesk(docId,giaSegnato){if(!docId)return tst('ID non disponibile','er');if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var progItem=PROG.find(function(p){return p.id===docId;});if(giaSegnato){fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});tst('Preparazione annullata','ok');}else{fdb.collection('prog_preparato').doc(docId).set({ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});if(progItem){var bPar=BL[progItem.numero];if(bPar){var vl=bPar.locazione;fdb.collection('bilici').doc(progItem.numero).update({locazione:'PARTENZE'}).then(function(){dbAS({tipo:'TRASFERIMENTO',numero:progItem.numero,locazioneDa:vl,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});}).catch(function(){});}}suonoEntrata();tst('Bilico preparato ✅','ok');}}
+function toggleCarPrepVis(fonte,id,checked){if(!id)return;if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
+  // aggiornamento ottimistico locale + render immediato
+  if(fonte==='prog'){var i1=PROG.find(function(p){return p.id===id;});if(i1)i1.prepVis=checked;}
+  else if(fonte==='prog_domani'){var i2=PROG_DOMANI.find(function(p){return p.id===id;});if(i2)i2.prepVis=checked;}
+  else{Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){if(p.id===id)p.prepVis=checked;});});}
+  renderCarrellistaPreparare();
+  fdb.collection(fonte).doc(id).update({prepVis:checked}).catch(function(e){tst('Errore: '+e.message,'er');});}
+function segnaPreparatoDesk(docId,giaSegnato,numero){if(!docId)return tst('ID non disponibile','er');if(!UC||!fdb)return tst('Connessione cloud necessaria','er');if(giaSegnato){fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});tst('Preparazione annullata','ok');}else{fdb.collection('prog_preparato').doc(docId).set({ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});var bPar=BL[numero];if(bPar){var vl=bPar.locazione;fdb.collection('bilici').doc(numero).update({locazione:'PARTENZE'}).then(function(){dbAS({tipo:'TRASFERIMENTO',numero:numero,locazioneDa:vl,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});}).catch(function(){});}suonoEntrata();tst('Bilico preparato ✅','ok');}}
 function renderCarrellistaMissioni(){
   var el=document.getElementById('car-missioni-desk-list');if(!el)return;
   var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';});

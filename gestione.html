@@ -39,6 +39,9 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 .sf-chip:active{transform:scale(.95);}
 .sf-chip:not(.active){background:none!important;border-color:var(--bd)!important;color:var(--tx3)!important;opacity:.5;text-decoration:line-through;}
 .sf-inp{height:38px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:0 10px;outline:none;}
+.ms-opt{display:flex;align-items:center;gap:9px;padding:9px 8px;font-size:14px;color:var(--tx);cursor:pointer;border-radius:6px;}
+.ms-opt:active{background:var(--sf2);}
+.ms-opt input{width:18px;height:18px;cursor:pointer;flex-shrink:0;}
 .sf-inp:focus{border-color:var(--bl);}
 
 /* ── ORIENTATION ── */
@@ -765,6 +768,45 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 </div>
 </div>
 
+<!-- Conferma PLT bilico missione (stile operatore) -->
+<div class="overlay center" id="sh-conf-miss">
+<div class="sheet center" style="max-width:360px;">
+  <div class="sheet-handle"></div>
+  <div style="text-align:center;margin-bottom:14px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--pb);">&#x270B; Conferma Bilico</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:var(--bb);margin-top:4px;" id="cm-num">#&#x2014;</div>
+    <div style="font-size:13px;color:var(--tx2);margin-top:4px;" id="cm-info"></div>
+  </div>
+  <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--tx2);margin-bottom:8px;text-align:center;">PLT caricati</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <button onclick="stp('cm-val',-1)" style="width:48px;height:54px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:26px;font-weight:900;flex-shrink:0;">&#x2212;</button>
+    <input id="cm-val" type="number" min="0" inputmode="numeric" style="flex:1;min-width:0;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;height:54px;background:var(--bg);border:2px solid var(--pu);border-radius:10px;color:var(--pb);outline:none;">
+    <button onclick="stp('cm-val',1)" style="width:48px;height:54px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:26px;font-weight:900;flex-shrink:0;">+</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn bpu" onclick="confermaConPltGest()">&#x2705; CONFERMA</button>
+    <button class="btn bgh" onclick="chiO('sh-conf-miss');_pendConfMiss=null;">&#x274C; Annulla</button>
+  </div>
+</div>
+</div>
+
+<!-- Carica e concludi missione -->
+<div class="overlay center" id="sh-carica-miss">
+<div class="sheet center" style="max-width:420px;">
+  <div class="sheet-handle"></div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--gb);margin-bottom:8px;text-align:center;">&#x1F69B; Carica e Concludi</div>
+  <div id="cmc-body" style="font-size:13px;color:var(--tx2);max-height:38vh;overflow-y:auto;margin-bottom:12px;"></div>
+  <div class="fg">
+    <label class="foto-label"><span>&#x1F4F7;</span> <span id="cmf-lbl">Foto carico (opzionale)</span><input type="file" id="cmf-foto" accept="image/*" style="display:none;" onchange="prevFoto(this,'cmf-img','cmf-prev','cmf-lbl')"></label>
+    <div class="foto-prev" id="cmf-prev"><img id="cmf-img"><button class="foto-del" onclick="clearFoto('cmf-foto','cmf-prev','cmf-lbl')">&#x2715;</button></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn brd" onclick="confermaCaricaMiss()">&#x1F69B; CARICA E CONCLUDI</button>
+    <button class="btn bgh" onclick="chiO('sh-carica-miss');_pendEvasaId=null;">&#x274C; Annulla</button>
+  </div>
+</div>
+</div>
+
 <!-- Uscita coppia -->
 <div class="overlay" id="sh-coppia">
 <div class="sheet">
@@ -952,13 +994,15 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <div style="padding:10px 16px;border-bottom:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:7px;">
     <input type="date" id="miss-f-dal" oninput="renderMissioni()" onclick="try{this.showPicker()}catch(e){}" style="font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);flex:1;min-width:110px;">
     <input type="date" id="miss-f-al" oninput="renderMissioni()" onclick="try{this.showPicker()}catch(e){}" style="font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);flex:1;min-width:110px;">
-    <select id="miss-f-stato" onchange="renderMissioni()" style="font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);flex:1;min-width:100px;">
-      <option value="">Tutti stati</option>
-      <option value="attesa">Attesa</option>
-      <option value="in_corso">In corso</option>
-      <option value="completata">Completata</option>
-      <option value="caricata">Caricata</option>
-    </select>
+    <div style="position:relative;flex:1;min-width:120px;">
+      <button type="button" id="miss-stato-btn" onclick="toggleMissStatoDrop(event)" style="width:100%;text-align:left;font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;">Tutti stati ▾</button>
+      <div id="miss-stato-drop" style="display:none;position:absolute;z-index:60;top:100%;left:0;right:0;margin-top:4px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:5px;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+        <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="attesa" onchange="renderMissioni()"> ⏳ Attesa</label>
+        <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="in_corso" onchange="renderMissioni()"> 🟡 In corso / prelievo</label>
+        <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="completata" onchange="renderMissioni()"> 🟢 Completata</label>
+        <label class="ms-opt"><input type="checkbox" class="miss-stato-chk" value="caricata" onchange="renderMissioni()"> ✅ Caricata</label>
+      </div>
+    </div>
     <button onclick="resetFiltriMissioni()" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);">&#x274C;</button>
   </div>
   <div id="miss-list" style="padding:0 16px;"></div>
@@ -1803,22 +1847,35 @@ function renderCarrellistaStoccare(){
       '</div><button onclick="sistemaArrivo(\''+b.numero+'\')" style="width:46px;height:46px;background:var(--gn);color:#fff;border:none;border-radius:50%;font-size:22px;">✅</button></div>';
   }).join('');
 }
+// effettiva visibilità all'operatore: oggi auto-visibile (salvo deselezione), altre date solo se spuntate
+function _carPrepVisibile(p,oggiStr){if(p.prepVis===true)return true;if(p.prepVis===false)return false;return (p.data||'')===oggiStr;}
 function renderCarrellistaPreparare(){
   var el=document.getElementById('car-prep-content');if(!el)return;
   var q=_carFiltro().trim().toUpperCase();
-  var lista=PROG.filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
-  if(q)lista=lista.filter(function(p){return String(p.numero).toUpperCase().includes(q);});
-  if(!lista.length){el.innerHTML='<div class="empty"><p>'+(q?'Nessun risultato per "'+q+'"':'Nessun bilico da preparare oggi')+'</p></div>';return;}
-  el.innerHTML=lista.map(function(p){
+  var oggiStr=datLocale(new Date());
+  var lista=getAllOrdini().filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
+  if(q)lista=lista.filter(function(p){return String(p.numero).toUpperCase().includes(q)||(((BL[p.numero]&&BL[p.numero].locazione)||'').toUpperCase().includes(q));});
+  if(!lista.length){el.innerHTML='<div class="empty"><p>'+(q?'Nessun risultato per "'+q+'"':'Nessun bilico da preparare')+'</p></div>';return;}
+  lista.sort(function(a,b){return (a.data||'')<(b.data||'')?-1:((a.data||'')>(b.data||'')?1:0);});
+  el.innerHTML='<div style="font-size:11px;color:var(--tx2);margin-bottom:8px;">☑ = visibile all\'operatore · oggi spuntato in automatico</div>'+lista.map(function(p){
     var preparato=!!(p.id&&PROG_PREPARATO[p.id]),b=BL[p.numero];
-    var bancNote=b?('📦 '+b.bancali+(p.bancaliProg?' · ord. '+p.bancaliProg:'')+' · 📍 '+b.locazione):'Non in magazzino';
-    return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--sf);border-radius:10px;margin-bottom:8px;'+(preparato?'opacity:.4;':'')+'">' +
-      '<div style="flex:1;"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;'+(preparato?'text-decoration:line-through;':'')+'">#'+p.numero+'</div>'+
-      '<div style="font-size:13px;color:var(--ob);margin-top:2px;">'+bancNote+'</div>'+
-      (p.nota?'<div style="font-size:12px;color:var(--tx2);margin-top:2px;">📝 '+p.nota+'</div>':'')+
-      '</div><button onclick="segnaPreparato(\''+(p.id||'')+'\','+preparato+')" style="width:46px;height:46px;background:'+(preparato?'var(--bd)':'var(--gn)')+';color:#fff;border:none;border-radius:50%;font-size:22px;">'+(preparato?'↩':'✅')+'</button></div>';
+    var vis=_carPrepVisibile(p,oggiStr);
+    var df=p.data?p.data.split('-').reverse().join('/'):'—';
+    var oggiB=(p.data||'')===oggiStr?' <span style="font-size:9px;background:rgba(46,160,67,.2);color:var(--gb);padding:1px 6px;border-radius:8px;font-weight:700;">OGGI</span>':'';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:11px;background:var(--sf);border-radius:10px;margin-bottom:8px;'+(preparato?'opacity:.45;':'')+'">'+
+      '<input type="checkbox" '+(vis?'checked':'')+' onchange="toggleCarPrepVis(\''+p.fonte+'\',\''+(p.id||'')+'\',this.checked)" style="width:22px;height:22px;flex-shrink:0;" title="Visibile operatore">'+
+      '<div style="flex:1;min-width:0;"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:19px;font-weight:900;'+(preparato?'text-decoration:line-through;':'')+'">#'+p.numero+'</div>'+
+      '<div style="font-size:12px;color:var(--ob);">📍 '+(b?b.locazione:'non in mag.')+' · '+(p.bancaliProg||(b?b.bancali:'-'))+' PLT</div>'+
+      '<div style="font-size:11px;color:var(--tx2);">📅 '+df+oggiB+'</div></div>'+
+      '<button onclick="segnaPreparato(\''+(p.id||'')+'\','+preparato+',\''+p.numero+'\')" style="width:44px;height:44px;background:'+(preparato?'var(--bd)':'var(--gn)')+';color:#fff;border:none;border-radius:50%;font-size:20px;flex-shrink:0;">'+(preparato?'↩':'✅')+'</button></div>';
   }).join('');
 }
+function toggleCarPrepVis(fonte,id,checked){if(!id)return;if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
+  if(fonte==='prog'){var i1=PROG.find(function(p){return p.id===id;});if(i1)i1.prepVis=checked;}
+  else if(fonte==='prog_domani'){var i2=PROG_DOMANI.find(function(p){return p.id===id;});if(i2)i2.prepVis=checked;}
+  else{Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){if(p.id===id)p.prepVis=checked;});});}
+  renderCarrellistaPreparare();
+  fdb.collection(fonte).doc(id).update({prepVis:checked}).catch(function(e){tst('Errore: '+e.message,'er');});}
 function aggiornaBadgeCarrellista(){
   var nS=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';}).length;
   var nP=PROG.filter(function(p){var b=BL[p.numero];return p.id&&!PROG_PREPARATO[p.id]&&(!b||(b.locazione||'').toUpperCase()!=='FRESCO');}).length;
@@ -1835,11 +1892,10 @@ function aggiornaBadgeCarrellista(){
   var sub=document.getElementById('menu-car-sub');
   if(sub)sub.textContent=tot>0?(nS+' da stoccare · '+nP+' da preparare'):'Da stoccare e preparare';
 }
-function segnaPreparato(docId,giaSegnato){
+function segnaPreparato(docId,giaSegnato,numero){
   if(!docId)return tst('ID non disponibile','er');if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
-  var progItem=PROG.find(function(p){return p.id===docId;});
   if(giaSegnato){fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});tst('Preparazione annullata','ok');}
-  else{fdb.collection('prog_preparato').doc(docId).set({ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});if(progItem){var bPar=BL[progItem.numero];if(bPar){var vl=bPar.locazione;fdb.collection('bilici').doc(progItem.numero).update({locazione:'PARTENZE'}).then(function(){dbAS({tipo:'TRASFERIMENTO',numero:progItem.numero,locazioneDa:vl,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});}).catch(function(){});}}suonoEntrata();tst('Bilico preparato ✅','ok');}
+  else{fdb.collection('prog_preparato').doc(docId).set({ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});var bPar=BL[numero];if(bPar){var vl=bPar.locazione;fdb.collection('bilici').doc(numero).update({locazione:'PARTENZE'}).then(function(){dbAS({tipo:'TRASFERIMENTO',numero:numero,locazioneDa:vl,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});}).catch(function(){});}suonoEntrata();tst('Bilico preparato ✅','ok');}
 }
 function sistemaArrivo(numero){
   var b=BL[numero];if(!b)return;
@@ -1853,9 +1909,9 @@ function sistemaArrivo(numero){
 function getAllOrdini(){
   var oggiD=new Date();oggiD.setHours(0,0,0,0);var domaniD=new Date(oggiD.getTime()+86400000);
   var oggiStr=datLocale(oggiD),domaniStr=datLocale(domaniD),lista=[];
-  (PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||oggiStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog'});});
-  (PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||domaniStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_domani'});});
-  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:dt,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,fonte:'prog_calendario'});});});
+  (PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||oggiStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,prepVis:p.prepVis,fonte:'prog'});});
+  (PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||domaniStr,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,prepVis:p.prepVis,fonte:'prog_domani'});});
+  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:dt,ts:p.ts||null,operatore:p.operatore||'',aggancioId:p.aggancioId||null,prepVis:p.prepVis,fonte:'prog_calendario'});});});
   lista.sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:0;});
   var seenAgg={},merged=[];
   lista.forEach(function(p){if(p.aggancioId){if(seenAgg[p.aggancioId])return;var partner=lista.find(function(x){return x.aggancioId===p.aggancioId&&x.id!==p.id;});if(partner){seenAgg[p.aggancioId]=true;merged.push(Object.assign({},p,{partner:partner}));return;}}merged.push(p);});
@@ -2241,7 +2297,12 @@ function renderDashMissioni(){
   }).join('');
 }
 function apriMissioni(){renderMissioni();aprO('sh-missioni');}
-function resetFiltriMissioni(){var d=document.getElementById('miss-f-dal');if(d)d.value='';var a=document.getElementById('miss-f-al');if(a)a.value='';var s=document.getElementById('miss-f-stato');if(s)s.value='';renderMissioni();}
+// ── filtro stato missioni multi-selezione ──
+function toggleMissStatoDrop(e){if(e)e.stopPropagation();var d=document.getElementById('miss-stato-drop');if(d)d.style.display=d.style.display==='none'?'block':'none';}
+function _missStatiSel(){return Array.prototype.slice.call(document.querySelectorAll('.miss-stato-chk:checked')).map(function(c){return c.value;});}
+function _aggMissStatoBtn(){var sel=_missStatiSel();var b=document.getElementById('miss-stato-btn');if(b)b.textContent=(sel.length===0?'Tutti stati':sel.length===1?sel[0]:sel.length+' selez.')+' ▾';}
+document.addEventListener('click',function(e){var d=document.getElementById('miss-stato-drop'),b=document.getElementById('miss-stato-btn');if(d&&d.style.display==='block'&&!d.contains(e.target)&&e.target!==b)d.style.display='none';});
+function resetFiltriMissioni(){var d=document.getElementById('miss-f-dal');if(d)d.value='';var a=document.getElementById('miss-f-al');if(a)a.value='';document.querySelectorAll('.miss-stato-chk').forEach(function(c){c.checked=false;});_aggMissStatoBtn();renderMissioni();}
 var _missCollapsed={};
 function toggleMissione(id){
   _missCollapsed[id]=!_missCollapsed[id];
@@ -2254,11 +2315,11 @@ function renderMissioni(){
   var el=document.getElementById('miss-list');if(!el)return;
   var fDal=(document.getElementById('miss-f-dal')||{}).value||'';
   var fAl=(document.getElementById('miss-f-al')||{}).value||'';
-  var fStato=(document.getElementById('miss-f-stato')||{}).value||'';
+  var fStati=_missStatiSel();_aggMissStatoBtn();
   var lista=MISSIONI.slice().sort(function(a,b){return(b.ts||0)-(a.ts||0);});
   if(fDal)lista=lista.filter(function(m){return(m.data||'')>=fDal;});
   if(fAl)lista=lista.filter(function(m){return(m.data||'')<=fAl;});
-  if(fStato)lista=lista.filter(function(m){return m.stato===fStato;});
+  if(fStati.length)lista=lista.filter(function(m){return fStati.indexOf(m.stato)!==-1;});
   if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📦</div><p>Nessuna missione trovata</p></div>';return;}
   var html='<div style="margin-top:12px;">';
   lista.forEach(function(m){
@@ -2281,7 +2342,7 @@ function renderMissioni(){
     // corpo a tendina (bilici + azioni)
     html+='<div id="miss-body-'+m.id+'" style="display:'+(_coll?'none':'block')+';">';
     // bilici
-    if(tot>0){html+='<div style="padding:0 14px;border-top:1px solid var(--bd);">';(m.bilici||[]).forEach(function(b,i){var nh=b.nota?'<div style="font-size:11px;color:var(--bb);margin-top:2px;">📝 '+b.nota+'</div>':'';var bl=BL[b.numero];var locTxt=bl?('📍 '+bl.locazione):'📍 fuori magazzino';html+='<div style="padding:7px 0;border-bottom:1px solid var(--bd);"><div style="display:flex;align-items:center;gap:7px;"><span style="flex:1;font-weight:700;font-size:14px;">#'+b.numero+'</span><span style="font-size:12px;color:var(--tx2);">'+(b.bancaliProg||0)+' PLT</span><span style="font-size:14px;">'+(b.confermato?'✅':'⏳')+'</span>'+(m.stato!=='caricata'?(b.confermato?'<button onclick="togliFlgBilico(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:6px;color:var(--rb);padding:2px 7px;font-size:11px;">✕</button>':'<button onclick="confermaBilicoGest(\''+m.id+'\','+i+')" style="background:var(--gn);border:none;border-radius:6px;color:#fff;padding:3px 9px;font-size:11px;font-weight:700;">✋ Conf.</button>'):'')+'</div><div style="font-size:11px;color:'+(bl?'var(--ob)':'var(--rb)')+';margin-top:2px;">'+locTxt+'</div>'+nh+'</div>';});html+='</div>';}
+    if(tot>0){html+='<div style="padding:0 14px;border-top:1px solid var(--bd);">';(m.bilici||[]).forEach(function(b,i){var nh=b.nota?'<div style="font-size:11px;color:var(--bb);margin-top:2px;">📝 '+b.nota+'</div>':'';var bl=BL[b.numero];var _loc=b.confermato?(b.locazioneConfermata||''):(bl?bl.locazione:'');var locTxt='📍 '+(_loc||'fuori magazzino');html+='<div style="padding:7px 0;border-bottom:1px solid var(--bd);"><div style="display:flex;align-items:center;gap:7px;"><span style="flex:1;font-weight:700;font-size:14px;">#'+b.numero+'</span><span style="font-size:12px;color:var(--tx2);">'+(b.bancaliProg||0)+' PLT</span><span style="font-size:14px;">'+(b.confermato?'✅':'⏳')+'</span>'+(m.stato!=='caricata'?(b.confermato?'<button onclick="togliFlgBilico(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:6px;color:var(--rb);padding:2px 7px;font-size:11px;">✕</button>':'<button onclick="confermaBilicoGest(\''+m.id+'\','+i+')" style="background:var(--gn);border:none;border-radius:6px;color:#fff;padding:3px 9px;font-size:11px;font-weight:700;">✋ Conf.</button>'):'')+'</div><div style="font-size:11px;color:'+(_loc?'var(--ob)':'var(--rb)')+';margin-top:2px;">'+locTxt+'</div>'+nh+'</div>';});html+='</div>';}
     // azioni
     html+='<div style="padding:10px 14px;border-top:1px solid var(--bd);display:flex;gap:7px;flex-wrap:wrap;">';
     if(m.stato==='completata')html+='<button onclick="apriConfermaEvasa(\''+m.id+'\')" style="background:rgba(46,160,67,.15);border:1px solid var(--gn);border-radius:8px;color:var(--gb);padding:7px 12px;font-size:13px;font-weight:700;">✅ Segna Caricata</button>';
@@ -2308,8 +2369,26 @@ function creaMissione(){if(_missTipo==='manuale'&&String(document.getElementById
 function eliminaMissione(id){var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;if(m.stato==='caricata'){if(!confirm('Questa missione è già caricata. Sei sicuro di volerla eliminare?'))return;}else{if(!confirm('Eliminare questa missione?'))return;}if(UC&&fdb)fdb.collection('missioni').doc(id).delete().then(function(){tst('Missione eliminata','ok');renderMissioni();});}
 function apriModificaMissione(id){var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;apriCreaMissione();_editMissioneId=id;document.getElementById('crea-miss-title').textContent='✏️ Modifica Missione';document.getElementById('crea-miss-btn').textContent='✏️ SALVA';setTipoMissione(m.tipo);if(m.tipo==='locazione'){var locEl=document.getElementById('miss-loc-sel');if(locEl){locEl.value=m.locazione||'';populaLocazioneMissione();(m.bilici||[]).forEach(function(b){var ni=document.getElementById('loc-nota-'+b.numero);if(ni)ni.value=b.nota||'';var pi=document.getElementById('loc-plt-'+b.numero);if(pi&&b.bancaliProg!=null)pi.value=b.bancaliProg;});}}if(m.tipo==='manuale'){_missBiliciMan=(m.bilici||[]).map(function(b){return{numero:b.numero,plt:b.bancaliProg||0,nota:b.nota||''};});renderMissManList();}var dataEl=document.getElementById('miss-data');if(dataEl&&m.data)dataEl.value=m.data;var notaEl=document.getElementById('miss-nota');if(notaEl)notaEl.value=m.nota||'';}
 function togliFlgBilico(missioneId,bilIdx){if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m||m.stato==='caricata')return;var newBilici=(m.bilici||[]).map(function(b,i){return i===bilIdx?Object.assign({},b,{confermato:false,bancaliConfermati:0}):b;});var confCount=newBilici.filter(function(b){return b.confermato;}).length;var nuovoStato=(confCount===newBilici.length&&newBilici.length>0)?'completata':confCount>0?'in_corso':(m.stato==='attesa'?'attesa':'in_corso');fdb.collection('missioni').doc(missioneId).update({bilici:newBilici,stato:nuovoStato}).then(function(){tst('Flag rimosso','ok');renderMissioni();}).catch(function(e){tst('Errore: '+e.message,'er');});}
-function confermaBilicoGest(missioneId,bilIdx){if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m||m.stato==='caricata')return;var b=m.bilici[bilIdx];if(!b)return;var bInMag=BL[b.numero];var sugg=(b.bancaliProg||0)||(bInMag?bInMag.bancali:0);var p=prompt('Conferma #'+b.numero+' — PLT confermati:',sugg);if(p===null)return;var plt=parseInt(p)||0;if(plt<=0)return tst('Inserisci almeno 1 PLT','er');var newBilici=(m.bilici||[]).map(function(x,i){return i===bilIdx?Object.assign({},x,{confermato:true,bancaliConfermati:plt}):x;});var confCount=newBilici.filter(function(x){return x.confermato;}).length;var nuovoStato=(confCount===newBilici.length&&newBilici.length>0)?'completata':confCount>0?'in_corso':'attesa';fdb.collection('missioni').doc(missioneId).update({bilici:newBilici,stato:nuovoStato}).then(function(){tst('Bilico #'+b.numero+' confermato ✅','ok');renderMissioni();}).catch(function(e){tst('Errore: '+e.message,'er');});}
-function apriConfermaEvasa(id){_pendEvasaId=id;var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;if(!confirm('Segnare questa missione come caricata?'))return;if(UC&&fdb)fdb.collection('missioni').doc(id).update({stato:'caricata',operatoreChiusura:CURR_USER?CURR_USER.username:'',tsChiusura:Date.now()}).then(function(){tst('Missione caricata ✅','ok');renderMissioni();}).catch(function(e){tst('Errore: '+e.message,'er');});}
+var _pendConfMiss=null;
+function confermaBilicoGest(missioneId,bilIdx){if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m||m.stato==='caricata')return;var b=m.bilici[bilIdx];if(!b)return;var bInMag=BL[b.numero];var sugg=(b.bancaliProg||0)||(bInMag?bInMag.bancali:0);_pendConfMiss={missioneId:missioneId,bilIdx:bilIdx,numero:b.numero};var nE=document.getElementById('cm-num');if(nE)nE.textContent='#'+b.numero;var iE=document.getElementById('cm-info');if(iE)iE.textContent=(bInMag?'📍 '+bInMag.locazione+' — ':'')+(b.bancaliProg?'Ordinati: '+b.bancaliProg+' PLT':'');var vE=document.getElementById('cm-val');if(vE)vE.value=sugg;aprO('sh-conf-miss');}
+function confermaConPltGest(){if(!_pendConfMiss)return;var plt=parseInt(document.getElementById('cm-val').value);if(isNaN(plt)||plt<0)return tst('Valore non valido','er');var missioneId=_pendConfMiss.missioneId,bilIdx=_pendConfMiss.bilIdx,numero=_pendConfMiss.numero;_pendConfMiss=null;chiO('sh-conf-miss');var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m)return;var newBilici=(m.bilici||[]).map(function(x,i){return i===bilIdx?Object.assign({},x,{confermato:true,bancaliConfermati:plt,locazioneConfermata:(BL[x.numero]?BL[x.numero].locazione:'')}):x;});var confCount=newBilici.filter(function(x){return x.confermato;}).length;var nuovoStato=(confCount===newBilici.length&&newBilici.length>0)?'completata':confCount>0?'in_corso':'attesa';fdb.collection('missioni').doc(missioneId).update({bilici:newBilici,stato:nuovoStato}).then(function(){suonoSirena();tst('Bilico #'+numero+' confermato ✅','ok');renderMissioni();}).catch(function(e){tst('Errore: '+e.message,'er');});}
+function apriConfermaEvasa(id){_pendEvasaId=id;var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var html='<p style="text-align:center;">Verranno registrate le uscite e scaricati i PLT dei seguenti bilici:</p>';(m.bilici||[]).forEach(function(b){var bl=BL[b.numero];html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);"><span style="flex:1;font-weight:700;">#'+b.numero+'</span><span style="font-size:11px;color:'+(bl?'var(--tx2)':'var(--rb)')+';">'+(bl?bl.locazione:'fuori mag.')+'</span><span style="color:var(--ob);font-size:12px;">'+(b.bancaliConfermati||b.bancaliProg||0)+' PLT</span><span>'+(b.confermato?'✅':'⏳')+'</span></div>';});var bd=document.getElementById('cmc-body');if(bd)bd.innerHTML=html;var l=document.getElementById('cmf-lbl');if(l)l.textContent='Foto carico (opzionale)';var pv=document.getElementById('cmf-prev');if(pv)pv.style.display='none';var fi=document.getElementById('cmf-foto');if(fi)fi.value='';aprO('sh-carica-miss');}
+function confermaCaricaMiss(){if(!_pendEvasaId)return;if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===_pendEvasaId;});if(!m)return;var fotoFile=(document.getElementById('cmf-foto').files||[])[0];if(fotoFile){var caricoId='SP'+Date.now();m.caricoIdSpedizione=caricoId;var reader=new FileReader();reader.onload=function(e){caricaMissioneEsegui(m,e.target.result);};reader.readAsDataURL(fotoFile);}else{caricaMissioneEsegui(m,null);}}
+function caricaMissioneEsegui(m,fotoBase64){
+  var caricoId=m.caricoIdSpedizione||('SP'+Date.now());
+  if(fotoBase64&&UC&&fdb)fdb.collection('foto_uscite').doc(caricoId).set({base64:fotoBase64,ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});
+  if(!m.scaricato){
+    (m.bilici||[]).forEach(function(b,idx){
+      if(!b.confermato)return;var shipped=(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0));if(shipped<=0)return;
+      var cur=BL[b.numero];var rimasti=cur?(cur.bancali-shipped):0;
+      if(cur){if(rimasti<=0)dbDB(b.numero);else{var L=(cur.locazione||'').toUpperCase();dbUB(b.numero,{bancali:rimasti,locazione:(L==='SMEZZI'||L==='FRESCO')?L:'SMEZZI'});}}
+      var rec={tipo:'USCITA',numero:b.numero,locazione:cur?cur.locazione:'—',bancaliUsciti:shipped,bancaliRimasti:Math.max(0,rimasti),note:'Spedizione missione',ts:new Date(Date.now()+idx).toISOString(),caricoId:caricoId,spedizioneMiss:true};
+      if(fotoBase64)rec.fotoSalvata=true;
+      dbAS(rec);
+    });
+  }
+  if(UC&&fdb)fdb.collection('missioni').doc(m.id).update({stato:'caricata',scaricato:true,caricoIdSpedizione:caricoId,operatoreChiusura:CURR_USER?CURR_USER.username:'',tsChiusura:Date.now()}).then(function(){suonoUscita();tst('Missione caricata — uscite registrate ✅','ok');chiO('sh-carica-miss');_pendEvasaId=null;renderMissioni();}).catch(function(e){tst('Errore: '+e.message,'er');});
+}
 function expMissioni(){var wb=XLSX.utils.book_new();var r=[['TIPO','LOCAZIONE','DATA','BILICI TOT','CONF.','PLT','STATO','OPERATORE']];MISSIONI.forEach(function(m){var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length,plt=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);r.push([m.tipo==='locazione'?'Carico Smezzi':'Picking',m.locazione||'',m.data||'',tot,conf,plt,m.stato||'',m.operatoreChiusura||'']);});var ws=XLSX.utils.aoa_to_sheet(r);XLSX.utils.book_append_sheet(wb,ws,'Missioni');
   // foglio dettaglio con NOTE per ogni bilico
   var rd=[['MISSIONE','DATA','#BILICO','LOCAZIONE','PLT','NOTA','CONFERMATO']];MISSIONI.forEach(function(m){var mlbl=m.tipo==='locazione'?'Carico Smezzi'+(m.locazione?' '+m.locazione:''):'Picking';(m.bilici||[]).forEach(function(b){var bl=BL[b.numero];rd.push([mlbl,m.data||'',b.numero,bl?bl.locazione:'—',b.bancaliProg||0,b.nota||'',b.confermato?'Sì':'No']);});});var wsd=XLSX.utils.aoa_to_sheet(rd);wsd['!cols']=[{wch:22},{wch:12},{wch:10},{wch:14},{wch:8},{wch:30},{wch:12}];XLSX.utils.book_append_sheet(wb,wsd,'Dettaglio Bilici');

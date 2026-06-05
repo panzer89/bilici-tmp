@@ -751,7 +751,7 @@ var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
 var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE'];
 
 // ═══ STATO ═══
-var BL={},ST=[],PROG=[],PROG_DOMANI=[];
+var BL={},ST=[],PROG=[],PROG_DOMANI=[],CAL_DATA={};
 var MISSIONI=[],PROG_PREPARATO={};
 var fdb=null,UC=false;
 var CURR_USER=null;
@@ -811,6 +811,11 @@ window.onload=function(){
     fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s){
       PROG_DOMANI=[];s.forEach(function(d){PROG_DOMANI.push(Object.assign({id:d.id},d.data()));});
       renderProgDomani();
+      if(pageStack[pageStack.length-1]==='car-preparare')renderCarPreparare();
+    });
+    fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(s){
+      CAL_DATA={};s.forEach(function(doc){var item=Object.assign({id:doc.id},doc.data());if(!item.data)return;if(!CAL_DATA[item.data])CAL_DATA[item.data]=[];CAL_DATA[item.data].push(item);});
+      if(pageStack[pageStack.length-1]==='car-preparare')renderCarPreparare();
     });
     fdb.collection('prog_preparato').onSnapshot(function(s){
       PROG_PREPARATO={};s.forEach(function(d){PROG_PREPARATO[d.id]=true;});
@@ -1487,44 +1492,58 @@ function sistemaArrivo(numero){
   }else{b.locazione=nuovaPos;suonoOk();tst('Bilico #'+numero+' → '+nuovaPos,'ok');}
 }
 
+function datLocale(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// tutti gli ordini (oggi+domani+calendario) con il flag prepVis
+function getAllOrdini(){
+  var oggiD=new Date();oggiD.setHours(0,0,0,0);var domaniD=new Date(oggiD.getTime()+86400000);
+  var oggiStr=datLocale(oggiD),domaniStr=datLocale(domaniD),lista=[];
+  (PROG||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||oggiStr,prepVis:p.prepVis,fonte:'prog'});});
+  (PROG_DOMANI||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:p.data||domaniStr,prepVis:p.prepVis,fonte:'prog_domani'});});
+  Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){lista.push({id:p.id,numero:p.numero,nota:p.nota||'',bancaliProg:p.bancaliProg||0,data:dt,prepVis:p.prepVis,fonte:'prog_calendario'});});});
+  return lista;
+}
+// visibile all'operatore: oggi auto (salvo deselezione), altre date solo se spuntate da desktop/gestione
+function _carPrepVisibile(p,oggiStr){if(p.prepVis===true)return true;if(p.prepVis===false)return false;return (p.data||'')===oggiStr;}
 function renderCarPreparare(){
   var el=document.getElementById('car-preparare-list');if(!el)return;
   var q=((document.getElementById('car-prep-search')||{}).value||'').trim().toUpperCase();
-  var lista=PROG.filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
+  var oggiStr=datLocale(new Date());
+  // solo ordini resi visibili (oggi auto + spuntati), escluso FRESCO
+  var lista=getAllOrdini().filter(function(p){var b=BL[p.numero];return (!b||(b.locazione||'').toUpperCase()!=='FRESCO')&&_carPrepVisibile(p,oggiStr);});
   if(q)lista=lista.filter(function(p){var b=BL[p.numero];return String(p.numero||'').toUpperCase().indexOf(q)!==-1||(b&&(b.locazione||'').toUpperCase().indexOf(q)!==-1);});
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">'+(q?'🔍':'✅')+'</div><p>'+(q?'Nessun risultato':'Nessun bilico da preparare oggi')+'</p></div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">'+(q?'🔍':'✅')+'</div><p>'+(q?'Nessun risultato':'Niente da preparare')+'</p></div>';return;}
+  lista.sort(function(a,b){return (a.data||'')<(b.data||'')?-1:((a.data||'')>(b.data||'')?1:0);});
   el.innerHTML=lista.map(function(p){
     var preparato=!!(p.id&&PROG_PREPARATO[p.id]);
     var b=BL[p.numero];
+    var df=p.data?p.data.split('-').reverse().join('/'):'—';
     var bancNote=b?('📦 '+b.bancali+(p.bancaliProg?' · ord. '+p.bancaliProg:'')+' · 📍 '+b.locazione):'Non in magazzino';
     return '<div style="display:flex;align-items:center;gap:12px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;'+(preparato?'opacity:.4;':'')+'">' +
       '<div style="flex:1;">'+
       '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:900;'+(preparato?'text-decoration:line-through;':'')+'">Bilico #'+p.numero+'</div>'+
       '<div style="font-size:13px;color:var(--ob);margin-top:3px;">'+bancNote+'</div>'+
+      '<div style="font-size:12px;color:var(--tx2);margin-top:2px;">📅 Carico: '+df+'</div>'+
       (p.nota?'<div style="font-size:12px;color:var(--tx2);margin-top:2px;">📝 '+p.nota+'</div>':'')+
       '</div>'+
-      '<button onclick="segnaPreparato(\''+(p.id||'')+'\','+preparato+')" style="width:52px;height:52px;background:'+(preparato?'var(--bd)':'var(--gn)')+';color:#fff;border:none;border-radius:50%;font-size:24px;flex-shrink:0;">'+(preparato?'↩':'✅')+'</button>'+
+      '<button onclick="segnaPreparato(\''+(p.id||'')+'\','+preparato+',\''+p.numero+'\')" style="width:52px;height:52px;background:'+(preparato?'var(--bd)':'var(--gn)')+';color:#fff;border:none;border-radius:50%;font-size:24px;flex-shrink:0;">'+(preparato?'↩':'✅')+'</button>'+
       '</div>';
   }).join('');
 }
 
-function segnaPreparato(docId,giaSegnato){
+function segnaPreparato(docId,giaSegnato,numero){
   if(!docId)return tst('ID non disponibile','er');
   if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
-  var progItem=PROG.find(function(p){return p.id===docId;});
   if(giaSegnato){
     fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});
     tst('Preparazione annullata','ok');
   }else{
     fdb.collection('prog_preparato').doc(docId).set({ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});
-    if(progItem){
-      var bPar=BL[progItem.numero];
-      if(bPar){
-        var vecchiaLoc=bPar.locazione;
-        fdb.collection('bilici').doc(progItem.numero).update({locazione:'PARTENZE'}).then(function(){
-          dbAS({tipo:'TRASFERIMENTO',numero:progItem.numero,locazioneDa:vecchiaLoc,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});
-        }).catch(function(){});
-      }
+    var bPar=BL[numero];
+    if(bPar){
+      var vecchiaLoc=bPar.locazione;
+      fdb.collection('bilici').doc(numero).update({locazione:'PARTENZE'}).then(function(){
+        dbAS({tipo:'TRASFERIMENTO',numero:numero,locazioneDa:vecchiaLoc,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});
+      }).catch(function(){});
     }
     suonoOk();tst('Bilico preparato ✅','ok');
   }
@@ -1600,7 +1619,9 @@ function apriDettaglioMissione(id){
     html+='<div style="display:flex;align-items:center;gap:10px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:8px;">';
     html+='<div style="flex:1;">';
     html+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;">Bilico #'+b.numero+'</div>';
-    if(bInMag)html+='<div style="font-size:13px;color:var(--tx2);margin-top:2px;">📍 '+bInMag.locazione+' · 📦 '+bInMag.bancali+' PLT</div>';
+    // confermato → posizione congelata alla conferma; non confermato → posizione dal vivo
+    if(b.confermato){var _lc=b.locazioneConfermata||'';html+='<div style="font-size:13px;color:'+(_lc?'var(--tx2)':'var(--rb)')+';margin-top:2px;">📍 '+(_lc||'fuori magazzino')+'</div>';}
+    else if(bInMag)html+='<div style="font-size:13px;color:var(--tx2);margin-top:2px;">📍 '+bInMag.locazione+' · 📦 '+bInMag.bancali+' PLT</div>';
     else html+='<div style="font-size:13px;color:var(--rb);margin-top:2px;">📍 fuori magazzino</div>';
     html+='<div style="font-size:12px;color:var(--ob);margin-top:2px;">Previsti: '+bPlt+' PLT</div>';
     html+='</div>';
@@ -1616,8 +1637,10 @@ function apriDettaglioMissione(id){
   });
   // azioni
   html+='<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">';
-  if(conf>0&&m.stato!=='caricata'){
-    html+='<button onclick="apriCompletaMissione(\''+id+'\')" style="width:100%;padding:15px;background:var(--gn);border:none;border-radius:var(--r);color:#fff;font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;cursor:pointer;">✅ SEGNA COMPLETATA</button>';
+  if(conf===tot&&tot>0&&m.stato!=='caricata'){
+    html+='<button onclick="apriCompletaMissione(\''+id+'\')" style="width:100%;padding:15px;background:var(--gn);border:none;border-radius:var(--r);color:#fff;font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;cursor:pointer;">🚛 CARICA E CONCLUDI</button>';
+  }else if(conf<tot&&m.stato!=='caricata'){
+    html+='<div style="width:100%;padding:13px;background:var(--sf2);border:1px dashed var(--bd);border-radius:var(--r);color:var(--tx2);text-align:center;font-size:13px;">🔒 Conferma tutti i bilici ('+conf+'/'+tot+') per poter caricare</div>';
   }
   html+='<button onclick="goBack()" style="width:100%;padding:13px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx2);font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">← INDIETRO</button>';
   html+='</div>';
@@ -1648,7 +1671,7 @@ function _eseguiConfBilico(pltConf){
   _pendConfBilico=null;
   var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m)return;
   var newBilici=(m.bilici||[]).map(function(bil,i){
-    return i===bilIdx?Object.assign({},bil,{confermato:true,bancaliConfermati:parseInt(pltConf)||0}):bil;
+    return i===bilIdx?Object.assign({},bil,{confermato:true,bancaliConfermati:parseInt(pltConf)||0,locazioneConfermata:(BL[bil.numero]?BL[bil.numero].locazione:'')}):bil;
   });
   var confCount=newBilici.filter(function(bil){return bil.confermato;}).length;
   var nuovoStato=confCount===newBilici.length?'completata':confCount>0?'in_corso':'attesa';
@@ -1659,8 +1682,9 @@ function _eseguiConfBilico(pltConf){
   }).catch(function(e){tst('Errore: '+e.message,'er');});
 }
 function confermaConPlt(){
-  var val=parseInt(document.getElementById('sh-conf-plt-val').value)||0;
-  if(val<=0)return tst('Inserisci almeno 1 PLT','er');
+  var val=parseInt(document.getElementById('sh-conf-plt-val').value);
+  if(isNaN(val)||val<0)return tst('Valore non valido','er');
+  // 0 PLT consentito: bilico non più presente o merce rotta → confermato a 0
   chiO('sh-conf-plt');
   _eseguiConfBilico(val);
 }
@@ -1698,13 +1722,26 @@ function completaMissioneFoto(){
   if(!_missioneAperta||!fotoUscitaSalvata)return tst('📷 Scatta la foto prima di confermare','er');
   var m=_missioneAperta,id=m.id;
   if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
+  var allConf=(m.bilici||[]).length>0&&(m.bilici||[]).every(function(b){return b.confermato;});
+  if(!allConf)return tst('Conferma prima tutti i bilici','er');
+  var caricoId=fotoCaricoIdPending||('SP'+Date.now());
+  // scarico stock + registrazione uscite (una sola volta, grazie a m.scaricato)
+  if(!m.scaricato){
+    (m.bilici||[]).forEach(function(b,idx){
+      if(!b.confermato)return;var shipped=(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0));if(shipped<=0)return;
+      var cur=BL[b.numero];var rimasti=cur?(cur.bancali-shipped):0;
+      if(cur){if(rimasti<=0)dbDB(b.numero);else{var L=(cur.locazione||'').toUpperCase();dbUB(b.numero,{bancali:rimasti,locazione:(L==='SMEZZI'||L==='FRESCO')?L:'SMEZZI'});}}
+      var rec={tipo:'USCITA',numero:b.numero,locazione:cur?cur.locazione:'—',bancaliUsciti:shipped,bancaliRimasti:Math.max(0,rimasti),note:'Spedizione missione',ts:new Date(Date.now()+idx).toISOString(),caricoId:caricoId,fotoSalvata:true,spedizioneMiss:true};
+      dbAS(rec);
+    });
+  }
   fdb.collection('missioni').doc(id).update({
-    stato:'completata',
+    stato:'caricata',scaricato:true,caricoIdSpedizione:caricoId,
     operatoreChiusura:CURR_USER?CURR_USER.username:'',
     tsChiusura:Date.now()
   }).then(function(){
     chiO('sh-miss-foto');
-    suonoOk();tst('Missione completata ✅','ok');
+    suonoOk();tst('Missione caricata — uscite registrate ✅','ok');
     fotoUscitaSalvata=false;fotoCaricoIdPending=null;_missioneAperta=null;
     goBack();
   }).catch(function(e){tst('Errore: '+e.message,'er');});

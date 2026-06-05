@@ -810,11 +810,12 @@ window.onload=function(){
     });
     fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(s){
       PROG_DOMANI=[];s.forEach(function(d){PROG_DOMANI.push(Object.assign({id:d.id},d.data()));});
-      renderProgDomani();
+      renderProgDomani();aggiornaBadges();
       if(pageStack[pageStack.length-1]==='car-preparare')renderCarPreparare();
     });
     fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(s){
       CAL_DATA={};s.forEach(function(doc){var item=Object.assign({id:doc.id},doc.data());if(!item.data)return;if(!CAL_DATA[item.data])CAL_DATA[item.data]=[];CAL_DATA[item.data].push(item);});
+      aggiornaBadges();
       if(pageStack[pageStack.length-1]==='car-preparare')renderCarPreparare();
     });
     fdb.collection('prog_preparato').onSnapshot(function(s){
@@ -1000,7 +1001,9 @@ function aggiornaBadges(){
   if(bu){bu.textContent=nU;bu.classList.toggle('vis',nU>0);}
   // badge carrellista
   var nS=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';}).length;
-  var nP=PROG.filter(function(p){var b=BL[p.numero];return p.id&&!PROG_PREPARATO[p.id]&&(!b||(b.locazione||'').toUpperCase()!=='FRESCO');}).length;
+  // conta le preparazioni che l'operatore VEDE (visibili/spuntate, tutte le date), non solo oggi
+  var _oS=datLocale(new Date());
+  var nP=getAllOrdini().filter(function(p){var b=BL[p.numero];return p.id&&!PROG_PREPARATO[p.id]&&(!b||(b.locazione||'').toUpperCase()!=='FRESCO')&&_carPrepVisibile(p,_oS);}).length;
   var nM=MISSIONI.filter(function(m){return m.stato!=='caricata';}).length;
   var totCar=nS+nP+nM;
   var bc=document.getElementById('badge-carrellista');

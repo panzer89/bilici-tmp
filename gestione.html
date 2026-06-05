@@ -923,6 +923,11 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
         <span id="badge-car-prep" style="display:none;position:absolute;top:-6px;right:-6px;background:var(--og);color:#111;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;">0</span>
       </button>
     </div>
+    <div id="cp-data-row-g" style="display:none;margin-top:10px;align-items:center;gap:8px;">
+      <span style="font-size:13px;color:var(--tx2);white-space:nowrap;">&#x1F4C5; Data:</span>
+      <input id="cp-f-data-g" type="date" oninput="renderCarrellistaPreparare()" onclick="try{this.showPicker()}catch(e){}" style="flex:1;min-width:0;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:7px 10px;outline:none;">
+      <button onclick="document.getElementById('cp-f-data-g').value='';renderCarrellistaPreparare();" style="background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx2);padding:7px 11px;font-size:13px;">&#x21BA;</button>
+    </div>
   </div>
   <div id="car-stoc-content" style="padding:12px 16px;"></div>
   <div id="car-prep-content" style="display:none;padding:12px 16px;"></div>
@@ -1829,6 +1834,7 @@ function selCarTab(tab){
   document.getElementById('car-prep-content').style.display=tab==='preparare'?'block':'none';
   document.getElementById('car-tab-stoc').className=tab==='stoccare'?'btn sm bog':'btn sm bgh';
   document.getElementById('car-tab-prep').className=tab==='preparare'?'btn sm bog':'btn sm bgh';
+  var dr=document.getElementById('cp-data-row-g');if(dr)dr.style.display=tab==='preparare'?'flex':'none';
   renderCarrellista();
 }
 function renderCarrellista(){renderCarrellistaStoccare();renderCarrellistaPreparare();aggiornaBadgeCarrellista();}
@@ -1852,9 +1858,11 @@ function _carPrepVisibile(p,oggiStr){if(p.prepVis===true)return true;if(p.prepVi
 function renderCarrellistaPreparare(){
   var el=document.getElementById('car-prep-content');if(!el)return;
   var q=_carFiltro().trim().toUpperCase();
+  var fData=((document.getElementById('cp-f-data-g')||{}).value||'').trim();
   var oggiStr=datLocale(new Date());
   var lista=getAllOrdini().filter(function(p){var b=BL[p.numero];return !b||(b.locazione||'').toUpperCase()!=='FRESCO';});
   if(q)lista=lista.filter(function(p){return String(p.numero).toUpperCase().includes(q)||(((BL[p.numero]&&BL[p.numero].locazione)||'').toUpperCase().includes(q));});
+  if(fData)lista=lista.filter(function(p){return (p.data||'')===fData;});
   if(!lista.length){el.innerHTML='<div class="empty"><p>'+(q?'Nessun risultato per "'+q+'"':'Nessun bilico da preparare')+'</p></div>';return;}
   lista.sort(function(a,b){return (a.data||'')<(b.data||'')?-1:((a.data||'')>(b.data||'')?1:0);});
   el.innerHTML='<div style="font-size:11px;color:var(--tx2);margin-bottom:8px;">☑ = visibile all\'operatore · oggi spuntato in automatico</div>'+lista.map(function(p){
@@ -1878,7 +1886,8 @@ function toggleCarPrepVis(fonte,id,checked){if(!id)return;if(!UC||!fdb)return ts
   fdb.collection(fonte).doc(id).update({prepVis:checked}).catch(function(e){tst('Errore: '+e.message,'er');});}
 function aggiornaBadgeCarrellista(){
   var nS=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';}).length;
-  var nP=PROG.filter(function(p){var b=BL[p.numero];return p.id&&!PROG_PREPARATO[p.id]&&(!b||(b.locazione||'').toUpperCase()!=='FRESCO');}).length;
+  // conta TUTTI i bilici da preparare (tutte le date), escluso FRESCO
+  var nP=getAllOrdini().filter(function(p){var b=BL[p.numero];return p.id&&!PROG_PREPARATO[p.id]&&(!b||(b.locazione||'').toUpperCase()!=='FRESCO');}).length;
   var tot=nS+nP;
   var badge=document.getElementById('badge-carrellista');
   if(badge){badge.textContent=tot;badge.style.display=tot>0?'inline-block':'none';}

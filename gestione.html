@@ -924,9 +924,17 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
       </button>
     </div>
     <div id="cp-data-row-g" style="display:none;margin-top:10px;align-items:center;gap:8px;">
-      <span style="font-size:13px;color:var(--tx2);white-space:nowrap;">&#x1F4C5; Data:</span>
-      <input id="cp-f-data-g" type="date" oninput="renderCarrellistaPreparare()" onclick="try{this.showPicker()}catch(e){}" style="flex:1;min-width:0;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:7px 10px;outline:none;">
-      <button onclick="document.getElementById('cp-f-data-g').value='';renderCarrellistaPreparare();" style="background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx2);padding:7px 11px;font-size:13px;">&#x21BA;</button>
+      <span id="cp-data-lbl-g" style="font-size:13px;color:var(--tx2);white-space:nowrap;">&#x1F4C5; Data:</span>
+      <input id="cp-f-data-g" type="date" oninput="renderCarrellista()" onclick="try{this.showPicker()}catch(e){}" style="flex:1;min-width:0;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:7px 10px;outline:none;">
+      <button onclick="document.getElementById('cp-f-data-g').value='';renderCarrellista();" style="background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx2);padding:7px 11px;font-size:13px;">&#x21BA;</button>
+    </div>
+    <div id="cp-sort-row-g" style="display:none;margin-top:8px;align-items:center;gap:8px;">
+      <span style="font-size:13px;color:var(--tx2);white-space:nowrap;">&#x2195; Ordina:</span>
+      <select id="cp-sort-g" onchange="renderCarrellista()" style="flex:1;min-width:0;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:7px 10px;">
+        <option value="data">&#x1F4C5; Data</option>
+        <option value="numero">&#x1F522; N&#xB0; Bilico</option>
+        <option value="plt">&#x1F4E6; PLT / Bancali</option>
+      </select>
     </div>
   </div>
   <div id="car-stoc-content" style="padding:12px 16px;"></div>
@@ -1834,7 +1842,11 @@ function selCarTab(tab){
   document.getElementById('car-prep-content').style.display=tab==='preparare'?'block':'none';
   document.getElementById('car-tab-stoc').className=tab==='stoccare'?'btn sm bog':'btn sm bgh';
   document.getElementById('car-tab-prep').className=tab==='preparare'?'btn sm bog':'btn sm bgh';
-  var dr=document.getElementById('cp-data-row-g');if(dr)dr.style.display=tab==='preparare'?'flex':'none';
+  var showFilt=(tab==='preparare'||tab==='stoccare');
+  var dr=document.getElementById('cp-data-row-g');if(dr)dr.style.display=showFilt?'flex':'none';
+  var sr=document.getElementById('cp-sort-row-g');if(sr)sr.style.display=showFilt?'flex':'none';
+  var dl=document.getElementById('cp-data-lbl-g');if(dl)dl.textContent=tab==='stoccare'?'📅 Ingresso:':'📅 Carico:';
+  var df=document.getElementById('cp-f-data-g');if(df)df.value='';
   renderCarrellista();
 }
 function renderCarrellista(){renderCarrellistaStoccare();renderCarrellistaPreparare();aggiornaBadgeCarrellista();}
@@ -1842,15 +1854,21 @@ function _carFiltro(){return(document.getElementById('car-search')||{}).value||'
 function renderCarrellistaStoccare(){
   var el=document.getElementById('car-stoc-content');if(!el)return;
   var q=_carFiltro().trim().toUpperCase();
+  var fData=((document.getElementById('cp-f-data-g')||{}).value||'').trim();
   var arrivi=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';});
   if(q)arrivi=arrivi.filter(function(b){return String(b.numero).toUpperCase().includes(q);});
-  if(!arrivi.length){el.innerHTML='<div class="empty"><p>'+(q?'Nessun risultato per "'+q+'"':'Nessuna merce da stoccare 🎉')+'</p></div>';return;}
+  if(fData)arrivi=arrivi.filter(function(b){return b.ts&&datLocale(new Date(b.ts))===fData;});
+  if(!arrivi.length){el.innerHTML='<div class="empty"><p>'+(q||fData?'Nessun risultato':'Nessuna merce da stoccare 🎉')+'</p></div>';return;}
+  var so=((document.getElementById('cp-sort-g')||{}).value)||'data';
+  arrivi.sort(function(a,b){var va,vb;if(so==='plt'){va=a.bancali||0;vb=b.bancali||0;}else if(so==='numero'){va=String(a.numero||'').toUpperCase();vb=String(b.numero||'').toUpperCase();}else{va=new Date(a.ts||0).getTime();vb=new Date(b.ts||0).getTime();}return va<vb?-1:(va>vb?1:0);});
   el.innerHTML=arrivi.map(function(b){
+    var di=b.ts?datLocale(new Date(b.ts)).split('-').reverse().join('/'):'—';
     return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--sf);border-radius:10px;margin-bottom:8px;">'+
-      '<div style="flex:1;"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;">Bilico #'+b.numero+'</div>'+
+      '<div style="flex:1;min-width:0;"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:900;">Bilico #'+b.numero+'</div>'+
       '<div style="font-size:13px;color:var(--ob);margin-top:2px;">📦 '+b.bancali+' bancali · 📍 ARRIVI</div>'+
+      '<div style="font-size:11px;color:var(--tx2);margin-top:2px;">📅 Ingresso: '+di+'</div>'+
       (b.note?'<div style="font-size:12px;color:var(--tx2);margin-top:2px;">📝 '+b.note+'</div>':'')+
-      '</div><button onclick="sistemaArrivo(\''+b.numero+'\')" style="width:46px;height:46px;background:var(--gn);color:#fff;border:none;border-radius:50%;font-size:22px;">✅</button></div>';
+      '</div><button onclick="sistemaArrivo(\''+b.numero+'\')" style="width:46px;height:46px;background:var(--gn);color:#fff;border:none;border-radius:50%;font-size:22px;flex-shrink:0;">✅</button></div>';
   }).join('');
 }
 // effettiva visibilità all'operatore: oggi auto-visibile (salvo deselezione), altre date solo se spuntate
@@ -1864,7 +1882,8 @@ function renderCarrellistaPreparare(){
   if(q)lista=lista.filter(function(p){return String(p.numero).toUpperCase().includes(q)||(((BL[p.numero]&&BL[p.numero].locazione)||'').toUpperCase().includes(q));});
   if(fData)lista=lista.filter(function(p){return (p.data||'')===fData;});
   if(!lista.length){el.innerHTML='<div class="empty"><p>'+(q?'Nessun risultato per "'+q+'"':'Nessun bilico da preparare')+'</p></div>';return;}
-  lista.sort(function(a,b){return (a.data||'')<(b.data||'')?-1:((a.data||'')>(b.data||'')?1:0);});
+  var so=((document.getElementById('cp-sort-g')||{}).value)||'data';
+  lista.sort(function(a,b){var va,vb;if(so==='plt'){va=a.bancaliProg||0;vb=b.bancaliProg||0;}else if(so==='numero'){va=String(a.numero||'').toUpperCase();vb=String(b.numero||'').toUpperCase();}else{va=a.data||'';vb=b.data||'';}return va<vb?-1:(va>vb?1:0);});
   el.innerHTML='<div style="font-size:11px;color:var(--tx2);margin-bottom:8px;">☑ = visibile all\'operatore · oggi spuntato in automatico</div>'+lista.map(function(p){
     var preparato=!!(p.id&&PROG_PREPARATO[p.id]),b=BL[p.numero];
     var vis=_carPrepVisibile(p,oggiStr);

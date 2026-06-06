@@ -1226,7 +1226,14 @@ input, select, textarea { font-family: inherit; }
         <span id="badge-car-miss-desk" style="display:none;position:absolute;top:5px;right:7px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;">0</span>
       </button>
     </div>
-    <div id="car-stoccare-content"><div id="car-stoccare-list"></div></div>
+    <div id="car-stoccare-content">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
+        <div class="sf-grp"><div class="sf-lbl">N° Bilico</div><input class="sf-inp" id="cs-f-num" type="text" placeholder="es. 914" oninput="renderCarrellistaStoccare()" style="width:120px;"></div>
+        <div class="sf-grp"><div class="sf-lbl">Data Ingresso</div><input class="sf-inp" id="cs-f-data" type="date" oninput="renderCarrellistaStoccare()" onclick="try{this.showPicker()}catch(e){}" style="width:150px;"></div>
+        <button onclick="document.getElementById('cs-f-num').value='';document.getElementById('cs-f-data').value='';renderCarrellistaStoccare();" class="btn bgh" style="padding:5px 10px;font-size:11px;">↺ Reset</button>
+      </div>
+      <div id="car-stoccare-list"></div>
+    </div>
     <div id="car-preparare-content" style="display:none;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
         <div class="sf-grp"><div class="sf-lbl">N° Bilico</div><input class="sf-inp" id="cp-f-num" type="text" placeholder="es. 799" oninput="renderCarrellistaPreparare()" style="width:120px;"></div>
@@ -1235,7 +1242,14 @@ input, select, textarea { font-family: inherit; }
       </div>
       <div id="car-preparare-list"></div>
     </div>
-    <div id="car-missioni-content" style="display:none;"><div id="car-missioni-desk-list"></div></div>
+    <div id="car-missioni-content" style="display:none;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
+        <div class="sf-grp"><div class="sf-lbl">N° Bilico</div><input class="sf-inp" id="cm-f-num" type="text" placeholder="es. 849" oninput="renderCarrellistaMissioni()" style="width:120px;"></div>
+        <div class="sf-grp"><div class="sf-lbl">Data</div><input class="sf-inp" id="cm-f-data" type="date" oninput="renderCarrellistaMissioni()" onclick="try{this.showPicker()}catch(e){}" style="width:150px;"></div>
+        <button onclick="document.getElementById('cm-f-num').value='';document.getElementById('cm-f-data').value='';renderCarrellistaMissioni();" class="btn bgh" style="padding:5px 10px;font-size:11px;">↺ Reset</button>
+      </div>
+      <div id="car-missioni-desk-list"></div>
+    </div>
   </div>
 </div>
 
@@ -2824,64 +2838,68 @@ function _missStatiSel(){return Array.prototype.slice.call(document.querySelecto
 function _aggMissStatoBtn(){var sel=_missStatiSel();var b=document.getElementById('miss-stato-btn');if(b)b.textContent=(sel.length===0?'Tutti gli stati':sel.length===1?sel[0]:sel.length+' selezionati')+' ▾';}
 document.addEventListener('click',function(e){var d=document.getElementById('miss-stato-drop'),b=document.getElementById('miss-stato-btn');if(d&&d.style.display==='block'&&!d.contains(e.target)&&e.target!==b)d.style.display='none';});
 function resetFiltriMissioni(){var ids=['miss-f-dal','miss-f-al'];ids.forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var t=document.getElementById('miss-f-tipo');if(t)t.value='';document.querySelectorAll('.miss-stato-chk').forEach(function(c){c.checked=false;});_aggMissStatoBtn();renderMissioniDesk();}
+var missSortCol='ts',missSortDir=-1;
+function sortMiss(col){if(missSortCol===col)missSortDir*=-1;else{missSortCol=col;missSortDir=1;}renderMissioniDesk();}
 function renderMissioniDesk(){
   var el=document.getElementById('miss-desk-list');if(!el)return;
   var fDal=(document.getElementById('miss-f-dal')||{}).value||'';
   var fAl=(document.getElementById('miss-f-al')||{}).value||'';
   var fTipo=(document.getElementById('miss-f-tipo')||{}).value||'';
   var fStati=_missStatiSel();_aggMissStatoBtn();
-  var lista=MISSIONI.slice().sort(function(a,b){return(b.ts||0)-(a.ts||0);});
+  var lista=MISSIONI.slice();
   if(fDal)lista=lista.filter(function(m){return(m.data||'')>=fDal;});
   if(fAl)lista=lista.filter(function(m){return(m.data||'')<=fAl;});
   if(fTipo)lista=lista.filter(function(m){return m.tipo===fTipo;});
   if(fStati.length)lista=lista.filter(function(m){return fStati.indexOf(m.stato)!==-1;});
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📦</div><p>Nessuna missione trovata</p></div>';return;}
-  el.innerHTML=lista.map(function(m){
-    var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;
-    var plt=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
-    var df=m.data?m.data.split('-').reverse().join('/'):'—';
-    var lbl=m.tipo==='locazione'?'📍 Carico Smezzi'+(m.locazione?' <span style="font-weight:400;font-size:11px;color:var(--tx2);">— '+m.locazione+'</span>':''):'✋ Picking Manuale';
-    var statoLbl={attesa:'⏳ Attesa',in_corso:'🟡 In corso',completata:'🟢 Completata',caricata:'✅ Caricata'}[m.stato]||m.stato;
-    var prog=tot>0?Math.round(conf/tot*100):0;
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">&#x1F4E6;</div><p>Nessuna missione trovata</p></div>';return;}
+  var statoOrd={attesa:0,in_corso:1,completata:2,caricata:3};
+  var sv=function(m){if(missSortCol==='data')return m.data||'';if(missSortCol==='stato')return statoOrd[m.stato]!=null?statoOrd[m.stato]:0;if(missSortCol==='tipo')return m.tipo||'';if(missSortCol==='bilici')return (m.bilici||[]).length;if(missSortCol==='plt')return (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);return m.ts||0;};
+  lista.sort(function(a,b){var va=sv(a),vb=sv(b);if(va<vb)return -1*missSortDir;if(va>vb)return 1*missSortDir;return 0;});
+  var statoLblM={attesa:'&#x23F3; Attesa',in_corso:'&#x1F7E1; In corso',completata:'&#x1F7E2; Completata',caricata:'&#x2705; Caricata'};
+  var bar=function(p){return '<div style="background:var(--sf2);border-radius:3px;height:4px;margin-top:3px;"><div style="background:var(--pb);height:100%;width:'+p+'%;border-radius:3px;"></div></div>';};
+  var rows=lista.map(function(m){
+    var bil=m.bilici||[];
+    var conf=bil.filter(function(b){return b.confermato;}).length,tot=bil.length;
+    var pltTot=bil.reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var pltConf=bil.filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0));},0);
+    var df=m.data?m.data.split('-').reverse().join('/'):'&#x2014;';
+    var lbl=m.tipo==='locazione'?'&#x1F4CD; Carico Smezzi'+(m.locazione?' <span style="font-weight:400;font-size:11px;color:var(--tx2);">&#x2014; '+m.locazione+'</span>':''):'&#x270B; Picking Manuale';
+    var statoLbl=statoLblM[m.stato]||m.stato;
+    var progB=tot>0?Math.round(conf/tot*100):0;
+    var progP=pltTot>0?Math.round(pltConf/pltTot*100):0;
     var cid=m.id.replace(/[^a-zA-Z0-9_-]/g,'_');
-    var s='<div class="card" style="margin-bottom:10px;">';
-    s+='<div class="card-hdr" onclick="toggleMissDesk(\''+cid+'\')" style="cursor:pointer;">';
-    s+='<div style="flex:1;">'+
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'+
-      '<strong style="color:var(--pb);">'+lbl+'</strong>'+
-      '<span class="miss-stato '+(m.stato||'attesa')+'">'+statoLbl+'</span>'+
-      (m.nota?'<span style="font-size:12px;color:var(--tx2);">· '+m.nota+'</span>':'')+
-      '</div>'+
-      '<div style="font-size:12px;color:var(--tx2);">📅 '+df+' · 🚛 '+conf+'/'+tot+' bilici · 📦 '+plt+' PLT</div>'+
-      '<div style="background:var(--sf2);border-radius:3px;height:3px;margin-top:5px;width:200px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>'+
-      '</div>';
-    s+='<div style="display:flex;gap:6px;align-items:center;">';
-    if(m.stato==='completata')s+='<button onclick="event.stopPropagation();apriConfermaEvasa(\''+m.id+'\')" class="btn tgn" style="padding:5px 10px;font-size:11px;">✅ Caricata</button>';
-    if(m.stato!=='caricata')s+='<button onclick="event.stopPropagation();apriModificaMissione(\''+m.id+'\')" class="btn tbl" style="padding:5px 10px;font-size:11px;">✏️</button>';
-    s+='<button onclick="event.stopPropagation();stampaMissione(\''+m.id+'\')" class="btn bgh" style="padding:5px 10px;font-size:11px;">🖨️</button>';
-    s+='<button onclick="event.stopPropagation();eliminaMissione(\''+m.id+'\')" class="btn" style="padding:5px 10px;font-size:11px;background:none;border:1px solid var(--rd);color:var(--rb);">🗑</button>';
-    s+='</div></div>';
-    // body collassabile
-    s+='<div id="miss-body-'+cid+'" style="display:none;border-top:1px solid var(--bd);">';
-    s+='<div style="padding:10px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;">';
-    (m.bilici||[]).forEach(function(b,i){
-      var bPlt=b.confermato?(b.bancaliConfermati||b.bancaliProg||0):(b.bancaliProg||0);
+    var r='<tr onclick="toggleMissDesk(\''+cid+'\')" style="cursor:pointer;">';
+    r+='<td><span id="miss-chev-'+cid+'" style="color:var(--tx2);">&#x25B6;</span> <strong style="color:var(--pb);">'+lbl+'</strong>'+(m.nota?'<div style="font-size:11px;color:var(--tx2);">'+m.nota+'</div>':'')+'</td>';
+    r+='<td style="white-space:nowrap;">'+df+'</td>';
+    r+='<td><span class="miss-stato '+(m.stato||'attesa')+'">'+statoLbl+'</span></td>';
+    r+='<td style="min-width:92px;"><div style="font-size:12px;">&#x1F69B; '+conf+'/'+tot+'</div>'+bar(progB)+'</td>';
+    r+='<td style="min-width:92px;"><div style="font-size:12px;color:var(--ob);">&#x1F4E6; '+pltConf+'/'+pltTot+'</div>'+bar(progP)+'</td>';
+    r+='<td style="text-align:right;white-space:nowrap;" onclick="event.stopPropagation();">';
+    if(m.stato==='completata')r+='<button onclick="apriConfermaEvasa(\''+m.id+'\')" class="btn tgn" style="padding:4px 8px;font-size:11px;">&#x1F69B;</button> ';
+    if(m.stato!=='caricata')r+='<button onclick="apriModificaMissione(\''+m.id+'\')" class="btn tbl" style="padding:4px 8px;font-size:11px;">&#x270F;&#xFE0F;</button> ';
+    r+='<button onclick="stampaMissione(\''+m.id+'\')" class="btn bgh" style="padding:4px 8px;font-size:11px;">&#x1F5A8;&#xFE0F;</button> ';
+    r+='<button onclick="eliminaMissione(\''+m.id+'\')" class="btn" style="padding:4px 8px;font-size:11px;background:none;border:1px solid var(--rd);color:var(--rb);">&#x1F5D1;</button>';
+    r+='</td></tr>';
+    r+='<tr id="miss-body-'+cid+'" style="display:none;"><td colspan="6" style="background:var(--bg);padding:10px 14px;">';
+    r+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;">';
+    bil.forEach(function(b,i){
+      var bPlt=b.confermato?(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0)):(b.bancaliProg||0);
       var bInMag=BL[b.numero];
-      s+='<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 10px;">';
-      s+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;">#'+b.numero+'</div>';
-      // confermato → posizione congelata alla conferma; non confermato → posizione dal vivo
       var _loc=b.confermato?(b.locazioneConfermata||''):(bInMag?bInMag.locazione:'');
-      s+='<div style="font-size:11px;color:'+(_loc?'var(--ob)':'var(--rb)')+';">📦 '+bPlt+' PLT · 📍 '+(_loc||'fuori magazzino')+'</div>';
-      if(b.nota)s+='<div style="font-size:11px;color:var(--bb);margin-top:3px;">📝 '+b.nota+'</div>';
-      s+='<div style="font-size:13px;margin-top:4px;">'+(b.confermato?'✅ Confermato':'⏳ In attesa')+'</div>';
-      if(m.stato!=='caricata'){if(b.confermato)s+='<button onclick="togliFlgDesk(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:2px 7px;font-size:10px;margin-top:4px;cursor:pointer;">↩ Togli</button>';else s+='<button onclick="confermaBilicoDesk(\''+m.id+'\','+i+')" style="background:var(--gn);border:none;border-radius:4px;color:#fff;padding:3px 10px;font-size:10px;margin-top:4px;cursor:pointer;font-weight:700;">✋ Conferma</button>';}
-      s+='</div>';
+      r+='<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 10px;">';
+      r+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;">#'+b.numero+'</div>';
+      r+='<div style="font-size:11px;color:'+(_loc?'var(--ob)':'var(--rb)')+';">&#x1F4E6; '+bPlt+' PLT &#xB7; &#x1F4CD; '+(_loc||'fuori magazzino')+'</div>';
+      if(b.nota)r+='<div style="font-size:11px;color:var(--bb);margin-top:3px;">&#x1F4DD; '+b.nota+'</div>';
+      r+='<div style="font-size:13px;margin-top:4px;">'+(b.confermato?'&#x2705; Confermato':'&#x23F3; In attesa')+'</div>';
+      if(m.stato!=='caricata'){if(b.confermato)r+='<button onclick="togliFlgDesk(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:2px 7px;font-size:10px;margin-top:4px;cursor:pointer;">&#x21A9; Togli</button>';else r+='<button onclick="confermaBilicoDesk(\''+m.id+'\','+i+')" style="background:var(--gn);border:none;border-radius:4px;color:#fff;padding:3px 10px;font-size:10px;margin-top:4px;cursor:pointer;font-weight:700;">&#x270B; Conferma</button>';}
+      r+='</div>';
     });
-    s+='</div></div></div>';
-    return s;
+    r+='</div></td></tr>';
+    return r;
   }).join('');
+  el.innerHTML='<div style="overflow-x:auto;background:#111214;border-radius:var(--r);"><table class="tbl" style="width:100%;"><thead><tr><th onclick="sortMiss(\'tipo\')" style="cursor:pointer;">Tipo <span class="sort-ic">&#x2195;</span></th><th onclick="sortMiss(\'data\')" style="cursor:pointer;">Data <span class="sort-ic">&#x2195;</span></th><th onclick="sortMiss(\'stato\')" style="cursor:pointer;">Stato <span class="sort-ic">&#x2195;</span></th><th onclick="sortMiss(\'bilici\')" style="cursor:pointer;">Bilici <span class="sort-ic">&#x2195;</span></th><th onclick="sortMiss(\'plt\')" style="cursor:pointer;">PLT <span class="sort-ic">&#x2195;</span></th><th style="text-align:right;">Azioni</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
-function toggleMissDesk(cid){var b=document.getElementById('miss-body-'+cid);if(!b)return;b.style.display=b.style.display==='none'?'block':'none';}
+function toggleMissDesk(cid){var b=document.getElementById('miss-body-'+cid),chev=document.getElementById('miss-chev-'+cid);if(!b)return;var open=b.style.display!=='none';b.style.display=open?'none':'';if(chev)chev.textContent=open?'▶':'▼';}
 function apriCreaMissione(){
   _editMissioneId=null;_missBiliciMan=[];
   var locs={};Object.values(BL).forEach(function(b){if(b.locazione)locs[b.locazione]=true;});
@@ -2952,20 +2970,34 @@ function selCarrellistaTab(tab){
   renderCarrellista();
 }
 function renderCarrellista(){renderCarrellistaStoccare();renderCarrellistaPreparare();renderCarrellistaMissioni();}
+var csSort='ts',csDir=1;
+function sortStoc(c){if(csSort===c)csDir*=-1;else{csSort=c;csDir=1;}renderCarrellistaStoccare();}
 function renderCarrellistaStoccare(){
   var el=document.getElementById('car-stoccare-list');if(!el)return;
+  var fNum=((document.getElementById('cs-f-num')||{}).value||'').trim().toUpperCase();
+  var fData=((document.getElementById('cs-f-data')||{}).value||'').trim();
   var arrivi=Object.values(BL).filter(function(b){return(b.locazione||'').toUpperCase()==='ARRIVI';});
+  if(fNum)arrivi=arrivi.filter(function(b){return String(b.numero||'').toUpperCase().indexOf(fNum)!==-1;});
+  if(fData)arrivi=arrivi.filter(function(b){return b.ts&&datLocale(new Date(b.ts))===fData;});
   if(!arrivi.length){el.innerHTML='<div class="empty"><p>Nessuna merce da stoccare 🎉</p></div>';return;}
-  el.innerHTML=arrivi.map(function(b){
-    return '<div class="car-row"><div class="car-num"><small>#</small>'+b.numero+'</div>'+
-      '<div class="car-info"><div style="font-size:13px;font-weight:600;">📦 '+b.bancali+' bancali</div><div class="car-loc">📍 ARRIVI</div>'+(b.note?'<div class="car-note">📝 '+b.note+'</div>':'')+'</div>'+
-      '<button onclick="sistemaArrivoDesk(\''+b.numero+'\')" style="height:36px;padding:0 14px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;">✅ Stocca</button>'+
-      '</div>';
+  arrivi.sort(function(a,b){var va,vb;if(csSort==='bancali'){va=a.bancali||0;vb=b.bancali||0;}else if(csSort==='ts'){va=new Date(a.ts||0).getTime();vb=new Date(b.ts||0).getTime();}else{va=String(a[csSort]||'').toUpperCase();vb=String(b[csSort]||'').toUpperCase();}return va<vb?-csDir:(va>vb?csDir:0);});
+  var rows=arrivi.map(function(b){
+    var di=b.ts?datLocale(new Date(b.ts)).split('-').reverse().join('/'):'—';
+    return '<tr>'+
+      '<td><strong>#'+b.numero+'</strong></td>'+
+      '<td style="text-align:center;color:var(--ob);">'+b.bancali+'</td>'+
+      '<td>📍 '+b.locazione+(b.note?' <span style="color:var(--tx3);font-size:11px;">· '+b.note+'</span>':'')+'</td>'+
+      '<td style="white-space:nowrap;">'+di+'</td>'+
+      '<td style="text-align:right;"><button onclick="sistemaArrivoDesk(\''+b.numero+'\')" class="btn tgn" style="padding:4px 12px;font-size:11px;white-space:nowrap;">✅ Stocca</button></td>'+
+      '</tr>';
   }).join('');
+  el.innerHTML='<div style="overflow-x:auto;background:#111214;border-radius:var(--r);"><table class="tbl" style="width:100%;"><thead><tr><th onclick="sortStoc(\'numero\')" style="cursor:pointer;">Bilico <span class="sort-ic">↕</span></th><th onclick="sortStoc(\'bancali\')" style="text-align:center;cursor:pointer;">Bancali <span class="sort-ic">↕</span></th><th onclick="sortStoc(\'locazione\')" style="cursor:pointer;">Locazione <span class="sort-ic">↕</span></th><th onclick="sortStoc(\'ts\')" style="cursor:pointer;">Data Ingresso <span class="sort-ic">↕</span></th><th style="text-align:right;">Azione</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 function sistemaArrivoDesk(numero){var b=BL[numero];if(!b)return;var nuovaPos=prompt('Stocca bilico #'+numero+'\nInserisci la postazione definitiva:','');if(nuovaPos===null)return;nuovaPos=nuovaPos.trim().toUpperCase();if(!nuovaPos)return;if(!isIllimitata(nuovaPos)){var occ=Object.values(BL).find(function(x){return(x.locazione||'').toUpperCase()===nuovaPos&&x.numero!==numero;});if(occ)return tst('Postazione '+nuovaPos+' occupata da #'+occ.numero,'er');}if(UC&&fdb){fdb.collection('bilici').doc(numero).update({locazione:nuovaPos}).then(function(){dbAS({tipo:'TRASFERIMENTO',numero:numero,locazioneDa:'ARRIVI',locazioneA:nuovaPos,bancali:b.bancali,ts:new Date().toISOString()});suonoEntrata();tst('Bilico #'+numero+' → '+nuovaPos,'ok');}).catch(function(e){tst('Errore: '+e.message,'er');});}else{b.locazione=nuovaPos;svLoc();suonoEntrata();tst('Bilico #'+numero+' → '+nuovaPos,'ok');}}
 // effettiva visibilità all'operatore: oggi auto-visibile (salvo deselezione), altre date solo se spuntate
 function _carPrepVisibile(p,oggiStr){if(p.prepVis===true)return true;if(p.prepVis===false)return false;return (p.data||'')===oggiStr;}
+var cpSort='data',cpDir=1;
+function sortPrep(c){if(cpSort===c)cpDir*=-1;else{cpSort=c;cpDir=1;}renderCarrellistaPreparare();}
 function renderCarrellistaPreparare(){
   var el=document.getElementById('car-preparare-list');if(!el)return;
   var oggiStr=datLocale(new Date());
@@ -2976,7 +3008,7 @@ function renderCarrellistaPreparare(){
   if(fNum)lista=lista.filter(function(p){return String(p.numero||'').toUpperCase().indexOf(fNum)!==-1;});
   if(fData)lista=lista.filter(function(p){return (p.data||'')===fData;});
   if(!lista.length){el.innerHTML='<div class="empty"><p>Nessun bilico da preparare</p></div>';return;}
-  lista.sort(function(a,b){return (a.data||'')<(b.data||'')?-1:((a.data||'')>(b.data||'')?1:0);});
+  lista.sort(function(a,b){var va,vb;if(cpSort==='plt'){va=a.bancaliProg||0;vb=b.bancaliProg||0;}else if(cpSort==='locazione'){va=((BL[a.numero]&&BL[a.numero].locazione)||'').toUpperCase();vb=((BL[b.numero]&&BL[b.numero].locazione)||'').toUpperCase();}else if(cpSort==='numero'){va=String(a.numero||'').toUpperCase();vb=String(b.numero||'').toUpperCase();}else{va=a.data||'';vb=b.data||'';}return va<vb?-cpDir:(va>vb?cpDir:0);});
   var rows=lista.map(function(p){
     var b=BL[p.numero];
     var preparato=!!(p.id&&PROG_PREPARATO[p.id]);
@@ -2992,7 +3024,7 @@ function renderCarrellistaPreparare(){
       '<td style="text-align:right;"><button onclick="segnaPreparatoDesk(\''+(p.id||'')+'\','+preparato+',\''+p.numero+'\')" class="btn '+(preparato?'bgh':'tgn')+'" style="padding:4px 10px;font-size:11px;white-space:nowrap;">'+(preparato?'↩ Annulla':'✅ Preparato')+'</button></td>'+
       '</tr>';
   }).join('');
-  el.innerHTML='<div style="overflow-x:auto;background:#111214;border-radius:var(--r);"><table class="tbl" style="width:100%;"><thead><tr><th style="text-align:center;">👁</th><th>Bilico</th><th>Locazione</th><th style="text-align:center;">PLT</th><th>Data Carico</th><th style="text-align:right;">Preparato</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  el.innerHTML='<div style="overflow-x:auto;background:#111214;border-radius:var(--r);"><table class="tbl" style="width:100%;"><thead><tr><th style="text-align:center;">👁</th><th onclick="sortPrep(\'numero\')" style="cursor:pointer;">Bilico <span class="sort-ic">↕</span></th><th onclick="sortPrep(\'locazione\')" style="cursor:pointer;">Locazione <span class="sort-ic">↕</span></th><th onclick="sortPrep(\'plt\')" style="text-align:center;cursor:pointer;">PLT <span class="sort-ic">↕</span></th><th onclick="sortPrep(\'data\')" style="cursor:pointer;">Data Carico <span class="sort-ic">↕</span></th><th style="text-align:right;">Preparato</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 function toggleCarPrepVis(fonte,id,checked){if(!id)return;if(!UC||!fdb)return tst('Connessione cloud necessaria','er');
   // aggiornamento ottimistico locale + render immediato
@@ -3002,37 +3034,58 @@ function toggleCarPrepVis(fonte,id,checked){if(!id)return;if(!UC||!fdb)return ts
   renderCarrellistaPreparare();
   fdb.collection(fonte).doc(id).update({prepVis:checked}).catch(function(e){tst('Errore: '+e.message,'er');});}
 function segnaPreparatoDesk(docId,giaSegnato,numero){if(!docId)return tst('ID non disponibile','er');if(!UC||!fdb)return tst('Connessione cloud necessaria','er');if(giaSegnato){fdb.collection('prog_preparato').doc(docId).delete().catch(function(){});tst('Preparazione annullata','ok');}else{fdb.collection('prog_preparato').doc(docId).set({ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});var bPar=BL[numero];if(bPar){var vl=bPar.locazione;fdb.collection('bilici').doc(numero).update({locazione:'PARTENZE'}).then(function(){dbAS({tipo:'TRASFERIMENTO',numero:numero,locazioneDa:vl,locazioneA:'PARTENZE',bancali:bPar.bancali,ts:new Date().toISOString()});}).catch(function(){});}suonoEntrata();tst('Bilico preparato ✅','ok');}}
+var cmSort='data',cmDir=1;
+function sortCarMiss(c){if(cmSort===c)cmDir*=-1;else{cmSort=c;cmDir=1;}renderCarrellistaMissioni();}
+function toggleCarMiss(cid){var b=document.getElementById('cmiss-body-'+cid),chev=document.getElementById('cmiss-chev-'+cid);if(!b)return;var open=b.style.display!=='none';b.style.display=open?'none':'';if(chev)chev.textContent=open?'▶':'▼';}
 function renderCarrellistaMissioni(){
   var el=document.getElementById('car-missioni-desk-list');if(!el)return;
+  var fNum=((document.getElementById('cm-f-num')||{}).value||'').trim().toUpperCase();
+  var fData=((document.getElementById('cm-f-data')||{}).value||'').trim();
   var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';});
+  if(fNum)lista=lista.filter(function(m){return (m.bilici||[]).some(function(b){return String(b.numero||'').toUpperCase().indexOf(fNum)!==-1;});});
+  if(fData)lista=lista.filter(function(m){return (m.data||'')===fData;});
   if(!lista.length){el.innerHTML='<div class="empty"><p>Nessuna missione attiva</p></div>';return;}
-  el.innerHTML=lista.map(function(m){
-    var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;
-    var pltConf=(m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
-    var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
-    var lbl=m.tipo==='locazione'?('📍 SMEZZI'+(m.locazione?' — '+m.locazione:'')):'✋ Picking';
-    var statoCol=m.stato==='completata'?'#00bfff':(m.stato==='in_corso'?'var(--ob)':'var(--tx2)');
-    var statoIco=m.stato==='completata'?'🟢':(m.stato==='in_corso'?'🟡':'⏳');
-    var prog=tot>0?Math.round(conf/tot*100):0;
-    return '<div class="car-row" onclick="apriDettaglioMissione(\''+m.id+'\')" style="cursor:pointer;">';
+  var statoOrd={attesa:0,in_corso:1,completata:2};
+  var sv=function(m){if(cmSort==='stato')return statoOrd[m.stato]!=null?statoOrd[m.stato]:0;if(cmSort==='tipo')return m.tipo||'';if(cmSort==='bilici')return (m.bilici||[]).length;if(cmSort==='plt')return (m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);return m.data||'';};
+  lista.sort(function(a,b){var va=sv(a),vb=sv(b);return va<vb?-cmDir:(va>vb?cmDir:0);});
+  var statoLblM={attesa:'&#x23F3; Attesa',in_corso:'&#x1F7E1; In corso',completata:'&#x1F7E2; Completata'};
+  var bar=function(p){return '<div style="background:var(--sf2);border-radius:3px;height:4px;margin-top:3px;"><div style="background:var(--pb);height:100%;width:'+p+'%;border-radius:3px;"></div></div>';};
+  var rows=lista.map(function(m){
+    var bil=m.bilici||[];
+    var conf=bil.filter(function(b){return b.confermato;}).length,tot=bil.length;
+    var pltTot=bil.reduce(function(s,b){return s+(b.bancaliProg||0);},0);
+    var pltConf=bil.filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0));},0);
+    var df=m.data?m.data.split('-').reverse().join('/'):'&#x2014;';
+    var lbl=m.tipo==='locazione'?'&#x1F4CD; Carico Smezzi'+(m.locazione?' &#x2014; '+m.locazione:''):'&#x270B; Picking';
+    var statoLbl=statoLblM[m.stato]||m.stato;
+    var progB=tot>0?Math.round(conf/tot*100):0,progP=pltTot>0?Math.round(pltConf/pltTot*100):0;
+    var cid=m.id.replace(/[^a-zA-Z0-9_-]/g,'_');
+    var r='<tr onclick="toggleCarMiss(\''+cid+'\')" style="cursor:pointer;">';
+    r+='<td><span id="cmiss-chev-'+cid+'" style="color:var(--tx2);">&#x25B6;</span> <strong style="color:var(--pb);">'+lbl+'</strong></td>';
+    r+='<td style="white-space:nowrap;">'+df+'</td>';
+    r+='<td><span class="miss-stato '+(m.stato||'attesa')+'">'+statoLbl+'</span></td>';
+    r+='<td style="min-width:90px;"><div style="font-size:12px;">&#x1F69B; '+conf+'/'+tot+'</div>'+bar(progB)+'</td>';
+    r+='<td style="min-width:90px;"><div style="font-size:12px;color:var(--ob);">&#x1F4E6; '+pltConf+'/'+pltTot+'</div>'+bar(progP)+'</td>';
+    r+='</tr>';
+    r+='<tr id="cmiss-body-'+cid+'" style="display:none;"><td colspan="5" style="background:var(--bg);padding:10px 14px;">';
+    r+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;">';
+    bil.forEach(function(b,i){
+      var bPlt=b.confermato?(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0)):(b.bancaliProg||0);
+      var bInMag=BL[b.numero];
+      var _loc=b.confermato?(b.locazioneConfermata||''):(bInMag?bInMag.locazione:'');
+      r+='<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 10px;">';
+      r+='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:900;">#'+b.numero+'</div>';
+      r+='<div style="font-size:11px;color:'+(_loc?'var(--ob)':'var(--rb)')+';">&#x1F4E6; '+bPlt+' PLT &#xB7; &#x1F4CD; '+(_loc||'fuori magazzino')+'</div>';
+      if(b.nota)r+='<div style="font-size:11px;color:var(--bb);margin-top:3px;">&#x1F4DD; '+b.nota+'</div>';
+      r+='<div style="font-size:13px;margin-top:4px;">'+(b.confermato?'&#x2705; Confermato':'&#x23F3; In attesa')+'</div>';
+      if(m.stato!=='caricata'){if(b.confermato)r+='<button onclick="togliFlgDesk(\''+m.id+'\','+i+')" style="background:none;border:1px solid var(--rd);border-radius:4px;color:var(--rb);padding:2px 7px;font-size:10px;margin-top:4px;cursor:pointer;">&#x21A9; Togli</button>';else r+='<button onclick="confermaBilicoDesk(\''+m.id+'\','+i+')" style="background:var(--gn);border:none;border-radius:4px;color:#fff;padding:3px 10px;font-size:10px;margin-top:4px;cursor:pointer;font-weight:700;">&#x270B; Conferma</button>';}
+      r+='</div>';
+    });
+    r+='</div></td></tr>';
+    return r;
   }).join('');
-  // Versione corretta
-  el.innerHTML=lista.map(function(m){
-    var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length;
-    var pltConf=(m.bilici||[]).filter(function(b){return b.confermato;}).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
-    var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
-    var lbl=m.tipo==='locazione'?('📍 SMEZZI'+(m.locazione?' — '+m.locazione:'')):'✋ Picking';
-    var statoCol=m.stato==='completata'?'#00bfff':(m.stato==='in_corso'?'var(--ob)':'var(--tx2)');
-    var statoIco=m.stato==='completata'?'🟢':(m.stato==='in_corso'?'🟡':'⏳');
-    var prog=tot>0?Math.round(conf/tot*100):0;
-    return '<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;cursor:pointer;" onclick="apriDettaglioMissione(\''+m.id+'\')">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'+
-      '<strong style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;">'+lbl+'</strong>'+
-      '<span style="font-size:14px;color:'+statoCol+';">'+statoIco+'</span></div>'+
-      '<div style="font-size:12px;color:var(--tx2);">📅 '+(m.data||'—')+' · 🚛 '+conf+'/'+tot+' · 📦 '+pltConf+'/'+pltTot+' PLT</div>'+
-      '<div style="background:var(--bd);border-radius:3px;height:3px;margin-top:6px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>'+
-      '</div>';
-  }).join('');
+  el.innerHTML='<div style="overflow-x:auto;background:#111214;border-radius:var(--r);"><table class="tbl" style="width:100%;"><thead><tr><th onclick="sortCarMiss(\'tipo\')" style="cursor:pointer;">Tipo <span class="sort-ic">&#x2195;</span></th><th onclick="sortCarMiss(\'data\')" style="cursor:pointer;">Data <span class="sort-ic">&#x2195;</span></th><th onclick="sortCarMiss(\'stato\')" style="cursor:pointer;">Stato <span class="sort-ic">&#x2195;</span></th><th onclick="sortCarMiss(\'bilici\')" style="cursor:pointer;">Bilici <span class="sort-ic">&#x2195;</span></th><th onclick="sortCarMiss(\'plt\')" style="cursor:pointer;">PLT <span class="sort-ic">&#x2195;</span></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
 }
 
 // ═══ UTENTI ═══

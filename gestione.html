@@ -96,16 +96,16 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 .page.active{display:block;}
 
 /* ── STAT STRIP ── */
-.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bd);margin-bottom:1px;}
-.stat-card{background:var(--sf);padding:12px 8px;}
-.stat-card .num{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;}
+.stat-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--bd);margin-bottom:1px;}
+.stat-card{background:var(--sf);padding:8px 4px;}
+.stat-card .num{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;line-height:1;}
 .stat-card .num.og{color:var(--ob);}
 .stat-card .num.cy{color:var(--cb);}
 .stat-card .num.gn{color:var(--gb);}
 .stat-card .num.rd{color:var(--rb);}
 .stat-card .num.pu{color:var(--pb);}
-.stat-card .lab{font-size:11px;color:var(--tx2);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
-.stat-card .sub{font-size:12px;color:var(--tx3);margin-top:2px;}
+.stat-card .lab{font-size:9px;color:var(--tx2);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.2px;}
+.stat-card .sub{font-size:9px;color:var(--tx3);margin-top:1px;}
 
 /* ── SEZIONE ── */
 .section{padding:20px 16px 8px;}
@@ -449,62 +449,63 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <!-- ────────────── OGGI ────────────── -->
 <div class="page active" id="page-oggi">
 
-  <!-- Stats 2x4 -->
+  <!-- Stats 3x5 -->
   <div class="stat-strip">
-    <div class="stat-card"><div class="num og" id="s-stock-secco">0</div><div class="lab">Stock Secco</div><div class="sub" id="s-disp-secco">— PLT liberi</div></div>
-    <div class="stat-card"><div class="num cy" id="s-stock-fresco">0</div><div class="lab">Stock Fresco</div><div class="sub" id="s-disp-fresco">— PLT liberi</div></div>
-    <div class="stat-card"><div class="num gn" id="s-plt-in">0</div><div class="lab">PLT Entrati oggi</div></div>
-    <div class="stat-card"><div class="num rd" id="s-plt-out">0</div><div class="lab">PLT Usciti oggi</div></div>
-    <div class="stat-card"><div class="num og" id="s-bilici-secco">—</div><div class="lab">Bilici disp. Secco</div></div>
+    <!-- riga 1: stock + disp plt + bilici secco -->
+    <div class="stat-card"><div class="num og" id="s-stock-secco">0</div><div class="lab">Stock Secco</div></div>
+    <div class="stat-card"><div class="num og" id="s-disp-secco-num">—</div><div class="lab">Disp PLT Secco</div></div>
+    <div class="stat-card"><div class="num cy" id="s-stock-fresco">0</div><div class="lab">Stock Fresco</div></div>
+    <div class="stat-card"><div class="num cy" id="s-disp-fresco-num">—</div><div class="lab">Disp PLT Fresco</div></div>
+    <div class="stat-card"><div class="num og" id="s-bilici-secco">—</div><div class="lab">Bilici Secco</div></div>
+    <!-- riga 2: movimenti oggi + marchesi + mese -->
+    <div class="stat-card"><div class="num gn" id="s-plt-in">0</div><div class="lab">PLT In oggi</div></div>
+    <div class="stat-card"><div class="num rd" id="s-plt-out">0</div><div class="lab">PLT Out oggi</div></div>
     <div class="stat-card"><div class="num pu" id="s-marchesi">0</div><div class="lab">PLT Marchesi</div></div>
     <div class="stat-card" style="cursor:default;">
       <div class="num gn" id="s-plt-mese-in">0</div>
-      <div class="lab">⬆ PLT Entrati Mese</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px;">
-        <button onclick="navMeseGest(-1)" style="background:none;border:none;color:var(--gb);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">‹</button>
-        <span id="g-plt-mese-lbl" style="font-size:10px;color:var(--tx2);cursor:pointer;text-decoration:underline dotted;" onclick="apriSelettoreMeseGest()" title="Cambia mese"></span>
-        <button onclick="navMeseGest(1)" style="background:none;border:none;color:var(--gb);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">›</button>
+      <div class="lab">PLT In Mese</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:1px;margin-top:2px;">
+        <button onclick="navMeseGest(-1)" style="background:none;border:none;color:var(--gb);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;">‹</button>
+        <span id="g-plt-mese-lbl" style="font-size:8px;color:var(--tx2);cursor:pointer;text-decoration:underline dotted;" onclick="apriSelettoreMeseGest()" title="Cambia mese"></span>
+        <button onclick="navMeseGest(1)" style="background:none;border:none;color:var(--gb);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;">›</button>
       </div>
       <input type="month" id="g-mese-picker" style="display:none;position:absolute;" onchange="selezionaMeseGest(this.value)">
     </div>
     <div class="stat-card" style="cursor:default;">
       <div class="num rd" id="s-plt-mese-out">0</div>
-      <div class="lab">⬇ PLT Usciti Mese</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px;">
-        <button onclick="navMeseGest(-1)" style="background:none;border:none;color:var(--rb);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">‹</button>
-        <span id="g-plt-mese-lbl2" style="font-size:10px;color:var(--tx2);"></span>
-        <button onclick="navMeseGest(1)" style="background:none;border:none;color:var(--rb);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">›</button>
+      <div class="lab">PLT Out Mese</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:1px;margin-top:2px;">
+        <button onclick="navMeseGest(-1)" style="background:none;border:none;color:var(--rb);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;">‹</button>
+        <span id="g-plt-mese-lbl2" style="font-size:8px;color:var(--tx2);"></span>
+        <button onclick="navMeseGest(1)" style="background:none;border:none;color:var(--rb);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;">›</button>
       </div>
     </div>
-    <!-- riga 3: 3 box oggi + 1 cella vuota -->
+    <!-- riga 3: oggi + 2 celle vuote -->
     <div class="stat-card" onclick="apriSetAttesi('secco')" style="cursor:pointer;position:relative;">
-      <div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--tx3);">✏️</div>
-      <div style="display:flex;align-items:baseline;gap:3px;">
+      <div style="position:absolute;top:3px;right:4px;font-size:8px;color:var(--tx3);">✏️</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
         <div class="num og" id="s-ent-secco-oggi">0</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--tx2);">/<span id="s-ent-secco-att">?</span></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);">/<span id="s-ent-secco-att">?</span></div>
       </div>
       <div class="lab">📦 Secco oggi</div>
-      <div class="sub">bilici entrati</div>
     </div>
     <div class="stat-card" onclick="apriSetAttesi('fresco')" style="cursor:pointer;position:relative;">
-      <div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--tx3);">✏️</div>
-      <div style="display:flex;align-items:baseline;gap:3px;">
+      <div style="position:absolute;top:3px;right:4px;font-size:8px;color:var(--tx3);">✏️</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
         <div class="num cy" id="s-ent-fresco-oggi">0</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--tx2);">/<span id="s-ent-fresco-att">?</span></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);">/<span id="s-ent-fresco-att">?</span></div>
       </div>
       <div class="lab">❄️ Fresco oggi</div>
-      <div class="sub">bilici entrati</div>
     </div>
     <div class="stat-card" onclick="apriSetAttesi('marchesi')" style="cursor:pointer;position:relative;">
-      <div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--tx3);">✏️</div>
-      <div style="display:flex;align-items:baseline;gap:3px;">
+      <div style="position:absolute;top:3px;right:4px;font-size:8px;color:var(--tx3);">✏️</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
         <div class="num pu" id="s-ent-march-oggi">0</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--tx2);">/<span id="s-ent-march-att">?</span></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--tx2);">/<span id="s-ent-march-att">?</span></div>
       </div>
       <div class="lab">🏭 Marchesi oggi</div>
-      <div class="sub">PLT entrati</div>
     </div>
-    <!-- 4a cella ultima riga: vuota -->
+    <div class="stat-card" style="background:var(--sf2);opacity:.3;"></div>
     <div class="stat-card" style="background:var(--sf2);opacity:.3;"></div>
   </div>
 
@@ -2652,8 +2653,7 @@ function _uiNow(){
   _s('s-stock-secco',stockSecco);_s('s-stock-fresco',stockFresco);
   _s('s-plt-in',pltIn);_s('s-plt-out',pltOut);
   _s('s-bilici-secco',biliciDispSecco);_s('s-marchesi',pltMarchesi);
-  var dDispS=document.getElementById('s-disp-secco');if(dDispS)dDispS.textContent=postiDispSecco!==null?postiDispSecco+' PLT liberi':'— (non configurato)';
-  var dDispF=document.getElementById('s-disp-fresco');if(dDispF)dDispF.textContent=postiDispFresc!==null?postiDispFresc+' PLT liberi':'— (non configurato)';
+  _s('s-disp-secco-num',postiDispSecco);_s('s-disp-fresco-num',postiDispFresc);
   var mc=document.getElementById('menu-mag-sub');if(mc)mc.textContent=lst.length+' bilici in magazzino';
   aggiornaBadgeCarrellista();aggiornaBadgeMissioni();
   aggiornaBoxAttesi();

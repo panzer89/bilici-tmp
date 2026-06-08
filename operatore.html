@@ -784,6 +784,7 @@ window.onload=function(){
     fdb=firebase.firestore();UC=true;
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent='CLOUD';
+    setTimeout(_qFlush,2000);
     // listeners realtime
     fdb.collection('bilici').onSnapshot(function(s){
       BL={};s.forEach(function(d){BL[d.id]=Object.assign({id:d.id},d.data());});
@@ -989,11 +990,44 @@ function suonoOk(){var ctx=getAudioCtx();if(!ctx)return;var t=ctx.currentTime;pl
 function suonoErr(){var ctx=getAudioCtx();if(!ctx)return;var t=ctx.currentTime;playTone(180,'square',.25,.2,t,ctx);playTone(140,'square',.2,.15,t+.18,ctx);}
 function suonoSirena(){var ctx=getAudioCtx();if(!ctx)return;var t=ctx.currentTime;for(var i=0;i<3;i++){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sawtooth';var s=t+i*0.28;o.frequency.setValueAtTime(880,s);o.frequency.linearRampToValueAtTime(660,s+.14);o.frequency.linearRampToValueAtTime(880,s+.28);g.gain.setValueAtTime(.18,s);g.gain.exponentialRampToValueAtTime(0.001,s+.28);o.start(s);o.stop(s+.28);}}
 
+// ═══ CODA STORICO (salvataggio locale di backup) ═══
+var _STQK='OP_ST_QUEUE_v1';
+function _qGet(){try{return JSON.parse(localStorage.getItem(_STQK)||'[]');}catch(e){return[];}}
+function _qSave(arr){try{localStorage.setItem(_STQK,JSON.stringify(arr));}catch(e){}}
+function _qAdd(id,d){var q=_qGet();q.push(Object.assign({},d,{_qid:id}));_qSave(q);}
+function _qDel(id){_qSave(_qGet().filter(function(x){return x._qid!==id;}));}
+function _qFlush(){
+  if(!UC||!fdb)return;
+  var q=_qGet();if(!q.length)return;
+  var tot=q.length,ok=0,fail=0;
+  function _check(){if(ok+fail<tot)return;if(ok>0)tst('📤 '+ok+' movimento/i in coda inviati ✅','ok');if(fail>0)tst('⚠️ '+fail+' movimento/i ancora in coda (rete instabile)','er');}
+  q.forEach(function(entry){
+    var d=Object.assign({},entry);var id=d._qid;delete d._qid;
+    fdb.collection('storico').doc(id).set(d)
+      .then(function(){_qDel(id);ok++;_check();})
+      .catch(function(){fail++;_check();});
+  });
+}
+
 // ═══ DB ═══
 function dbSB(id,d){if(UC)return fdb.collection('bilici').doc(id).set(d);BL[id]=d;return Promise.resolve();}
 function dbUB(id,d){if(UC)return fdb.collection('bilici').doc(id).update(d);Object.assign(BL[id],d);return Promise.resolve();}
 function dbDB(id){if(UC)return fdb.collection('bilici').doc(id).delete();delete BL[id];return Promise.resolve();}
-function dbAS(d){if(!d.operatore&&CURR_USER)d.operatore=CURR_USER.username;if(UC)return fdb.collection('storico').add(d);ST.unshift(Object.assign({id:'L'+Date.now()},d));return Promise.resolve();}
+function dbAS(d){
+  if(!d.operatore&&CURR_USER)d.operatore=CURR_USER.username;
+  var docId='S'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
+  _qAdd(docId,d);
+  ST.unshift(Object.assign({id:docId},d));
+  if(UC){
+    return fdb.collection('storico').doc(docId).set(d)
+      .then(function(){_qDel(docId);})
+      .catch(function(e){
+        ST=ST.filter(function(x){return x.id!==docId;});
+        tst('⚠️ Movimento in coda locale — sarà inviato al ripristino rete','er');
+      });
+  }
+  return Promise.resolve();
+}
 
 // ═══ BADGES ═══
 function aggiornaBadges(){
@@ -1557,8 +1591,9 @@ function segnaPreparato(docId,giaSegnato,numero){
 function renderCarMissioni(){
   var el=document.getElementById('car-missioni-list');if(!el)return;
   var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';});
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
-  el.innerHTML=lista.map(function(m){
+  var caricati=MISSIONI.filter(function(m){return m.stato==='caricata';}).sort(function(a,b){return(b.tsChiusura||0)-(a.tsChiusura||0);}).slice(0,10);
+  if(!lista.length&&!caricati.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
+  var html=lista.map(function(m){
     var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length;
     var tot=(m.bilici||[]).length;
     var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
@@ -1576,6 +1611,21 @@ function renderCarMissioni(){
       '<div style="background:var(--sf2);border-radius:3px;height:5px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>'+
       '</div>';
   }).join('');
+  if(caricati.length){
+    html+='<div style="padding:10px 2px 6px;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;border-top:1px solid var(--bd);margin-top:4px;margin-bottom:8px;">✅ Già caricati</div>';
+    html+=caricati.map(function(m){
+      var tot=(m.bilici||[]).length;
+      var lbl=m.tipo==='locazione'?('📍 SMEZZI '+(m.locazione?'— '+m.locazione:'')):'✋ Picking Manuale';
+      var pltConf=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
+      return '<div style="background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;opacity:0.55;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+        '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;color:var(--tx2);">'+lbl+'</span>'+
+        '<span style="font-size:18px;">✅</span></div>'+
+        '<div style="font-size:12px;color:var(--tx3);margin-top:3px;">📅 '+(m.data||'—')+' · 🚛 '+tot+' bilici · 📦 '+pltConf+' PLT</div>'+
+        '</div>';
+    }).join('');
+  }
+  el.innerHTML=html;
 }
 
 // ═══ MISSIONI ═══
@@ -1583,8 +1633,9 @@ function renderMissioni(){
   var el=document.getElementById('missioni-list');if(!el)return;
   var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';})
     .sort(function(a,b){return(a.ts||0)-(b.ts||0);});
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
-  el.innerHTML=lista.map(function(m){
+  var caricati=MISSIONI.filter(function(m){return m.stato==='caricata';}).sort(function(a,b){return(b.tsChiusura||0)-(a.tsChiusura||0);}).slice(0,10);
+  if(!lista.length&&!caricati.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
+  var html=lista.map(function(m){
     var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length;
     var tot=(m.bilici||[]).length;
     var pltTot=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);
@@ -1604,6 +1655,25 @@ function renderMissioni(){
     s+='</div></div>';
     return s;
   }).join('');
+  if(caricati.length){
+    html+='<div style="padding:10px 2px 6px;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;border-top:1px solid var(--bd);margin-top:4px;margin-bottom:8px;">✅ Già caricati</div>';
+    html+=caricati.map(function(m){
+      var tot=(m.bilici||[]).length;
+      var lbl=m.tipo==='locazione'?('📍 Carico Smezzi'+(m.locazione?' — '+m.locazione:'')):'✋ Picking Manuale';
+      var pltConf=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
+      var s='<div class="miss-card" style="opacity:0.5;border-color:var(--bd);">';
+      s+='<div class="miss-card-hdr">';
+      s+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">';
+      s+='<div class="miss-card-title" style="color:var(--tx2);">'+lbl+'</div>';
+      s+='<span style="font-size:18px;">✅</span></div>';
+      s+='<div class="miss-card-meta">📅 '+(m.data||'—')+' · 🚛 '+tot+' bilici · 📦 '+pltConf+' PLT</div>';
+      if(m.nota)s+='<div style="font-size:12px;color:var(--tx3);margin-top:2px;">📝 '+m.nota+'</div>';
+      s+='<div class="miss-card-prog"><div class="miss-card-bar" style="width:100%;background:var(--gn);"></div></div>';
+      s+='</div></div>';
+      return s;
+    }).join('');
+  }
+  el.innerHTML=html;
 }
 
 function apriDettaglioMissione(id){

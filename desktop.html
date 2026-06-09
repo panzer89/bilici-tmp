@@ -1752,7 +1752,7 @@ window.onload=function(){
     if(e.altKey&&e.key==='s'){goP('storico');}
   });
 };
-function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
+function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();if(l.indexOf('M-')===0)return true;for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
 
 // ═══ AUTH ═══
 function doLogin(){

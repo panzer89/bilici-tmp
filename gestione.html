@@ -602,17 +602,17 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
       <span class="menu-tile-badge" id="badge-carrellista" style="display:none;">0</span>
       <div class="menu-tile-arr">›</div>
     </div>
-  </div>
-
-  <!-- Strumenti -->
-  <div class="menu-section-title">Strumenti</div>
-  <div class="menu-group">
     <div class="menu-tile" onclick="apriMissioni()">
       <div class="menu-tile-icon pu">&#x1F4CB;</div>
       <div><div class="menu-tile-label">Missioni</div><div class="menu-tile-sub">Gestione carico smezzi / picking</div></div>
       <span class="menu-tile-badge" id="badge-miss-menu" style="display:none;">0</span>
       <div class="menu-tile-arr">›</div>
     </div>
+  </div>
+
+  <!-- Strumenti -->
+  <div class="menu-section-title">Strumenti</div>
+  <div class="menu-group">
     <div class="menu-tile" onclick="apriStorico()">
       <div class="menu-tile-icon tx">&#x1F4CB;</div>
       <div><div class="menu-tile-label">Storico Movimenti</div><div class="menu-tile-sub">Entrate, uscite, modifiche</div></div>
@@ -847,7 +847,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <div class="sheet-handle"></div>
   <div class="sheet-title" style="color:var(--bb);">&#x270F;&#xFE0F; Modifica Bilico <button class="close" onclick="chiO('sh-edit')">&#x2715;</button></div>
   <div class="sheet-body">
-    <div class="fg"><label class="lbl">Numero</label><input class="inp big" id="edit-n" type="number" inputmode="numeric" autocomplete="off"></div>
+    <div class="fg"><label class="lbl">Numero</label><div class="num-row"><input class="pfx" id="edit-n-pfx" type="text" maxlength="1" placeholder="A" oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');" onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('edit-n').focus();}"><input class="inp big" id="edit-n" type="number" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0;"></div></div>
     <div class="fg"><label class="lbl">Locazione</label><div class="loc-row"><input id="edit-l" type="text" class="inp" autocomplete="off" style="text-transform:uppercase;font-size:19px;font-weight:700;"><button class="qr-btn" onclick="apriQR('edit-l')">&#x1F4F7;</button></div></div>
     <div class="fg"><label class="lbl">Bancali</label><div class="counter"><button class="cnt-btn" onclick="stp('edit-b',-1)">&#x2212;</button><input class="cnt-val" id="edit-b" type="number" min="0" inputmode="numeric"><button class="cnt-btn" onclick="stp('edit-b',1)">+</button></div></div>
     <div class="fg"><label class="lbl">Data entrata</label><input class="inp" id="edit-d" type="datetime-local"></div>
@@ -1298,12 +1298,13 @@ window.onload=function(){
     fdb=firebase.firestore();UC=true;
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent='CLOUD';
-    fdb.collection('bilici').onSnapshot(function(s){BL={};s.forEach(function(d){BL[d.id]=Object.assign({id:d.id},d.data());});ui();aggiornaBadgeCarrellista();});
-    fdb.collection('missioni').onSnapshot(function(s){MISSIONI=[];s.forEach(function(d){MISSIONI.push(Object.assign({id:d.id},d.data()));});aggiornaBadgeMissioni();renderDashMissioni();var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-menu')renderMissioni();});
-    fdb.collection('storico').orderBy('ts','desc').onSnapshot(function(s){ST=[];s.forEach(function(d){ST.push(Object.assign({id:d.id},d.data()));});ui();});
+    fdb.collection('bilici').onSnapshot(function(s){BL={};s.forEach(function(d){BL[d.id]=Object.assign({id:d.id},d.data());});ui();aggiornaBadgeCarrellista();_markLight('bilici');});
+    fdb.collection('missioni').onSnapshot(function(s){MISSIONI=[];s.forEach(function(d){MISSIONI.push(Object.assign({id:d.id},d.data()));});aggiornaBadgeMissioni();renderDashMissioni();var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-menu')renderMissioni();_markLight('missioni');});
     fdb.collection('settings').doc('struttura').onSnapshot(function(doc){if(doc.exists){var d=doc.data();try{if(d.postiPlt!=null)localStorage.setItem('MAG_POSTI_PLT',d.postiPlt);if(d.postiFresc!=null)localStorage.setItem('MAG_POSTI_FRESCO',d.postiFresc);if(d.pltBilico!=null)localStorage.setItem('MAG_PLT_BILICO',d.pltBilico);if(d.pltBilicoFresc!=null)localStorage.setItem('MAG_PLT_BILICO_FRESCO',d.pltBilicoFresc);}catch(x){}ui();}});
     caricaProg();caricaProgDomani();
-    fdb.collection('prog_preparato').onSnapshot(function(s){PROG_PREPARATO={};s.forEach(function(d){PROG_PREPARATO[d.id]=true;});aggiornaBadgeCarrellista();});
+    fdb.collection('prog_preparato').onSnapshot(function(s){PROG_PREPARATO={};s.forEach(function(d){PROG_PREPARATO[d.id]=true;});aggiornaBadgeCarrellista();_markLight('prog_preparato');});
+    // lo storico (pesante) parte SOLO dopo che le collezioni leggere hanno caricato — fallback di sicurezza a 3.5s
+    setTimeout(_attachStorico,3500);
     setTimeout(controllaGiorno,2000);
     initEntratteAttese();
     tentaAutoLogin();
@@ -1312,6 +1313,18 @@ window.onload=function(){
   document.getElementById('imp-file').addEventListener('change',leggiFileImport);
 };
 function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();if(l.indexOf('M-')===0)return true;for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
+
+// ═══ CARICAMENTO STORICO DIFFERITO (dashboard più veloce) ═══
+var _storicoAttached=false,_lightReady={};
+function _attachStorico(){
+  if(_storicoAttached||!UC||!fdb)return;_storicoAttached=true;
+  fdb.collection('storico').orderBy('ts','desc').onSnapshot(function(s){ST=[];s.forEach(function(d){ST.push(Object.assign({id:d.id},d.data()));});ui();});
+}
+function _markLight(name){
+  _lightReady[name]=true;
+  var attese=['bilici','missioni','prog','prog_domani','prog_preparato'];
+  if(attese.every(function(k){return _lightReady[k];}))setTimeout(_attachStorico,150);
+}
 
 // ═══ AUTH ═══
 function doLogin(){
@@ -1442,7 +1455,7 @@ function controllaPltBilico(numero,nuoviPlt,onProceed){
 }
 
 // ═══ PROG OGGI ═══
-function caricaProg(){if(!UC){try{PROG=JSON.parse(localStorage.getItem('PROG_v1')||'[]');}catch(x){PROG=[];}renderProg();return;}fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(snap){PROG=[];snap.forEach(function(d){PROG.push(Object.assign({id:d.id},d.data()));});reconcileOrdini();renderProg();aggiornaBadgePianif();aggTuttiOrdini();renderCalendario();aggiornaBadgeCarrellista();var moC=document.getElementById('sh-cal');if(CAL_GIORNO_SEL&&moC&&moC.classList.contains('open'))renderCalModalList();});}
+function caricaProg(){if(!UC){try{PROG=JSON.parse(localStorage.getItem('PROG_v1')||'[]');}catch(x){PROG=[];}renderProg();return;}fdb.collection('prog').orderBy('ts','asc').onSnapshot(function(snap){PROG=[];snap.forEach(function(d){PROG.push(Object.assign({id:d.id},d.data()));});reconcileOrdini();renderProg();aggiornaBadgePianif();aggTuttiOrdini();renderCalendario();aggiornaBadgeCarrellista();var moC=document.getElementById('sh-cal');if(CAL_GIORNO_SEL&&moC&&moC.classList.contains('open'))renderCalModalList();_markLight('prog');});}
 function salvaProg(){if(!UC)try{localStorage.setItem('PROG_v1',JSON.stringify(PROG));}catch(x){}}
 // ═══ AUTO-RIALLINEAMENTO ORDINI (self-healing) ═══
 var _reconcileBusy={};
@@ -1487,7 +1500,7 @@ function caricaVeloce(num){
 }
 
 // ═══ PROG DOMANI ═══
-function caricaProgDomani(){if(!UC){try{PROG_DOMANI=JSON.parse(localStorage.getItem('PROG_DOMANI_v1')||'[]');}catch(x){PROG_DOMANI=[];}renderProgDomani();return;}fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(snap){PROG_DOMANI=[];snap.forEach(function(d){PROG_DOMANI.push(Object.assign({id:d.id},d.data()));});controllaGiorno();reconcileOrdini();renderProgDomani();aggTuttiOrdini();renderCalendario();var moC=document.getElementById('sh-cal');if(CAL_GIORNO_SEL&&moC&&moC.classList.contains('open'))renderCalModalList();});fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(snap){CAL_DATA={};snap.forEach(function(doc){var item=Object.assign({id:doc.id},doc.data());if(!item.data)return;if(!CAL_DATA[item.data])CAL_DATA[item.data]=[];CAL_DATA[item.data].push(item);});reconcileOrdini();renderCalendario();aggTuttiOrdini();var moC=document.getElementById('sh-cal');if(CAL_GIORNO_SEL&&moC&&moC.classList.contains('open'))renderCalModalList();});}
+function caricaProgDomani(){if(!UC){try{PROG_DOMANI=JSON.parse(localStorage.getItem('PROG_DOMANI_v1')||'[]');}catch(x){PROG_DOMANI=[];}renderProgDomani();return;}fdb.collection('prog_domani').orderBy('ts','asc').onSnapshot(function(snap){PROG_DOMANI=[];snap.forEach(function(d){PROG_DOMANI.push(Object.assign({id:d.id},d.data()));});controllaGiorno();reconcileOrdini();renderProgDomani();aggTuttiOrdini();renderCalendario();var moC=document.getElementById('sh-cal');if(CAL_GIORNO_SEL&&moC&&moC.classList.contains('open'))renderCalModalList();_markLight('prog_domani');});fdb.collection('prog_calendario').orderBy('data','asc').onSnapshot(function(snap){CAL_DATA={};snap.forEach(function(doc){var item=Object.assign({id:doc.id},doc.data());if(!item.data)return;if(!CAL_DATA[item.data])CAL_DATA[item.data]=[];CAL_DATA[item.data].push(item);});reconcileOrdini();renderCalendario();aggTuttiOrdini();var moC=document.getElementById('sh-cal');if(CAL_GIORNO_SEL&&moC&&moC.classList.contains('open'))renderCalModalList();});}
 function salvaProgDomani(){if(!UC)try{localStorage.setItem('PROG_DOMANI_v1',JSON.stringify(PROG_DOMANI));}catch(x){}}
 function aggProgDomani(val,nota,bancProg){
   if(!val)return tst('Inserisci il numero bilico','er');
@@ -1768,10 +1781,11 @@ function confermaTrasferisci(){
 }
 
 // ═══ MODIFICA / ELIMINA BILICO ═══
-function apriModifica(num){var b=BL[num];if(!b)return;editKey=num;document.getElementById('edit-n').value=b.numero;document.getElementById('edit-l').value=b.locazione;document.getElementById('edit-b').value=b.bancali;document.getElementById('edit-nt').value=b.note||'';try{var d=new Date(b.ts),pad=function(x){return String(x).padStart(2,'0');};document.getElementById('edit-d').value=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}catch(x){}aprO('sh-edit');}
+function apriModifica(num){var b=BL[num];if(!b)return;editKey=num;var _mN=String(b.numero||'').toUpperCase(),_mM=_mN.match(/^([A-Za-z]?)(.*)$/);document.getElementById('edit-n-pfx').value=_mM?_mM[1]:'';document.getElementById('edit-n').value=_mM?_mM[2]:_mN;document.getElementById('edit-l').value=b.locazione;document.getElementById('edit-b').value=b.bancali;document.getElementById('edit-nt').value=b.note||'';try{var d=new Date(b.ts),pad=function(x){return String(x).padStart(2,'0');};document.getElementById('edit-d').value=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}catch(x){}aprO('sh-edit');}
 function salvaModifica(){
   if(!editKey)return;
-  var nuovoN=String(document.getElementById('edit-n').value||'').trim().toUpperCase();
+  var _ep=String(document.getElementById('edit-n-pfx').value||'').trim().toUpperCase();
+  var nuovoN=(_ep+String(document.getElementById('edit-n').value||'').trim()).toUpperCase();
   var nuovaL=document.getElementById('edit-l').value.trim().toUpperCase();
   var nuovoB=parseInt(document.getElementById('edit-b').value)||0;
   var nuovoNt=document.getElementById('edit-nt').value.trim();

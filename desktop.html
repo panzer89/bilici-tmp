@@ -1333,7 +1333,12 @@ input, select, textarea { font-family: inherit; }
   <div class="mdl">
     <div class="mha"></div>
     <div class="mtt bb">&#x270F;&#xFE0F; Modifica Bilico</div>
-    <div class="fg"><label class="fl">Numero</label><input class="fi big" id="edit-n" type="number" inputmode="numeric"></div>
+    <div class="fg"><label class="fl">Numero</label>
+      <div class="num-row">
+        <input class="pfx" id="edit-n-pfx" type="text" maxlength="1" placeholder="A" oninput="this.value=this.value.toUpperCase().replace(/[^A-Za-z]/g,'');" onkeydown="if(this.value.length===1&&event.key!=='Backspace'){event.preventDefault();document.getElementById('edit-n').focus();}">
+        <input class="fi big" id="edit-n" type="number" placeholder="905" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0;">
+      </div>
+    </div>
     <div class="fg"><label class="fl">Locazione</label><div class="loc-row"><input class="fi" id="edit-l" type="text" style="text-transform:uppercase;"><button class="qr-btn" onclick="apriQR('edit-l')">&#x1F4F7;</button></div></div>
     <div class="fg"><label class="fl">Bancali</label><div class="crow"><button class="cbt" onclick="stp('edit-b',-1)">&#x2212;</button><input class="cvl" id="edit-b" type="number" min="0" inputmode="numeric"><button class="cbt" onclick="stp('edit-b',1)">+</button></div></div>
     <div class="fg"><label class="fl">Data entrata</label><input class="fi" id="edit-d" type="datetime-local"></div>
@@ -2114,8 +2119,8 @@ function confermaTrasferisci(){if(!trasfKey)return;var b=BL[trasfKey];if(!b)retu
 
 // ═══ MODIFICA / ELIMINA BILICO ═══
 var editKey=null;
-function apriModifica(num){var b=BL[num];if(!b)return;editKey=num;document.getElementById('edit-n').value=b.numero;document.getElementById('edit-l').value=b.locazione;document.getElementById('edit-b').value=b.bancali;document.getElementById('edit-nt').value=b.note||'';try{var d=new Date(b.ts),pad=function(x){return String(x).padStart(2,'0');};document.getElementById('edit-d').value=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}catch(x){}aprM('mo-edit');}
-function salvaModifica(){if(!editKey)return;var nuovoN=String(document.getElementById('edit-n').value||'').trim().toUpperCase();var nuovaL=document.getElementById('edit-l').value.trim().toUpperCase();var nuovoB=parseInt(document.getElementById('edit-b').value)||0;var nuovoNt=document.getElementById('edit-nt').value.trim();var nuovaD=document.getElementById('edit-d').value;if(!nuovoN)return tst('Inserisci numero bilico','er');if(!nuovaL)return tst('Inserisci locazione','er');if(nuovoB<=0)return tst('Inserisci almeno 1 bancale','er');var nuovoTs=nuovaD?new Date(nuovaD).toISOString():BL[editKey].ts;var old=BL[editKey]||{},diff=[];if(String(old.numero||'')!==nuovoN)diff.push({campo:'Numero',da:String(old.numero||'—'),a:nuovoN});if((old.locazione||'').toUpperCase()!==nuovaL)diff.push({campo:'Locazione',da:old.locazione||'—',a:nuovaL});if((old.bancali||0)!==nuovoB)diff.push({campo:'Bancali',da:String(old.bancali||0),a:String(nuovoB)});var datiAgg={numero:nuovoN,locazione:nuovaL,bancali:nuovoB,note:nuovoNt,ts:nuovoTs};if(nuovoN!==editKey){var vk=editKey;dbSB(nuovoN,datiAgg).then(function(){dbDB(vk);});}else dbUB(editKey,datiAgg);var recMod={tipo:'MODIFICA',numero:nuovoN,locazione:nuovaL,bancali:nuovoB,note:nuovoNt,ts:new Date().toISOString()};if(diff.length)recMod.diff=diff;dbAS(recMod);chiM('mo-edit');editKey=null;tst('Bilico '+nuovoN+' modificato','ok');}
+function apriModifica(num){var b=BL[num];if(!b)return;editKey=num;var _mN=String(b.numero||'').toUpperCase(),_mM=_mN.match(/^([A-Za-z]?)(.*)$/);document.getElementById('edit-n-pfx').value=_mM?_mM[1]:'';document.getElementById('edit-n').value=_mM?_mM[2]:_mN;document.getElementById('edit-l').value=b.locazione;document.getElementById('edit-b').value=b.bancali;document.getElementById('edit-nt').value=b.note||'';try{var d=new Date(b.ts),pad=function(x){return String(x).padStart(2,'0');};document.getElementById('edit-d').value=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}catch(x){}aprM('mo-edit');}
+function salvaModifica(){if(!editKey)return;var _ep=String(document.getElementById('edit-n-pfx').value||'').trim().toUpperCase();var nuovoN=(_ep+String(document.getElementById('edit-n').value||'').trim()).toUpperCase();var nuovaL=document.getElementById('edit-l').value.trim().toUpperCase();var nuovoB=parseInt(document.getElementById('edit-b').value)||0;var nuovoNt=document.getElementById('edit-nt').value.trim();var nuovaD=document.getElementById('edit-d').value;if(!nuovoN)return tst('Inserisci numero bilico','er');if(!nuovaL)return tst('Inserisci locazione','er');if(nuovoB<=0)return tst('Inserisci almeno 1 bancale','er');var nuovoTs=nuovaD?new Date(nuovaD).toISOString():BL[editKey].ts;var old=BL[editKey]||{},diff=[];if(String(old.numero||'')!==nuovoN)diff.push({campo:'Numero',da:String(old.numero||'—'),a:nuovoN});if((old.locazione||'').toUpperCase()!==nuovaL)diff.push({campo:'Locazione',da:old.locazione||'—',a:nuovaL});if((old.bancali||0)!==nuovoB)diff.push({campo:'Bancali',da:String(old.bancali||0),a:String(nuovoB)});var datiAgg={numero:nuovoN,locazione:nuovaL,bancali:nuovoB,note:nuovoNt,ts:nuovoTs};if(nuovoN!==editKey){var vk=editKey;dbSB(nuovoN,datiAgg).then(function(){dbDB(vk);});}else dbUB(editKey,datiAgg);var recMod={tipo:'MODIFICA',numero:nuovoN,locazione:nuovaL,bancali:nuovoB,note:nuovoNt,ts:new Date().toISOString()};if(diff.length)recMod.diff=diff;dbAS(recMod);chiM('mo-edit');editKey=null;tst('Bilico '+nuovoN+' modificato','ok');}
 function eliminaBilico(num){chiPin('elimBilico',num);}
 
 // ═══ MAGAZZINO TABELLA ═══
@@ -2457,10 +2462,11 @@ function renderCalPanelList(){
   var ordini=dateStr===oggiStr?PROG:dateStr===domaniStr?PROG_DOMANI:(CAL_DATA[dateStr]||[]);
   var fonte=dateStr===oggiStr?'prog':dateStr===domaniStr?'prog_domani':'prog_calendario';
   var html='';
-  // Lista ordini (o messaggio vuoto)
+  // Lista ordini (o messaggio vuoto) — max 5 visibili poi scroll
   if(!ordini.length){
     html+='<div class="empty" style="padding:14px 0;"><p style="font-size:13px;">Nessun ordine per questo giorno</p></div>';
   }else{
+    html+='<div style="max-height:340px;overflow-y:auto;margin:0 -2px;">';
     ordini.forEach(function(p){
       var b=BL[p.numero],inMag=!!b,idQ="'"+(p.id||'')+"'";
       html+='<div class="prog-item"><div class="prog-num"><small>#</small>'+p.numero+'</div><div class="prog-col">';
@@ -2474,6 +2480,7 @@ function renderCalPanelList(){
       if(isAdmin()&&p.id)html+='<button class="prog-icon-btn" onclick="eliminaCalGiorno(\''+fonte+'\','+idQ+',\''+p.numero+'\')">✕</button>';
       html+='</div></div>';
     });
+    html+='</div>';
   }
   // Form aggiungi ordine — SEMPRE visibile indipendentemente dagli ordini esistenti
   html+='<div style="border-top:1px solid var(--bd);padding-top:10px;margin-top:8px;">';

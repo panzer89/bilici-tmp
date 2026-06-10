@@ -162,7 +162,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 .cal-day{min-height:42px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:5px 2px 3px;cursor:pointer;border:1px solid transparent;background:var(--sf2);}
 .cal-day:active{opacity:.7;}
 .cal-day.empty{background:transparent;border-color:transparent;cursor:default;}
-.cal-day.past{opacity:.3;cursor:default;}
+.cal-day.past{opacity:.5;cursor:pointer;}
 .cal-day.today{border-color:var(--gn);}
 .cal-day.has{border-color:rgba(218,54,51,.5);}
 .cal-day-num{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;line-height:1;}
@@ -1122,7 +1122,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <div class="sheet-title" id="sh-cal-title" style="color:var(--pb);">&#x1F4C5; Ordini <button class="close" onclick="chiO('sh-cal')">&#x2715;</button></div>
   <div class="sheet-body">
     <div id="sh-cal-list" style="margin-bottom:12px;"></div>
-    <div style="border-top:1px solid var(--bd);padding-top:12px;margin-top:4px;">
+    <div id="cal-add-form" style="border-top:1px solid var(--bd);padding-top:12px;margin-top:4px;">
       <div style="font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">+ Aggiungi ordine</div>
       <div style="display:flex;gap:6px;margin-bottom:8px;align-items:stretch;">
         <input class="pfx" id="cal-pfx-inp" type="text" maxlength="1" placeholder="A"
@@ -1318,7 +1318,7 @@ function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();if(l.indexOf('M-
 var _storicoAttached=false,_lightReady={};
 function _attachStorico(){
   if(_storicoAttached||!UC||!fdb)return;_storicoAttached=true;
-  fdb.collection('storico').orderBy('ts','desc').onSnapshot(function(s){ST=[];s.forEach(function(d){ST.push(Object.assign({id:d.id},d.data()));});ui();});
+  fdb.collection('storico').orderBy('ts','desc').onSnapshot(function(s){ST=[];s.forEach(function(d){ST.push(Object.assign({id:d.id},d.data()));});ui();renderCalendario();var moC=document.getElementById('sh-cal');if(CAL_GIORNO_SEL&&moC&&moC.classList.contains('open'))renderCalModalList();});
 }
 function _markLight(name){
   _lightReady[name]=true;
@@ -2274,23 +2274,45 @@ function renderCalendario(){
     var domaniD=new Date(oggi);domaniD.setDate(oggi.getDate()+1);var domaniStr=datLocale(domaniD);
     var ordini=dateStr===oggiStr?PROG:dateStr===domaniStr?PROG_DOMANI:(CAL_DATA[dateStr]||[]);
     var hasOrdini=ordini.length>0;
+    var nUscite=isPast?getUsciteGiorno(dateStr).length:0;
     var cls='cal-day'+(isPast?' past':isToday?' today':hasOrdini?' has':'');
-    html+='<div class="'+cls+'" '+(isPast?'':'onclick="apriCalGiorno(\''+dateStr+'\')"')+'>';
+    html+='<div class="'+cls+'" onclick="apriCalGiorno(\''+dateStr+'\')">';
     html+='<div class="cal-day-num">'+d+'</div>';
     if(hasOrdini&&!isPast){html+='<div class="cal-day-dots">';ordini.slice(0,3).forEach(function(){html+='<div class="cal-day-dot"></div>';});if(ordini.length>3)html+='<div class="cal-day-dot" style="background:var(--tx3);"></div>';html+='</div>';}
+    if(isPast&&nUscite>0){html+='<div class="cal-day-dots"><div class="cal-day-dot" style="background:var(--rb);"></div></div>';}
     html+='</div>';
   }
   el.innerHTML=html;
 }
+function getUsciteGiorno(dateStr){
+  return ST.filter(function(m){return m.tipo==='USCITA'&&m.ts&&datLocale(new Date(m.ts))===dateStr;})
+           .sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
+}
 function apriCalGiorno(dateStr){
   CAL_GIORNO_SEL=dateStr;var d=dateStr.split('-');
-  document.getElementById('sh-cal-title').textContent='📅 '+d[2]+'/'+d[1]+'/'+d[0];
+  var oggiStr=datLocale(new Date());var isPast=dateStr<oggiStr;
+  document.getElementById('sh-cal-title').textContent=(isPast?'🔴 Usciti ':'📅 ')+d[2]+'/'+d[1]+'/'+d[0];
+  var form=document.getElementById('cal-add-form');if(form)form.style.display=isPast?'none':'block';
   document.getElementById('cal-inp').value='';document.getElementById('cal-banc-inp').value='';document.getElementById('cal-nota-inp').value='';
   renderCalModalList();aprO('sh-cal');
 }
 function renderCalModalList(){
   var el=document.getElementById('sh-cal-list');if(!el)return;
   var dateStr=CAL_GIORNO_SEL;var oggiStr=datLocale(new Date());var domaniD=new Date();domaniD.setDate(domaniD.getDate()+1);var domaniStr=datLocale(domaniD);
+  // GIORNO PASSATO → mostra i bilici realmente usciti (sola lettura)
+  if(dateStr<oggiStr){
+    var usc=getUsciteGiorno(dateStr);
+    if(!usc.length){el.innerHTML='<div class="empty" style="padding:14px;"><p>Nessuna uscita registrata in questo giorno</p></div>';return;}
+    el.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--rb);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">🔴 Bilici usciti ('+usc.length+')</div>'+usc.map(function(m){
+      var ora=m.ts?new Date(m.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'';
+      return '<div class="prog-row"><div class="prog-dot" style="background:var(--rb);"></div>'+
+        '<div class="prog-row-main"><div class="prog-row-num"><span class="prefix">#</span>'+m.numero+'</div>'+
+        '<div class="prog-row-info">📍 '+(m.locazione||'—')+' · 📦 Usciti: '+(m.bancaliUsciti!=null?m.bancaliUsciti:'—')+(m.bancaliRimasti?' · Rimasti: '+m.bancaliRimasti:'')+'</div>'+
+        (m.operatore?'<div class="prog-row-nota">👤 '+m.operatore+'</div>':'')+
+        '</div><div class="prog-row-right" style="font-size:11px;color:var(--tx2);">'+ora+'</div></div>';
+    }).join('');
+    return;
+  }
   var ordini=dateStr===oggiStr?PROG:dateStr===domaniStr?PROG_DOMANI:(CAL_DATA[dateStr]||[]);
   var fonte=dateStr===oggiStr?'prog':dateStr===domaniStr?'prog_domani':'prog_calendario';
   if(!ordini.length){el.innerHTML='<div class="empty" style="padding:14px;"><p>Nessun ordine per questo giorno</p></div>';return;}

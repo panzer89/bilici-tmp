@@ -1591,8 +1591,7 @@ function segnaPreparato(docId,giaSegnato,numero){
 function renderCarMissioni(){
   var el=document.getElementById('car-missioni-list');if(!el)return;
   var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';});
-  var caricati=MISSIONI.filter(function(m){return m.stato==='caricata';}).sort(function(a,b){return(b.tsChiusura||0)-(a.tsChiusura||0);}).slice(0,10);
-  if(!lista.length&&!caricati.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
   var html=lista.map(function(m){
     var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length;
     var tot=(m.bilici||[]).length;
@@ -1611,20 +1610,6 @@ function renderCarMissioni(){
       '<div style="background:var(--sf2);border-radius:3px;height:5px;"><div style="background:var(--pb);height:100%;width:'+prog+'%;border-radius:3px;"></div></div>'+
       '</div>';
   }).join('');
-  if(caricati.length){
-    html+='<div style="padding:10px 2px 6px;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;border-top:1px solid var(--bd);margin-top:4px;margin-bottom:8px;">✅ Già caricati</div>';
-    html+=caricati.map(function(m){
-      var tot=(m.bilici||[]).length;
-      var lbl=m.tipo==='locazione'?('📍 SMEZZI '+(m.locazione?'— '+m.locazione:'')):'✋ Picking Manuale';
-      var pltConf=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
-      return '<div style="background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;opacity:0.55;">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;">'+
-        '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;color:var(--tx2);">'+lbl+'</span>'+
-        '<span style="font-size:18px;">✅</span></div>'+
-        '<div style="font-size:12px;color:var(--tx3);margin-top:3px;">📅 '+(m.data||'—')+' · 🚛 '+tot+' bilici · 📦 '+pltConf+' PLT</div>'+
-        '</div>';
-    }).join('');
-  }
   el.innerHTML=html;
 }
 
@@ -1633,8 +1618,7 @@ function renderMissioni(){
   var el=document.getElementById('missioni-list');if(!el)return;
   var lista=MISSIONI.filter(function(m){return m.stato!=='caricata';})
     .sort(function(a,b){return(a.ts||0)-(b.ts||0);});
-  var caricati=MISSIONI.filter(function(m){return m.stato==='caricata';}).sort(function(a,b){return(b.tsChiusura||0)-(a.tsChiusura||0);}).slice(0,10);
-  if(!lista.length&&!caricati.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Nessuna missione attiva</p></div>';return;}
   var html=lista.map(function(m){
     var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length;
     var tot=(m.bilici||[]).length;
@@ -1655,24 +1639,6 @@ function renderMissioni(){
     s+='</div></div>';
     return s;
   }).join('');
-  if(caricati.length){
-    html+='<div style="padding:10px 2px 6px;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;border-top:1px solid var(--bd);margin-top:4px;margin-bottom:8px;">✅ Già caricati</div>';
-    html+=caricati.map(function(m){
-      var tot=(m.bilici||[]).length;
-      var lbl=m.tipo==='locazione'?('📍 Carico Smezzi'+(m.locazione?' — '+m.locazione:'')):'✋ Picking Manuale';
-      var pltConf=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliConfermati||b.bancaliProg||0);},0);
-      var s='<div class="miss-card" style="opacity:0.5;border-color:var(--bd);">';
-      s+='<div class="miss-card-hdr">';
-      s+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">';
-      s+='<div class="miss-card-title" style="color:var(--tx2);">'+lbl+'</div>';
-      s+='<span style="font-size:18px;">✅</span></div>';
-      s+='<div class="miss-card-meta">📅 '+(m.data||'—')+' · 🚛 '+tot+' bilici · 📦 '+pltConf+' PLT</div>';
-      if(m.nota)s+='<div style="font-size:12px;color:var(--tx3);margin-top:2px;">📝 '+m.nota+'</div>';
-      s+='<div class="miss-card-prog"><div class="miss-card-bar" style="width:100%;background:var(--gn);"></div></div>';
-      s+='</div></div>';
-      return s;
-    }).join('');
-  }
   el.innerHTML=html;
 }
 

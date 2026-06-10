@@ -1119,7 +1119,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <div class="overlay" id="sh-cal">
 <div class="sheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title" id="sh-cal-title" style="color:var(--pb);">&#x1F4C5; Ordini <button class="close" onclick="chiO('sh-cal')">&#x2715;</button></div>
+  <div class="sheet-title" style="color:var(--pb);"><span id="sh-cal-title">&#x1F4C5; Ordini</span> <button class="close" onclick="chiO('sh-cal')">&#x2715;</button></div>
   <div class="sheet-body">
     <div id="sh-cal-list" style="margin-bottom:12px;"></div>
     <div id="cal-add-form" style="border-top:1px solid var(--bd);padding-top:12px;margin-top:4px;">
@@ -2279,7 +2279,7 @@ function renderCalendario(){
     html+='<div class="'+cls+'" onclick="apriCalGiorno(\''+dateStr+'\')">';
     html+='<div class="cal-day-num">'+d+'</div>';
     if(hasOrdini&&!isPast){html+='<div class="cal-day-dots">';ordini.slice(0,3).forEach(function(){html+='<div class="cal-day-dot"></div>';});if(ordini.length>3)html+='<div class="cal-day-dot" style="background:var(--tx3);"></div>';html+='</div>';}
-    if(isPast&&nUscite>0){html+='<div class="cal-day-dots"><div class="cal-day-dot" style="background:var(--rb);"></div></div>';}
+    if(isPast&&nUscite>0){html+='<div class="cal-day-dots">';for(var u=0;u<Math.min(nUscite,3);u++)html+='<div class="cal-day-dot" style="background:var(--rb);"></div>';if(nUscite>3)html+='<div class="cal-day-dot" style="background:var(--tx3);"></div>';html+='</div>';}
     html+='</div>';
   }
   el.innerHTML=html;

@@ -222,6 +222,16 @@ input, select, textarea { font-family: inherit; }
 /* Pages */
 .page { display: none; }
 .page.active { display: block; }
+/* Pagine con filtri fissi + tabella scrollabile */
+.page.pg-scroll.active { display: flex; flex-direction: column; height: 100%; }
+.pg-fixed { flex-shrink: 0; }
+.pg-scrollarea { flex: 1; min-height: 0; overflow-y: auto; }
+.pg-scrollarea .tbl thead th,
+.tbl-sticky-head thead th { position: sticky; top: 0; z-index: 3; }
+[data-theme="dark"] .pg-scrollarea .tbl thead th,
+[data-theme="dark"] .tbl-sticky-head thead th { background: #191b1f; }
+[data-theme="light"] .pg-scrollarea .tbl thead th,
+[data-theme="light"] .tbl-sticky-head thead th { background: #f5f5f5; }
 
 /* ═══════════════════════════════
    STATS GRID
@@ -996,8 +1006,8 @@ input, select, textarea { font-family: inherit; }
 </div>
 
 <!-- ══════════ MAGAZZINO (TABELLA) ══════════ -->
-<div class="page" id="page-magazzino">
-  <div class="card" style="margin-bottom:14px;padding:14px;">
+<div class="page pg-scroll" id="page-magazzino">
+  <div class="card pg-fixed" style="margin-bottom:14px;padding:14px;">
     <!-- Riga 1: ricerca + modal -->
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
       <div style="position:relative;flex:1;min-width:200px;">
@@ -1042,8 +1052,8 @@ input, select, textarea { font-family: inherit; }
       </div>
     </div>
   </div>
-  <div class="card tbl-card" style="overflow:hidden;">
-    <div style="overflow-x:auto;">
+  <div class="card tbl-card pg-scrollarea" style="overflow:hidden;display:flex;flex-direction:column;">
+    <div style="overflow:auto;flex:1;min-height:0;">
       <table class="tbl" id="mag-tbl">
         <thead>
           <tr>
@@ -1103,7 +1113,7 @@ input, select, textarea { font-family: inherit; }
         </div>
       </div>
       <div style="overflow-x:auto;max-height:360px;overflow-y:auto;padding:0 14px 10px;background:#111214;">
-        <table class="tbl" style="margin-top:10px;" id="tutti-ordini-tbl">
+        <table class="tbl tbl-sticky-head" id="tutti-ordini-tbl">
           <thead>
             <tr>
               <th>Bilico</th>
@@ -1123,8 +1133,8 @@ input, select, textarea { font-family: inherit; }
 </div>
 
 <!-- ══════════ STORICO ══════════ -->
-<div class="page" id="page-storico">
-  <div class="card" style="margin-bottom:14px;padding:14px;">
+<div class="page pg-scroll" id="page-storico">
+  <div class="card pg-fixed" style="margin-bottom:14px;padding:14px;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx2);margin-bottom:10px;">🔍 Filtri</div>
     <div class="stor-filtri">
       <div class="sf-grp"><div class="sf-lbl">Numero bilico</div><input class="sf-inp" id="sf-num" type="text" placeholder="es. 839" oninput="filtraStorico()"></div>
@@ -1175,19 +1185,19 @@ input, select, textarea { font-family: inherit; }
       </div>
     </div>
   </div>
-  <div class="card"><div class="card-body" style="padding:0 14px;max-height:calc(100vh - 260px);overflow-y:auto;"><div id="stor-av-list"><div class="empty"><div class="ic">📋</div><p>Nessun movimento</p></div></div></div></div>
+  <div class="card pg-scrollarea"><div class="card-body" style="padding:0 14px;"><div id="stor-av-list"><div class="empty"><div class="ic">📋</div><p>Nessun movimento</p></div></div></div></div>
 </div>
 
 <!-- ══════════ MISSIONI ══════════ -->
-<div class="page" id="page-missioni">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+<div class="page pg-scroll" id="page-missioni">
+  <div class="pg-fixed" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;color:var(--pb);">📦 Missioni</div>
     <div style="display:flex;gap:8px;">
       <button onclick="expMissioni()" class="btn tgn" style="padding:6px 12px;font-size:12px;">📥 Excel</button>
       <button onclick="apriCreaMissione()" class="btn bpu" style="padding:6px 14px;font-size:12px;">+ Nuova Missione</button>
     </div>
   </div>
-  <div class="card" style="margin-bottom:12px;padding:10px 14px;">
+  <div class="card pg-fixed" style="margin-bottom:12px;padding:10px 14px;">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
       <div class="sf-grp"><div class="sf-lbl">Dal</div><input type="date" id="miss-f-dal" oninput="renderMissioniDesk()" onclick="try{this.showPicker()}catch(e){}" class="sf-inp" style="width:140px;"></div>
       <div class="sf-grp"><div class="sf-lbl">Al</div><input type="date" id="miss-f-al" oninput="renderMissioniDesk()" onclick="try{this.showPicker()}catch(e){}" class="sf-inp" style="width:140px;"></div>
@@ -1210,14 +1220,14 @@ input, select, textarea { font-family: inherit; }
       <div style="display:flex;align-items:flex-end;"><button onclick="resetFiltriMissioni()" class="btn bgh" style="padding:5px 10px;font-size:11px;">↺ Reset</button></div>
     </div>
   </div>
-  <div id="miss-desk-list"><div class="empty"><div class="ic">📦</div><p>Nessuna missione</p></div></div>
+  <div id="miss-desk-list" class="pg-scrollarea"><div class="empty"><div class="ic">📦</div><p>Nessuna missione</p></div></div>
 </div>
 
 
 <!-- ══════════ CARRELLISTA ══════════ -->
-<div class="page" id="page-carrellista">
-  <div class="card" style="padding:14px;">
-    <div style="display:flex;gap:10px;margin-bottom:14px;">
+<div class="page pg-scroll" id="page-carrellista">
+  <div class="card" style="padding:14px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="pg-fixed" style="display:flex;gap:10px;margin-bottom:14px;">
       <button id="tab-stoccare" class="btn bog" onclick="selCarrellistaTab('stoccare')" style="flex:1;padding:10px;position:relative;">
         📦 DA STOCCARE
         <span id="badge-tab-stoc" style="display:none;position:absolute;top:5px;right:7px;background:var(--rb);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;">0</span>
@@ -1231,29 +1241,29 @@ input, select, textarea { font-family: inherit; }
         <span id="badge-car-miss-desk" style="display:none;position:absolute;top:5px;right:7px;background:var(--pb);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;">0</span>
       </button>
     </div>
-    <div id="car-stoccare-content">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
+    <div id="car-stoccare-content" style="flex-direction:column;flex:1;min-height:0;">
+      <div class="pg-fixed" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
         <div class="sf-grp"><div class="sf-lbl">N° Bilico</div><input class="sf-inp" id="cs-f-num" type="text" placeholder="es. 914" oninput="renderCarrellistaStoccare()" style="width:120px;"></div>
         <div class="sf-grp"><div class="sf-lbl">Data Ingresso</div><input class="sf-inp" id="cs-f-data" type="date" oninput="renderCarrellistaStoccare()" onclick="try{this.showPicker()}catch(e){}" style="width:150px;"></div>
         <button onclick="document.getElementById('cs-f-num').value='';document.getElementById('cs-f-data').value='';renderCarrellistaStoccare();" class="btn bgh" style="padding:5px 10px;font-size:11px;">↺ Reset</button>
       </div>
-      <div id="car-stoccare-list"></div>
+      <div id="car-stoccare-list" style="flex:1;min-height:0;overflow-y:auto;"></div>
     </div>
-    <div id="car-preparare-content" style="display:none;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
+    <div id="car-preparare-content" style="display:none;flex-direction:column;flex:1;min-height:0;">
+      <div class="pg-fixed" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
         <div class="sf-grp"><div class="sf-lbl">N° Bilico</div><input class="sf-inp" id="cp-f-num" type="text" placeholder="es. 799" oninput="renderCarrellistaPreparare()" style="width:120px;"></div>
         <div class="sf-grp"><div class="sf-lbl">Data Carico</div><input class="sf-inp" id="cp-f-data" type="date" oninput="renderCarrellistaPreparare()" onclick="try{this.showPicker()}catch(e){}" style="width:150px;"></div>
         <button onclick="document.getElementById('cp-f-num').value='';document.getElementById('cp-f-data').value='';renderCarrellistaPreparare();" class="btn bgh" style="padding:5px 10px;font-size:11px;">↺ Reset</button>
       </div>
-      <div id="car-preparare-list"></div>
+      <div id="car-preparare-list" style="flex:1;min-height:0;overflow-y:auto;"></div>
     </div>
-    <div id="car-missioni-content" style="display:none;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
+    <div id="car-missioni-content" style="display:none;flex-direction:column;flex:1;min-height:0;">
+      <div class="pg-fixed" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:0 4px 12px;">
         <div class="sf-grp"><div class="sf-lbl">N° Bilico</div><input class="sf-inp" id="cm-f-num" type="text" placeholder="es. 849" oninput="renderCarrellistaMissioni()" style="width:120px;"></div>
         <div class="sf-grp"><div class="sf-lbl">Data</div><input class="sf-inp" id="cm-f-data" type="date" oninput="renderCarrellistaMissioni()" onclick="try{this.showPicker()}catch(e){}" style="width:150px;"></div>
         <button onclick="document.getElementById('cm-f-num').value='';document.getElementById('cm-f-data').value='';renderCarrellistaMissioni();" class="btn bgh" style="padding:5px 10px;font-size:11px;">↺ Reset</button>
       </div>
-      <div id="car-missioni-desk-list"></div>
+      <div id="car-missioni-desk-list" style="flex:1;min-height:0;overflow-y:auto;"></div>
     </div>
   </div>
 </div>
@@ -2261,7 +2271,7 @@ var _reconcileBusy={};
 function reconcileOrdini(){
   if(!UC||!fdb)return;
   var oggiS=datLocale(new Date());var _d=new Date();_d.setDate(_d.getDate()+1);var domS=datLocale(_d);
-  var bucketOf=function(data){return data===oggiS?'prog':(data===domS?'prog_domani':'prog_calendario');};
+  var bucketOf=function(data){return data<=oggiS?'prog':(data===domS?'prog_domani':'prog_calendario');};
   var moves=[];
   (PROG||[]).forEach(function(p){if(p.id&&p.data){var t=bucketOf(p.data);if(t!=='prog')moves.push({from:'prog',id:p.id,it:p,to:t});}});
   (PROG_DOMANI||[]).forEach(function(p){if(p.id&&p.data){var t=bucketOf(p.data);if(t!=='prog_domani')moves.push({from:'prog_domani',id:p.id,it:p,to:t});}});
@@ -2969,7 +2979,7 @@ var carrellistaTab='stoccare';
 function selCarrellistaTab(tab){
   carrellistaTab=tab;
   ['stoccare','preparare','missioni'].forEach(function(t){
-    var c=document.getElementById('car-'+t+'-content');if(c)c.style.display=t===tab?'block':'none';
+    var c=document.getElementById('car-'+t+'-content');if(c)c.style.display=t===tab?'flex':'none';
     var b=document.getElementById('tab-'+t);if(b)b.className=t===tab?'btn bog':'btn bgh';
   });
   renderCarrellista();

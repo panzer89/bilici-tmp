@@ -173,7 +173,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 /* ── ORDINI TABLE ── */
 .ordini-wrap{background:var(--sf);border-radius:var(--r);overflow:hidden;margin:0 16px 12px;}
 .ordini-filter{padding:10px 12px;border-bottom:1px solid var(--bd);display:flex;gap:8px;}
-.ordini-filter input{flex:1;height:36px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:0 10px;outline:none;}
+.ordini-filter input{flex:1;min-width:0;height:36px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:0 10px;outline:none;}
 .ordini-filter input:focus{border-color:var(--bl);}
 .ordine-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bd);}
 .ordine-row:last-child{border-bottom:none;}
@@ -222,7 +222,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 .overlay.open{display:flex;}
 .overlay.top{align-items:flex-start;}
 .overlay.center{align-items:center;padding:0 16px;}
-.sheet{background:var(--sf);border-radius:20px 20px 0 0;padding:0;width:100%;max-width:620px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .25s ease;}
+.sheet{background:var(--sf);border-radius:20px 20px 0 0;padding:0;width:100%;max-width:620px;max-height:92vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;animation:slideUp .25s ease;}
 .sheet.center{border-radius:16px;max-height:85vh;margin:0;padding:22px;}
 .sheet.full{border-radius:0;max-height:100vh;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
@@ -245,14 +245,14 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 .pfx{width:44px;min-width:44px;max-width:44px;text-align:center;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;background:var(--sf2);border:1.5px solid var(--bd);border-radius:var(--rs);color:var(--pb);outline:none;-webkit-appearance:none;flex-shrink:0;padding:0;}
 .num-row input.big{flex:1;min-width:0;width:0;}
 /* counter */
-.counter{display:flex;align-items:center;gap:8px;}
-.cnt-btn{width:48px;height:48px;border-radius:50%;border:2px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:24px;display:flex;align-items:center;justify-content:center;}
+.counter{display:flex;align-items:center;gap:8px;width:100%;}
+.cnt-btn{width:48px;height:48px;flex-shrink:0;border-radius:50%;border:2px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:24px;display:flex;align-items:center;justify-content:center;}
 .cnt-btn:active{background:var(--bd);transform:scale(.93);}
-.cnt-val{flex:1;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--ob);border:2px solid var(--og);padding:6px;height:64px;background:var(--bg);border-radius:var(--rs);outline:none;-webkit-appearance:none;}
+.cnt-val{flex:1;min-width:0;width:100%;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--ob);border:2px solid var(--og);padding:6px;height:64px;background:var(--bg);border-radius:var(--rs);outline:none;-webkit-appearance:none;box-sizing:border-box;}
 .cnt-val[type=number]{-moz-appearance:textfield;}
 /* loc+qr */
 .loc-row{display:flex;}
-.loc-row input{border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;flex:1;}
+.loc-row input{border-radius:var(--rs) 0 0 var(--rs)!important;border-right:none!important;flex:1;min-width:0;}
 .qr-btn{width:48px;height:auto;background:var(--sf2);border:1.5px solid var(--bd);border-radius:0 var(--rs) var(--rs) 0;color:var(--tx2);font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .qr-btn:active{background:var(--bl);color:#fff;border-color:var(--bl);}
 /* type toggle */
@@ -261,7 +261,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 .type-btn.active{border-color:var(--bb);background:rgba(31,111,235,.12);color:var(--bb);}
 /* pass */
 .pass-wrap{position:relative;display:flex;}
-.pass-wrap input{padding-right:46px;flex:1;}
+.pass-wrap input{padding-right:46px;flex:1;min-width:0;}
 .eye{position:absolute;right:0;top:0;bottom:0;width:46px;background:none;border:none;color:var(--tx2);font-size:18px;display:flex;align-items:center;justify-content:center;}
 
 /* ── BUTTONS ── */
@@ -362,7 +362,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 .qr-frame-box{width:200px;height:200px;border:3px solid var(--bb);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);}
 /* storico filtri */
 .sf-row{display:flex;gap:8px;margin-bottom:8px;}
-.sf-inp{flex:1;height:38px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:0 10px;outline:none;}
+.sf-inp{flex:1;min-width:0;height:38px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:14px;padding:0 10px;outline:none;}
 .sf-inp:focus{border-color:var(--bl);}
 /* usr panel */
 .usr-panel{position:fixed;inset:0;background:var(--bg);z-index:500;display:none;flex-direction:column;}
@@ -760,10 +760,6 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <div class="sheet-handle"></div>
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--rb);margin-bottom:12px;text-align:center;">&#x26A0;&#xFE0F; Conferma Uscita</div>
   <div id="conf-uscita-txt" style="font-size:14px;color:var(--tx2);line-height:1.7;margin-bottom:16px;text-align:center;"></div>
-  <div class="fg">
-    <label class="foto-label"><span>&#x1F4F7;</span><span id="cou-foto-lbl">Foto carico (opzionale)</span><input type="file" id="cou-foto" accept="image/*" style="display:none;" onchange="prevFoto(this,'cou-foto-img','cou-foto-prev','cou-foto-lbl')"></label>
-    <div class="foto-prev" id="cou-foto-prev"><img id="cou-foto-img"><button class="foto-del" onclick="clearFoto('cou-foto','cou-foto-prev','cou-foto-lbl')">&#x2715;</button></div>
-  </div>
   <div class="btn-row">
     <button class="btn brd" onclick="confU()">&#x2705; CONFERMA</button>
     <button class="btn bgh" onclick="chiO('sh-conf-uscita')">&#x274C; Annulla</button>
@@ -890,13 +886,15 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <!-- Magazzino fullscreen -->
 <div class="overlay top" id="sh-magazzino">
 <div class="sheet full">
-  <div style="height:10px;"></div>
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">&#x1F69B; Bilici Presenti <button class="close" onclick="chiO('sh-magazzino')">&#x2715;</button></div>
-  <div class="search-bar"><div class="search-wrap"><span class="search-ic">&#x1F50D;</span><input class="search-inp" id="mag-search" placeholder="Cerca per numero o locazione..." oninput="renderMagazzino()"><button onclick="document.getElementById('mag-search').value='';renderMagazzino();" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);font-size:16px;">&#x2715;</button></div></div>
-  <div style="display:flex;gap:8px;padding:8px 16px;border-bottom:1px solid var(--bd);">
-    <button class="btn sm" id="sm-bil" onclick="setSM('b')" style="background:rgba(31,111,235,.15);border:1px solid var(--bb);color:var(--bb);">&#x1F69B; Per Bilico</button>
-    <button class="btn sm bgh" id="sm-loc" onclick="setSM('l')">&#x1F4CD; Per Locaz.</button>
+  <div style="position:sticky;top:0;z-index:5;background:var(--sf);">
+    <div style="height:10px;"></div>
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">&#x1F69B; Bilici Presenti <button class="close" onclick="chiO('sh-magazzino')">&#x2715;</button></div>
+    <div class="search-bar"><div class="search-wrap"><span class="search-ic">&#x1F50D;</span><input class="search-inp" id="mag-search" placeholder="Cerca per numero o locazione..." oninput="renderMagazzino()"><button onclick="document.getElementById('mag-search').value='';renderMagazzino();" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);font-size:16px;">&#x2715;</button></div></div>
+    <div style="display:flex;gap:8px;padding:8px 16px;border-bottom:1px solid var(--bd);">
+      <button class="btn sm" id="sm-bil" onclick="setSM('b')" style="background:rgba(31,111,235,.15);border:1px solid var(--bb);color:var(--bb);">&#x1F69B; Per Bilico</button>
+      <button class="btn sm bgh" id="sm-loc" onclick="setSM('l')">&#x1F4CD; Per Locaz.</button>
+    </div>
   </div>
   <div id="mag-list" style="padding:0 16px;"></div>
   <div style="height:20px;"></div>
@@ -906,6 +904,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <!-- Carrellista fullscreen -->
 <div class="overlay top" id="sh-carrellista">
 <div class="sheet full">
+  <div style="position:sticky;top:0;z-index:5;background:var(--sf);">
   <div style="height:10px;"></div>
   <div class="sheet-handle"></div>
   <div class="sheet-title">&#x1F4E6; Carrellista <button class="close" onclick="chiO('sh-carrellista')">&#x2715;</button></div>
@@ -940,6 +939,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
       </select>
     </div>
   </div>
+  </div>
   <div id="car-stoc-content" style="padding:12px 16px;"></div>
   <div id="car-prep-content" style="display:none;padding:12px 16px;"></div>
   <div style="height:20px;"></div>
@@ -949,6 +949,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <!-- Storico fullscreen -->
 <div class="overlay top" id="sh-storico">
 <div class="sheet full">
+  <div style="position:sticky;top:0;z-index:5;background:var(--sf);">
   <div style="height:10px;"></div>
   <div class="sheet-handle"></div>
   <div class="sheet-title">
@@ -989,6 +990,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
       <button onclick="resetFiltriStorico()" style="background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx2);padding:6px 12px;font-size:12px;font-weight:700;">↺ Reset</button>
     </div>
   </div>
+  </div>
   <div id="stor-list" style="padding:0 16px;"></div>
   <div style="height:20px;"></div>
 </div>
@@ -997,6 +999,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <!-- Missioni fullscreen -->
 <div class="overlay top" id="sh-missioni">
 <div class="sheet full">
+  <div style="position:sticky;top:0;z-index:5;background:var(--sf);">
   <div style="height:10px;"></div>
   <div class="sheet-handle"></div>
   <div class="sheet-title">
@@ -1020,6 +1023,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
       </div>
     </div>
     <button onclick="resetFiltriMissioni()" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);">&#x274C;</button>
+  </div>
   </div>
   <div id="miss-list" style="padding:0 16px;"></div>
   <div style="height:20px;"></div>
@@ -1373,8 +1377,9 @@ function goP(n){
   ui();
 }
 function fabAction(){var cp=document.querySelector('.page.active');if(cp&&cp.id==='page-pianif')apriSheetAggProg('cal');else apriSheetAggProg('oggi');}
-function chiO(id){document.getElementById(id).classList.remove('open');}
-function aprO(id){document.getElementById(id).classList.add('open');}
+var _zTopOverlay=600;
+function chiO(id){var el=document.getElementById(id);if(el)el.classList.remove('open');}
+function aprO(id){var el=document.getElementById(id);if(!el)return;_zTopOverlay+=1;el.style.zIndex=_zTopOverlay;el.classList.add('open');}
 function stp(id,d){var el=document.getElementById(id);el.value=Math.max(0,(parseInt(el.value)||0)+d);}
 function datLocale(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function tst(msg,tp){var t=document.getElementById('tst');t.textContent=msg;t.className='tst '+(tp||'');void t.offsetWidth;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3200);if(tp==='er')suonoErrore();}
@@ -1444,7 +1449,7 @@ var _reconcileBusy={};
 function reconcileOrdini(){
   if(!UC||!fdb)return;
   var oggiS=datLocale(new Date());var _d=new Date();_d.setDate(_d.getDate()+1);var domS=datLocale(_d);
-  var bucketOf=function(data){return data===oggiS?'prog':(data===domS?'prog_domani':'prog_calendario');};
+  var bucketOf=function(data){return data<=oggiS?'prog':(data===domS?'prog_domani':'prog_calendario');};
   var moves=[];
   (PROG||[]).forEach(function(p){if(p.id&&p.data){var t=bucketOf(p.data);if(t!=='prog')moves.push({from:'prog',id:p.id,it:p,to:t});}});
   (PROG_DOMANI||[]).forEach(function(p){if(p.id&&p.data){var t=bucketOf(p.data);if(t!=='prog_domani')moves.push({from:'prog_domani',id:p.id,it:p,to:t});}});
@@ -1635,13 +1640,14 @@ function confUscitaCoppia(){
   if(bilB&&buB>bilB.bancali)return tst('Bancali #'+itemB.numero+': supera i presenti','er');
   var fotoFile=(document.getElementById('mcu-foto').files||[])[0];
   chiO('sh-coppia');clearFoto('mcu-foto','mcu-foto-prev','mcu-foto-lbl');
-  if(fotoFile){var rdr=new FileReader();rdr.onload=function(e){_eseguiCoppia(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,e.target.result);};rdr.readAsDataURL(fotoFile);}
-  else _eseguiCoppia(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,null);
+  var caricoId='C'+Date.now();
+  if(fotoFile){compressaFoto(fotoFile,function(base64){_salvaFotoCarico(caricoId,base64);_eseguiCoppia(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,caricoId,base64);});}
+  else _eseguiCoppia(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,caricoId,null);
 }
-function _eseguiCoppia(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,foto){
-  var caricoId='C'+Date.now(),ts=new Date().toISOString();
-  if(bilA){var rimA=bilA.bancali-buA;if(rimA===0)dbDB(itemA.numero);else{var lA=bilA.locazione.toUpperCase();dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'});}var stA={tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:bilA.bancali-buA,note:ntA,ts:ts,caricoId:caricoId};if(foto)stA.foto=foto;dbAS(stA);}
-  if(bilB){var rimB=bilB.bancali-buB;if(rimB===0)dbDB(itemB.numero);else{var lB=bilB.locazione.toUpperCase();dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'});}var stB={tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:bilB.bancali-buB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId};if(foto)stB.foto=foto;dbAS(stB);}
+function _eseguiCoppia(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,caricoId,foto){
+  var ts=new Date().toISOString();
+  if(bilA){var rimA=bilA.bancali-buA;if(rimA===0)dbDB(itemA.numero);else{var lA=bilA.locazione.toUpperCase();dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'});}var stA={tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:bilA.bancali-buA,note:ntA,ts:ts,caricoId:caricoId};if(foto){stA.foto=foto;stA.fotoSalvata=true;}dbAS(stA);}
+  if(bilB){var rimB=bilB.bancali-buB;if(rimB===0)dbDB(itemB.numero);else{var lB=bilB.locazione.toUpperCase();dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'});}var stB={tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:bilB.bancali-buB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId};if(foto){stB.foto=foto;stB.fotoSalvata=true;}dbAS(stB);}
   if(UC&&fdb){if(itemA.id)fdb.collection('prog').doc(itemA.id).delete().catch(function(){});if(itemB.id)fdb.collection('prog').doc(itemB.id).delete().catch(function(){});}
   else{PROG=PROG.filter(function(p){return p.id!==itemA.id&&p.id!==itemB.id;});salvaProg();renderProg();}
   suonoUscita();tst('Coppia #'+itemA.numero+' + #'+itemB.numero+' caricata!','ok');_coppiaA=null;_coppiaB=null;
@@ -1663,7 +1669,7 @@ function confCaricaQuick(){
   var fotoFile=(document.getElementById('cq-foto').files||[])[0];
   chiO('sh-carica-quick');clearFoto('cq-foto','cq-foto-prev','cq-foto-lbl');
   pend={n:_cqNumero,bu:bu,nt:nt,b:b};_cqNumero=null;
-  if(fotoFile){var r=new FileReader();r.onload=function(e){_eseguiUscita(e.target.result);};r.readAsDataURL(fotoFile);}else _eseguiUscita(null);
+  if(fotoFile){var caricoId='C'+Date.now();compressaFoto(fotoFile,function(base64){_salvaFotoCarico(caricoId,base64);_eseguiUscita(caricoId,base64);});}else _eseguiUscita('C'+Date.now(),null);
 }
 function apriCaricaQuickTO(id){
   var allItems=[];(PROG||[]).forEach(function(p){allItems.push(p);});(PROG_DOMANI||[]).forEach(function(p){allItems.push(p);});Object.keys(CAL_DATA||{}).forEach(function(dt){(CAL_DATA[dt]||[]).forEach(function(p){allItems.push(p);});});
@@ -1701,7 +1707,7 @@ function regE(){
   if(!isIllimitata(l)){var occ=null;Object.values(BL).forEach(function(x){if(x.locazione===l)occ=x;});if(occ)return tst('Locazione '+l+' occupata da '+occ.numero,'er');}
   var ts=new Date().toISOString();var fotoFile=(document.getElementById('in-foto').files||[])[0];
   var storEntry={tipo:'ENTRATA',numero:n,locazione:l,bancali:b,note:nt,ts:ts};
-  if(fotoFile){var r=new FileReader();r.onload=function(e){storEntry.foto=e.target.result;dbSB(n,{numero:n,locazione:l,bancali:b,note:nt,ts:ts});dbAS(storEntry);};r.readAsDataURL(fotoFile);}
+  if(fotoFile){var caricoId='E'+Date.now();storEntry.caricoId=caricoId;compressaFoto(fotoFile,function(base64){_salvaFotoCarico(caricoId,base64);storEntry.foto=base64;storEntry.fotoSalvata=true;dbSB(n,{numero:n,locazione:l,bancali:b,note:nt,ts:ts});dbAS(storEntry);});}
   else{dbSB(n,{numero:n,locazione:l,bancali:b,note:nt,ts:ts});dbAS(storEntry);}
   document.getElementById('in-pfx').value='';document.getElementById('in-n').value='';document.getElementById('in-l').value='ARRIVI';document.getElementById('in-b').value='0';document.getElementById('in-nt').value='';clearFoto('in-foto','in-foto-prev','in-foto-lbl');
   setTipoEntrata('ARRIVI');suonoEntrata();tst('Bilico '+n+' entrato in '+l,'ok');
@@ -1729,19 +1735,19 @@ function regU(){
   if(rim===0)txt='Il bilico <strong>'+n+'</strong> uscirà dalla locazione <strong>'+b.locazione+'</strong>.<br><br>Bancali: <strong>'+bu+'</strong> — locazione verrà <strong style="color:var(--rb)">liberata</strong>.';
   else{var locOrig2=b.locazione.toUpperCase();var destLoc=(locOrig2==='SMEZZI'||locOrig2==='FRESCO')?locOrig2:'SMEZZI';txt='Dal bilico <strong>'+n+'</strong> escono <strong>'+bu+'</strong> bancali.<br>Rimangono <strong style="color:var(--ob)">'+rim+'</strong> in <strong>'+destLoc+'</strong>.'+(locOrig2!=='SMEZZI'&&locOrig2!=='FRESCO'?'<br><span style="color:var(--cb)">📍 Rimanenza → SMEZZI</span>':'');}
   document.getElementById('conf-uscita-txt').innerHTML=txt;
-  clearFoto('cou-foto','cou-foto-prev','cou-foto-lbl');
   aprO('sh-conf-uscita');
 }
 function confU(){
   if(!pend)return;
-  var fotoFile=(document.getElementById('out-foto').files||[])[0]||(document.getElementById('cou-foto').files||[])[0];
-  chiO('sh-conf-uscita');clearFoto('cou-foto','cou-foto-prev','cou-foto-lbl');
-  if(fotoFile){var reader=new FileReader();reader.onload=function(e){_eseguiUscita(e.target.result);};reader.readAsDataURL(fotoFile);}else _eseguiUscita(null);
+  var fotoFile=(document.getElementById('out-foto').files||[])[0];
+  chiO('sh-conf-uscita');
+  if(fotoFile){var caricoId='C'+Date.now();compressaFoto(fotoFile,function(base64){_salvaFotoCarico(caricoId,base64);_eseguiUscita(caricoId,base64);});}
+  else _eseguiUscita('C'+Date.now(),null);
 }
-function _eseguiUscita(foto){
+function _eseguiUscita(caricoId,foto){
   var n=pend.n,bu=pend.bu,nt=pend.nt,b=pend.b,rim=b.bancali-bu,ts=new Date().toISOString(),storEntry;
-  if(rim===0){dbDB(n);storEntry={tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:0,note:nt,ts:ts};if(foto)storEntry.foto=foto;dbAS(storEntry);tst('Bilico '+n+' uscito — '+b.locazione+' liberata','ok');}
-  else{var locOrig=b.locazione.toUpperCase();var nuovaLoc=(locOrig==='SMEZZI'||locOrig==='FRESCO')?locOrig:'SMEZZI';dbUB(n,{bancali:rim,locazione:nuovaLoc});storEntry={tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:rim,note:nt,ts:ts};if(foto)storEntry.foto=foto;dbAS(storEntry);tst('Usciti '+bu+' bancali — rimasti '+rim+' in '+nuovaLoc,'ok');}
+  if(rim===0){dbDB(n);storEntry={tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:0,note:nt,ts:ts,caricoId:caricoId};if(foto){storEntry.foto=foto;storEntry.fotoSalvata=true;}dbAS(storEntry);tst('Bilico '+n+' uscito — '+b.locazione+' liberata','ok');}
+  else{var locOrig=b.locazione.toUpperCase();var nuovaLoc=(locOrig==='SMEZZI'||locOrig==='FRESCO')?locOrig:'SMEZZI';dbUB(n,{bancali:rim,locazione:nuovaLoc});storEntry={tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:rim,note:nt,ts:ts,caricoId:caricoId};if(foto){storEntry.foto=foto;storEntry.fotoSalvata=true;}dbAS(storEntry);tst('Usciti '+bu+' bancali — rimasti '+rim+' in '+nuovaLoc,'ok');}
   suonoUscita();rimuoviProg(n);rimuoviPrenotazioneNum(n);
   document.getElementById('out-pfx').value='';document.getElementById('out-n').value='';document.getElementById('out-b').value='0';document.getElementById('out-nt').value='';document.getElementById('trvbox').style.display='none';clearFoto('out-foto','out-foto-prev','out-foto-lbl');pend=null;
   // aggiorna log nel sheet
@@ -2404,7 +2410,7 @@ var _pendConfMiss=null;
 function confermaBilicoGest(missioneId,bilIdx){if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m||m.stato==='caricata')return;var b=m.bilici[bilIdx];if(!b)return;var bInMag=BL[b.numero];var sugg=(b.bancaliProg||0)||(bInMag?bInMag.bancali:0);_pendConfMiss={missioneId:missioneId,bilIdx:bilIdx,numero:b.numero};var nE=document.getElementById('cm-num');if(nE)nE.textContent='#'+b.numero;var iE=document.getElementById('cm-info');if(iE)iE.textContent=(bInMag?'📍 '+bInMag.locazione+' — ':'')+(b.bancaliProg?'Ordinati: '+b.bancaliProg+' PLT':'');var vE=document.getElementById('cm-val');if(vE)vE.value=sugg;aprO('sh-conf-miss');}
 function confermaConPltGest(){if(!_pendConfMiss)return;var plt=parseInt(document.getElementById('cm-val').value);if(isNaN(plt)||plt<0)return tst('Valore non valido','er');var missioneId=_pendConfMiss.missioneId,bilIdx=_pendConfMiss.bilIdx,numero=_pendConfMiss.numero;_pendConfMiss=null;chiO('sh-conf-miss');var m=MISSIONI.find(function(x){return x.id===missioneId;});if(!m)return;var newBilici=(m.bilici||[]).map(function(x,i){return i===bilIdx?Object.assign({},x,{confermato:true,bancaliConfermati:plt,locazioneConfermata:(BL[x.numero]?BL[x.numero].locazione:'')}):x;});var confCount=newBilici.filter(function(x){return x.confermato;}).length;var nuovoStato=(confCount===newBilici.length&&newBilici.length>0)?'completata':confCount>0?'in_corso':'attesa';fdb.collection('missioni').doc(missioneId).update({bilici:newBilici,stato:nuovoStato}).then(function(){suonoSirena();tst('Bilico #'+numero+' confermato ✅','ok');renderMissioni();}).catch(function(e){tst('Errore: '+e.message,'er');});}
 function apriConfermaEvasa(id){_pendEvasaId=id;var m=MISSIONI.find(function(x){return x.id===id;});if(!m)return;var html='<p style="text-align:center;">Verranno registrate le uscite e scaricati i PLT dei seguenti bilici:</p>';(m.bilici||[]).forEach(function(b){var bl=BL[b.numero];html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd);"><span style="flex:1;font-weight:700;">#'+b.numero+'</span><span style="font-size:11px;color:'+(bl?'var(--tx2)':'var(--rb)')+';">'+(bl?bl.locazione:'fuori mag.')+'</span><span style="color:var(--ob);font-size:12px;">'+(b.bancaliConfermati||b.bancaliProg||0)+' PLT</span><span>'+(b.confermato?'✅':'⏳')+'</span></div>';});var bd=document.getElementById('cmc-body');if(bd)bd.innerHTML=html;var l=document.getElementById('cmf-lbl');if(l)l.textContent='Foto carico (opzionale)';var pv=document.getElementById('cmf-prev');if(pv)pv.style.display='none';var fi=document.getElementById('cmf-foto');if(fi)fi.value='';aprO('sh-carica-miss');}
-function confermaCaricaMiss(){if(!_pendEvasaId)return;if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===_pendEvasaId;});if(!m)return;var fotoFile=(document.getElementById('cmf-foto').files||[])[0];if(fotoFile){var caricoId='SP'+Date.now();m.caricoIdSpedizione=caricoId;var reader=new FileReader();reader.onload=function(e){caricaMissioneEsegui(m,e.target.result);};reader.readAsDataURL(fotoFile);}else{caricaMissioneEsegui(m,null);}}
+function confermaCaricaMiss(){if(!_pendEvasaId)return;if(!UC||!fdb)return tst('Connessione cloud necessaria','er');var m=MISSIONI.find(function(x){return x.id===_pendEvasaId;});if(!m)return;var fotoFile=(document.getElementById('cmf-foto').files||[])[0];if(fotoFile){var caricoId='SP'+Date.now();m.caricoIdSpedizione=caricoId;compressaFoto(fotoFile,function(base64){caricaMissioneEsegui(m,base64);});}else{caricaMissioneEsegui(m,null);}}
 function caricaMissioneEsegui(m,fotoBase64){
   var caricoId=m.caricoIdSpedizione||('SP'+Date.now());
   if(fotoBase64&&UC&&fdb)fdb.collection('foto_uscite').doc(caricoId).set({base64:fotoBase64,ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});
@@ -2505,6 +2511,8 @@ function expOrdini(){var wb=XLSX.utils.book_new();var r=[['N° BILICO','PLT PIAN
 // ═══ FOTO ═══
 function prevFoto(inp,imgId,prevId,lblId){if(!inp.files||!inp.files[0])return;var r=new FileReader();r.onload=function(e){document.getElementById(imgId).src=e.target.result;document.getElementById(prevId).style.display='block';document.getElementById(lblId).textContent='✅ Foto allegata';};r.readAsDataURL(inp.files[0]);}
 function clearFoto(inpId,prevId,lblId){document.getElementById(inpId).value='';document.getElementById(prevId).style.display='none';document.getElementById(lblId).textContent='Foto (opzionale)';}
+function compressaFoto(file,cb){var reader=new FileReader();reader.onload=function(e){var img=new Image();img.onload=function(){var MAX=700,w=img.width,h=img.height;if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);cb(canvas.toDataURL('image/jpeg',0.6));};img.src=e.target.result;};reader.readAsDataURL(file);}
+function _salvaFotoCarico(caricoId,base64){if(UC&&fdb)fdb.collection('foto_uscite').doc(caricoId).set({base64:base64,ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});}
 function vediFoto(caricoId){if(!caricoId||!UC||!fdb){tst('Connessione cloud necessaria','er');return;}var imgEl=document.getElementById('foto-img'),vuotaEl=document.getElementById('foto-empty');imgEl.style.display='none';imgEl.src='';vuotaEl.style.display='block';vuotaEl.textContent='Caricamento...';aprO('sh-foto');fdb.collection('foto_uscite').doc(caricoId).get().then(function(doc){if(doc.exists&&doc.data().base64){imgEl.src=doc.data().base64;imgEl.style.display='block';vuotaEl.style.display='none';}else{var stor=ST.find(function(m){return m.caricoId===caricoId;});if(stor&&stor.foto){imgEl.src=stor.foto;imgEl.style.display='block';vuotaEl.style.display='none';}else vuotaEl.textContent='Nessuna foto disponibile';}}).catch(function(){vuotaEl.textContent='Errore caricamento foto';});}
 function checkFotoReminder(){if(!UC||!fdb)return;var isLeo=CURR_USER&&CURR_USER.username.toLowerCase()==='leo',isPlus=CURR_USER&&CURR_USER.livello===2;if(!isLeo&&!isPlus)return;var oggi=new Date();if(oggi.getDate()!==1)return;var chiave='FOTO_REM_'+oggi.getFullYear()+'_'+(oggi.getMonth()+1);try{if(localStorage.getItem(chiave))return;}catch(x){}fdb.collection('foto_uscite').get().then(function(snap){if(snap.size>0){document.getElementById('foto-rem-count').textContent=snap.size;setTimeout(function(){aprO('sh-foto-reminder');},2000);}}).catch(function(){});}
 function rispondiFotoReminder(scarica){chiO('sh-foto-reminder');if(scarica)scaricaTutteFoto(true);else{var oggi=new Date(),chiave='FOTO_REM_'+oggi.getFullYear()+'_'+(oggi.getMonth()+1);try{localStorage.setItem(chiave,'1');}catch(x){}}}

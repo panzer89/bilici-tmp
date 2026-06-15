@@ -15,6 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 :root{
@@ -1295,6 +1296,7 @@ window.onload=function(){
   try{
     if(FBC.apiKey==='INSERISCI_API_KEY')throw new Error('no cfg');
     if(!firebase.apps.length)firebase.initializeApp(FBC);
+    firebase.auth().signInAnonymously().catch(function(e){console.warn('Auth anonima:',e&&e.message);});
     fdb=firebase.firestore();UC=true;
     document.getElementById('cbg').classList.add('on');
     document.getElementById('cbl').textContent='CLOUD';

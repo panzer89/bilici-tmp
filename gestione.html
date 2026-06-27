@@ -1263,7 +1263,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <script>
 // ═══ CONFIG ═══
 var FBC={apiKey:"AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",authDomain:"firestore-database-93749.firebaseapp.com",projectId:"firestore-database-93749",storageBucket:"firestore-database-93749.firebasestorage.app",messagingSenderId:"13697167946",appId:"1:13697167946:web:e955abfe6d0ed11a3cecb3"};
-var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE'];
+var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','SMEZZI SIZIANO','SMEZZI CORTEOLONA'];
 var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
 var PIN='4114';
 
@@ -1315,6 +1315,8 @@ window.onload=function(){
   document.getElementById('imp-file').addEventListener('change',leggiFileImport);
 };
 function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();if(l.indexOf('M-')===0)return true;for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
+// Destinazione della rimanenza PLT dopo un'uscita parziale (smezzi per sede)
+function destRimanenza(loc){var L=(loc||'').toUpperCase().trim();if(L==='SIZIANO'||L==='SMEZZI SIZIANO')return 'SMEZZI SIZIANO';if(L==='CORTEOLONA'||L==='SMEZZI CORTEOLONA')return 'SMEZZI CORTEOLONA';if(L==='SMEZZI'||L==='FRESCO')return L;return 'SMEZZI';}
 
 // ═══ CARICAMENTO STORICO DIFFERITO (dashboard più veloce) ═══
 var _storicoAttached=false,_lightReady={};
@@ -1661,8 +1663,8 @@ function confUscitaCoppia(){
 }
 function _eseguiCoppia(buA,buB,ntA,ntB,itemA,itemB,bilA,bilB,caricoId,foto){
   var ts=new Date().toISOString();
-  if(bilA){var rimA=bilA.bancali-buA;if(rimA===0)dbDB(itemA.numero);else{var lA=bilA.locazione.toUpperCase();dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'});}var stA={tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:bilA.bancali-buA,note:ntA,ts:ts,caricoId:caricoId};if(foto){stA.foto=foto;stA.fotoSalvata=true;}dbAS(stA);}
-  if(bilB){var rimB=bilB.bancali-buB;if(rimB===0)dbDB(itemB.numero);else{var lB=bilB.locazione.toUpperCase();dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'});}var stB={tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:bilB.bancali-buB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId};if(foto){stB.foto=foto;stB.fotoSalvata=true;}dbAS(stB);}
+  if(bilA){var rimA=bilA.bancali-buA;if(rimA===0)dbDB(itemA.numero);else{var lA=bilA.locazione.toUpperCase();dbUB(itemA.numero,{bancali:rimA,locazione:destRimanenza(lA)});}var stA={tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:bilA.bancali-buA,note:ntA,ts:ts,caricoId:caricoId};if(foto){stA.foto=foto;stA.fotoSalvata=true;}dbAS(stA);}
+  if(bilB){var rimB=bilB.bancali-buB;if(rimB===0)dbDB(itemB.numero);else{var lB=bilB.locazione.toUpperCase();dbUB(itemB.numero,{bancali:rimB,locazione:destRimanenza(lB)});}var stB={tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:bilB.bancali-buB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId};if(foto){stB.foto=foto;stB.fotoSalvata=true;}dbAS(stB);}
   if(UC&&fdb){if(itemA.id)fdb.collection('prog').doc(itemA.id).delete().catch(function(){});if(itemB.id)fdb.collection('prog').doc(itemB.id).delete().catch(function(){});}
   else{PROG=PROG.filter(function(p){return p.id!==itemA.id&&p.id!==itemB.id;});salvaProg();renderProg();}
   suonoUscita();tst('Coppia #'+itemA.numero+' + #'+itemB.numero+' caricata!','ok');_coppiaA=null;_coppiaB=null;
@@ -1748,7 +1750,7 @@ function regU(){
   pend={n:n,bu:bu,nt:nt,b:b};
   var rim=b.bancali-bu,txt;
   if(rim===0)txt='Il bilico <strong>'+n+'</strong> uscirà dalla locazione <strong>'+b.locazione+'</strong>.<br><br>Bancali: <strong>'+bu+'</strong> — locazione verrà <strong style="color:var(--rb)">liberata</strong>.';
-  else{var locOrig2=b.locazione.toUpperCase();var destLoc=(locOrig2==='SMEZZI'||locOrig2==='FRESCO')?locOrig2:'SMEZZI';txt='Dal bilico <strong>'+n+'</strong> escono <strong>'+bu+'</strong> bancali.<br>Rimangono <strong style="color:var(--ob)">'+rim+'</strong> in <strong>'+destLoc+'</strong>.'+(locOrig2!=='SMEZZI'&&locOrig2!=='FRESCO'?'<br><span style="color:var(--cb)">📍 Rimanenza → SMEZZI</span>':'');}
+  else{var locOrig2=b.locazione.toUpperCase();var destLoc=destRimanenza(locOrig2);txt='Dal bilico <strong>'+n+'</strong> escono <strong>'+bu+'</strong> bancali.<br>Rimangono <strong style="color:var(--ob)">'+rim+'</strong> in <strong>'+destLoc+'</strong>.'+(destLoc!==locOrig2?'<br><span style="color:var(--cb)">📍 Rimanenza → '+destLoc+'</span>':'');}
   document.getElementById('conf-uscita-txt').innerHTML=txt;
   aprO('sh-conf-uscita');
 }
@@ -1762,7 +1764,7 @@ function confU(){
 function _eseguiUscita(caricoId,foto){
   var n=pend.n,bu=pend.bu,nt=pend.nt,b=pend.b,rim=b.bancali-bu,ts=new Date().toISOString(),storEntry;
   if(rim===0){dbDB(n);storEntry={tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:0,note:nt,ts:ts,caricoId:caricoId};if(foto){storEntry.foto=foto;storEntry.fotoSalvata=true;}dbAS(storEntry);tst('Bilico '+n+' uscito — '+b.locazione+' liberata','ok');}
-  else{var locOrig=b.locazione.toUpperCase();var nuovaLoc=(locOrig==='SMEZZI'||locOrig==='FRESCO')?locOrig:'SMEZZI';dbUB(n,{bancali:rim,locazione:nuovaLoc});storEntry={tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:rim,note:nt,ts:ts,caricoId:caricoId};if(foto){storEntry.foto=foto;storEntry.fotoSalvata=true;}dbAS(storEntry);tst('Usciti '+bu+' bancali — rimasti '+rim+' in '+nuovaLoc,'ok');}
+  else{var locOrig=b.locazione.toUpperCase();var nuovaLoc=destRimanenza(locOrig);dbUB(n,{bancali:rim,locazione:nuovaLoc});storEntry={tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:rim,note:nt,ts:ts,caricoId:caricoId};if(foto){storEntry.foto=foto;storEntry.fotoSalvata=true;}dbAS(storEntry);tst('Usciti '+bu+' bancali — rimasti '+rim+' in '+nuovaLoc,'ok');}
   suonoUscita();rimuoviProg(n);rimuoviPrenotazioneNum(n);
   document.getElementById('out-pfx').value='';document.getElementById('out-n').value='';document.getElementById('out-b').value='0';document.getElementById('out-nt').value='';document.getElementById('trvbox').style.display='none';clearFoto('out-foto','out-foto-prev','out-foto-lbl');pend=null;
   // aggiorna log nel sheet
@@ -2456,7 +2458,7 @@ function caricaMissioneEsegui(m,fotoBase64){
     (m.bilici||[]).forEach(function(b,idx){
       if(!b.confermato)return;var shipped=(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0));if(shipped<=0)return;
       var cur=BL[b.numero];var rimasti=cur?(cur.bancali-shipped):0;
-      if(cur){if(rimasti<=0)dbDB(b.numero);else{var L=(cur.locazione||'').toUpperCase();dbUB(b.numero,{bancali:rimasti,locazione:(L==='SMEZZI'||L==='FRESCO')?L:'SMEZZI'});}}
+      if(cur){if(rimasti<=0)dbDB(b.numero);else{var L=(cur.locazione||'').toUpperCase();dbUB(b.numero,{bancali:rimasti,locazione:destRimanenza(L)});}}
       var rec={tipo:'USCITA',numero:b.numero,locazione:cur?cur.locazione:'—',bancaliUsciti:shipped,bancaliRimasti:Math.max(0,rimasti),note:'Spedizione missione',ts:new Date(Date.now()+idx).toISOString(),caricoId:caricoId,spedizioneMiss:true};
       if(fotoBase64)rec.fotoSalvata=true;
       dbAS(rec);
@@ -2549,7 +2551,7 @@ function expOrdini(){var wb=XLSX.utils.book_new();var r=[['N° BILICO','PLT PIAN
 // ═══ FOTO ═══
 function prevFoto(inp,imgId,prevId,lblId){if(!inp.files||!inp.files[0])return;var r=new FileReader();r.onload=function(e){document.getElementById(imgId).src=e.target.result;document.getElementById(prevId).style.display='block';document.getElementById(lblId).textContent='✅ Foto allegata';};r.readAsDataURL(inp.files[0]);}
 function clearFoto(inpId,prevId,lblId){document.getElementById(inpId).value='';document.getElementById(prevId).style.display='none';document.getElementById(lblId).textContent='Foto (opzionale)';}
-function compressaFoto(file,cb){var reader=new FileReader();reader.onload=function(e){var img=new Image();img.onload=function(){var MAX=700,w=img.width,h=img.height;if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);cb(canvas.toDataURL('image/jpeg',0.6));};img.src=e.target.result;};reader.readAsDataURL(file);}
+function compressaFoto(file,cb){var done=false;function finish(r){if(done)return;done=true;clearTimeout(_t);cb(r);}var _t=setTimeout(function(){finish(null);},8000);var reader=new FileReader();reader.onerror=function(){finish(null);};reader.onload=function(e){var orig=e.target.result;var img=new Image();img.onerror=function(){finish(orig);};img.onload=function(){try{var MAX=700,w=img.width,h=img.height;if(!w||!h){finish(orig);return;}if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);finish(canvas.toDataURL('image/jpeg',0.6));}catch(err){finish(orig);}};img.src=orig;};reader.readAsDataURL(file);}
 function _salvaFotoCarico(caricoId,base64){if(UC&&fdb)fdb.collection('foto_uscite').doc(caricoId).set({base64:base64,ts:Date.now(),operatore:CURR_USER?CURR_USER.username:''}).catch(function(){});}
 function vediFoto(caricoId){if(!caricoId||!UC||!fdb){tst('Connessione cloud necessaria','er');return;}var imgEl=document.getElementById('foto-img'),vuotaEl=document.getElementById('foto-empty');imgEl.style.display='none';imgEl.src='';vuotaEl.style.display='block';vuotaEl.textContent='Caricamento...';aprO('sh-foto');fdb.collection('foto_uscite').doc(caricoId).get().then(function(doc){if(doc.exists&&doc.data().base64){imgEl.src=doc.data().base64;imgEl.style.display='block';vuotaEl.style.display='none';}else{var stor=ST.find(function(m){return m.caricoId===caricoId;});if(stor&&stor.foto){imgEl.src=stor.foto;imgEl.style.display='block';vuotaEl.style.display='none';}else vuotaEl.textContent='Nessuna foto disponibile';}}).catch(function(){vuotaEl.textContent='Errore caricamento foto';});}
 function checkFotoReminder(){if(!UC||!fdb)return;var isLeo=CURR_USER&&CURR_USER.username.toLowerCase()==='leo',isPlus=CURR_USER&&CURR_USER.livello===2;if(!isLeo&&!isPlus)return;var oggi=new Date();if(oggi.getDate()!==1)return;var chiave='FOTO_REM_'+oggi.getFullYear()+'_'+(oggi.getMonth()+1);try{if(localStorage.getItem(chiave))return;}catch(x){}fdb.collection('foto_uscite').get().then(function(snap){if(snap.size>0){document.getElementById('foto-rem-count').textContent=snap.size;setTimeout(function(){aprO('sh-foto-reminder');},2000);}}).catch(function(){});}

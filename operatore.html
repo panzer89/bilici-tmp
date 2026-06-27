@@ -751,7 +751,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);overfl
 // ═══ CONFIG ═══
 var FBC={apiKey:"AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",authDomain:"firestore-database-93749.firebaseapp.com",projectId:"firestore-database-93749",storageBucket:"firestore-database-93749.firebasestorage.app",messagingSenderId:"13697167946",appId:"1:13697167946:web:e955abfe6d0ed11a3cecb3"};
 var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
-var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE'];
+var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','SMEZZI SIZIANO','SMEZZI CORTEOLONA'];
 
 // ═══ STATO ═══
 var BL={},ST=[],PROG=[],PROG_DOMANI=[],CAL_DATA={};
@@ -982,6 +982,8 @@ function fmtT(ts){if(!ts)return '-';var d=new Date(ts);return d.toLocaleDateStri
 function fmtH(ts){if(!ts)return '-';var d=new Date(ts);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
 function tst(msg,tp){var t=document.getElementById('tst');t.textContent=msg;t.className='tst '+(tp||'');void t.offsetWidth;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3200);if(tp==='er')suonoErr();}
 function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();if(l.indexOf('M-')===0)return true;for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
+// Destinazione della rimanenza PLT dopo un'uscita parziale (smezzi per sede)
+function destRimanenza(loc){var L=(loc||'').toUpperCase().trim();if(L==='SIZIANO'||L==='SMEZZI SIZIANO')return 'SMEZZI SIZIANO';if(L==='CORTEOLONA'||L==='SMEZZI CORTEOLONA')return 'SMEZZI CORTEOLONA';if(L==='SMEZZI'||L==='FRESCO')return L;return 'SMEZZI';}
 function toggleLog(bodyId,chevId){var b=document.getElementById(bodyId),c=document.getElementById(chevId);if(!b)return;var o=b.classList.contains('open');if(o){b.classList.remove('open');if(c)c.classList.remove('open');}else{b.classList.add('open');if(c)c.classList.add('open');}}
 function toggleProg(bodyId,chevId){toggleLog(bodyId,chevId);}
 
@@ -1261,7 +1263,7 @@ function apriUscitaVeloce(numero,bancaliProg){
   var rim=b.bancali-banc;
   var txt='Bilico <strong style="color:var(--bb)">#'+numero+'</strong><br>📍 '+b.locazione+' — 📦 '+b.bancali+' bancali<br><br>';
   if(rim===0)txt+='Uscita <strong>totale</strong> — locazione verrà liberata.';
-  else{var destLoc=(b.locazione.toUpperCase()==='SMEZZI'||b.locazione.toUpperCase()==='FRESCO')?b.locazione.toUpperCase():'SMEZZI';txt+='Rimangono <strong style="color:var(--ob)">'+rim+'</strong> bancali → <strong>'+destLoc+'</strong>';}
+  else{var destLoc=destRimanenza(b.locazione);txt+='Rimangono <strong style="color:var(--ob)">'+rim+'</strong> bancali → <strong>'+destLoc+'</strong>';}
   document.getElementById('sh-conf-tx').innerHTML=txt;
   document.getElementById('sh-conf-banc-wrap').style.display='block';
   document.getElementById('sh-conf-banc').value=banc;
@@ -1306,7 +1308,7 @@ function eseguiConf(){
   // usa lo stesso caricoId generato quando è stata scattata la foto
   var caricoId=fotoCaricoIdPending||('C'+Date.now());
   if(rim===0){dbDB(n);}
-  else{var loc=(b.locazione.toUpperCase()==='SMEZZI'||b.locazione.toUpperCase()==='FRESCO')?b.locazione.toUpperCase():'SMEZZI';dbUB(n,{bancali:rim,locazione:loc});}
+  else{var loc=destRimanenza(b.locazione);dbUB(n,{bancali:rim,locazione:loc});}
   dbAS({tipo:'USCITA',numero:n,locazione:b.locazione,bancaliUsciti:bu,bancaliRimasti:rim,note:'',ts:ts,caricoId:caricoId,fotoSalvata:true});
   // rimuovi da prog
   rimuoviDaProg(n);
@@ -1329,8 +1331,8 @@ function confUscitaCoppia(){
   if(bilB&&buB>bilB.bancali)return tst('Bancali #'+itemB.numero+' superano i presenti','er');
   chiO('sh-coppia');
   var caricoId='C'+Date.now(),ts=new Date().toISOString();
-  if(bilA){var rimA=bilA.bancali-buA;if(rimA===0)dbDB(itemA.numero);else{var lA=bilA.locazione.toUpperCase();dbUB(itemA.numero,{bancali:rimA,locazione:(lA==='SMEZZI'||lA==='FRESCO')?lA:'SMEZZI'});}dbAS({tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId,fotoSalvata:true});}
-  if(bilB){var rimB=bilB.bancali-buB;if(rimB===0)dbDB(itemB.numero);else{var lB=bilB.locazione.toUpperCase();dbUB(itemB.numero,{bancali:rimB,locazione:(lB==='SMEZZI'||lB==='FRESCO')?lB:'SMEZZI'});}dbAS({tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId,fotoSalvata:true});}
+  if(bilA){var rimA=bilA.bancali-buA;if(rimA===0)dbDB(itemA.numero);else{var lA=bilA.locazione.toUpperCase();dbUB(itemA.numero,{bancali:rimA,locazione:destRimanenza(lA)});}dbAS({tipo:'USCITA',numero:itemA.numero,locazione:bilA.locazione,bancaliUsciti:buA,bancaliRimasti:rimA,note:ntA,ts:ts,caricoId:caricoId,fotoSalvata:true});}
+  if(bilB){var rimB=bilB.bancali-buB;if(rimB===0)dbDB(itemB.numero);else{var lB=bilB.locazione.toUpperCase();dbUB(itemB.numero,{bancali:rimB,locazione:destRimanenza(lB)});}dbAS({tipo:'USCITA',numero:itemB.numero,locazione:bilB.locazione,bancaliUsciti:buB,bancaliRimasti:rimB,note:ntB,ts:new Date(Date.now()+1).toISOString(),caricoId:caricoId,fotoSalvata:true});}
   if(UC&&fdb){if(itemA.id)fdb.collection('prog').doc(itemA.id).delete();if(itemB.id)fdb.collection('prog').doc(itemB.id).delete();}
   suonoOk();tst('Coppia #'+itemA.numero+' + #'+itemB.numero+' caricata! ✅','ok');
   _coppiaA=null;_coppiaB=null;fotoUscitaSalvata=false;fotoCaricoIdPending=null;
@@ -1403,18 +1405,28 @@ function clearFotoCoppia(){fotoUscitaSalvata=false;fotoCaricoIdPending=null;var 
 function clearFotoMiss(){fotoUscitaSalvata=false;fotoCaricoIdPending=null;var lbl=document.getElementById('miss-foto-label');if(lbl){lbl.classList.remove('done');lbl.querySelector('.tx').textContent='SCATTA FOTO CARICO';}var prev=document.getElementById('miss-foto-prev');if(prev)prev.style.display='none';var btn=document.getElementById('miss-foto-ok');if(btn)btn.disabled=true;}
 // I label con for="foto-input" aprono nativamente il file picker.
 function compressaFoto(file,cb){
+  var done=false;
+  function finish(r){if(done)return;done=true;clearTimeout(_t);cb(r);}
+  // se qualcosa si inceppa (foto HEIC iPhone, decodifica lenta...) sblocca comunque dopo 8s
+  var _t=setTimeout(function(){finish(null);},8000);
   var reader=new FileReader();
+  reader.onerror=function(){finish(null);};
   reader.onload=function(e){
+    var orig=e.target.result;
     var img=new Image();
+    img.onerror=function(){finish(orig);}; // immagine non decodificabile → uso l'originale, niente blocco
     img.onload=function(){
-      var MAX=700,w=img.width,h=img.height;
-      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-      if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-      var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      cb(canvas.toDataURL('image/jpeg',0.6));
+      try{
+        var MAX=700,w=img.width,h=img.height;
+        if(!w||!h){finish(orig);return;}
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+        var canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        finish(canvas.toDataURL('image/jpeg',0.6));
+      }catch(err){finish(orig);}
     };
-    img.src=e.target.result;
+    img.src=orig;
   };
   reader.readAsDataURL(file);
 }
@@ -1773,7 +1785,7 @@ function completaMissioneFoto(){
     (m.bilici||[]).forEach(function(b,idx){
       if(!b.confermato)return;var shipped=(b.bancaliConfermati!=null?b.bancaliConfermati:(b.bancaliProg||0));if(shipped<=0)return;
       var cur=BL[b.numero];var rimasti=cur?(cur.bancali-shipped):0;
-      if(cur){if(rimasti<=0)dbDB(b.numero);else{var L=(cur.locazione||'').toUpperCase();dbUB(b.numero,{bancali:rimasti,locazione:(L==='SMEZZI'||L==='FRESCO')?L:'SMEZZI'});}}
+      if(cur){if(rimasti<=0)dbDB(b.numero);else{var L=(cur.locazione||'').toUpperCase();dbUB(b.numero,{bancali:rimasti,locazione:destRimanenza(L)});}}
       var rec={tipo:'USCITA',numero:b.numero,locazione:cur?cur.locazione:'—',bancaliUsciti:shipped,bancaliRimasti:Math.max(0,rimasti),note:'Spedizione missione',ts:new Date(Date.now()+idx).toISOString(),caricoId:caricoId,fotoSalvata:true,spedizioneMiss:true};
       dbAS(rec);
     });

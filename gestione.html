@@ -453,10 +453,10 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <!-- Stats 3x5 -->
   <div class="stat-strip">
     <!-- riga 1: stock + disp plt + bilici secco -->
-    <div class="stat-card"><div class="num og" id="s-stock-secco">0</div><div class="lab">Stock Secco</div></div>
-    <div class="stat-card"><div class="num og" id="s-disp-secco-num">—</div><div class="lab">Disp PLT Secco</div></div>
-    <div class="stat-card"><div class="num cy" id="s-stock-fresco">0</div><div class="lab">Stock Fresco</div></div>
-    <div class="stat-card"><div class="num cy" id="s-disp-fresco-num">—</div><div class="lab">Disp PLT Fresco</div></div>
+    <div class="stat-card"><div class="num og" id="s-plt-secco-pieve">0</div><div class="lab">PLT Secco Pieve</div></div>
+    <div class="stat-card"><div class="num cy" id="s-plt-siziano">0</div><div class="lab">PLT Siziano</div></div>
+    <div class="stat-card"><div class="num gn" id="s-trasf-siziano">0</div><div class="lab">Trasf. a Siziano</div></div>
+    <div class="stat-card"><div class="num pu" id="s-plt-granarolo">0</div><div class="lab">PLT Granarolo</div></div>
     <div class="stat-card"><div class="num og" id="s-bilici-secco">—</div><div class="lab">Bilici Secco</div></div>
     <!-- riga 2: movimenti oggi + marchesi + mese -->
     <div class="stat-card"><div class="num gn" id="s-plt-in">0</div><div class="lab">PLT In oggi</div></div>
@@ -1263,7 +1263,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <script>
 // ═══ CONFIG ═══
 var FBC={apiKey:"AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",authDomain:"firestore-database-93749.firebaseapp.com",projectId:"firestore-database-93749",storageBucket:"firestore-database-93749.firebasestorage.app",messagingSenderId:"13697167946",appId:"1:13697167946:web:e955abfe6d0ed11a3cecb3"};
-var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','SMEZZI SIZIANO','SMEZZI CORTEOLONA'];
+var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','GRANAROLO','SMEZZI SIZIANO','SMEZZI CORTEOLONA'];
 var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
 var PIN='4114';
 
@@ -2686,6 +2686,11 @@ function _uiNow(){
   var stockSecco=lst.reduce(function(s,b){var loc=(b.locazione||'').toUpperCase();return loc==='FRESCO'?s:s+(b.bancali||0);},0)-pltMarchesi;
   var partenzePlt=lst.reduce(function(s,b){return(b.locazione||'').toUpperCase()==='PARTENZE'?s+(b.bancali||0):s;},0);
   var stockFresco=lst.reduce(function(s,b){return(b.locazione||'').toUpperCase()==='FRESCO'?s+(b.bancali||0):s;},0);
+  // ── Riquadri dashboard: PLT Secco Pieve / Siziano / Trasferiti Siziano / Granarolo ──
+  var pltSeccoPieve=lst.reduce(function(s,b){var loc=(b.locazione||'').toUpperCase();if(loc==='FRESCO'||loc==='SIZIANO'||loc==='SMEZZI SIZIANO'||loc==='GRANAROLO')return s;if(/[a-zA-Z]/.test(String(b.numero||'')))return s;return s+(b.bancali||0);},0);
+  var pltSiziano=lst.reduce(function(s,b){var loc=(b.locazione||'').toUpperCase();return(loc==='SIZIANO'||loc==='SMEZZI SIZIANO')?s+(b.bancali||0):s;},0);
+  var nTrasfSiziano=ST.filter(function(m){return m.tipo==='TRASFERIMENTO'&&(m.locazioneA||'').toUpperCase()==='SIZIANO';}).length;
+  var pltGranarolo=lst.reduce(function(s,b){return(b.locazione||'').toUpperCase()==='GRANAROLO'?s+(b.bancali||0):s;},0);
   var oggi=new Date().toDateString();
   var movOggi=ST.filter(function(m){return new Date(m.ts).toDateString()===oggi;});
   var pltIn=movOggi.reduce(function(a,m){return m.tipo==='ENTRATA'?a+(m.bancali||0):a;},0);
@@ -2698,10 +2703,9 @@ function _uiNow(){
   var postiDispFresc=postiFresc>0?postiFresc-stockFresco:null;
   var biliciDispSecco=(postiSecco>0&&pltBilico>0)?Math.floor((postiSecco-stockSecco+partenzePlt-pltMarchesi)/pltBilico):null;
   function _s(id,val){var el=document.getElementById(id);if(el)el.textContent=val!==null?val:'—';}
-  _s('s-stock-secco',stockSecco);_s('s-stock-fresco',stockFresco);
+  _s('s-plt-secco-pieve',pltSeccoPieve);_s('s-plt-siziano',pltSiziano);_s('s-trasf-siziano',nTrasfSiziano);_s('s-plt-granarolo',pltGranarolo);
   _s('s-plt-in',pltIn);_s('s-plt-out',pltOut);
   _s('s-bilici-secco',biliciDispSecco);_s('s-marchesi',pltMarchesi);
-  _s('s-disp-secco-num',postiDispSecco);_s('s-disp-fresco-num',postiDispFresc);
   var mc=document.getElementById('menu-mag-sub');if(mc)mc.textContent=lst.length+' bilici in magazzino';
   aggiornaBadgeCarrellista();aggiornaBadgeMissioni();
   aggiornaBoxAttesi();

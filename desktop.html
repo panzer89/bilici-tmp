@@ -1556,6 +1556,18 @@ input, select, textarea { font-family: inherit; }
   </div>
 </div>
 
+<!-- MODIFICA MOVIMENTO STORICO (solo Admin/Plus) -->
+<div class="mo" id="mo-edit-stor">
+  <div class="mdl" style="max-width:440px;">
+    <div class="mha"></div>
+    <div class="mtt" style="color:var(--ob);">&#x270F;&#xFE0F; Modifica Movimento</div>
+    <div id="es-info" style="font-size:12px;color:var(--tx3);margin-bottom:12px;"></div>
+    <div id="es-body"></div>
+    <div style="font-size:11px;color:var(--tx3);text-align:center;margin:6px 0 10px;">⚠️ Modifica solo il registro, non ricalcola la giacenza.</div>
+    <div class="btn-row"><button class="btn bgh" onclick="chiM('mo-edit-stor')">&#x2716; Annulla</button><button class="btn bgn" onclick="salvaModificaStorico()">&#x2705; Salva</button></div>
+  </div>
+</div>
+
 <!-- LEGENDA DASHBOARD -->
 <div class="mo" id="mo-dash-info">
   <div class="mdl wide" style="max-height:85vh;">
@@ -2658,7 +2670,7 @@ function expOrdini(){var wb=XLSX.utils.book_new();var r=[['N° BILICO','PLT PIAN
 
 // ═══ LOG ROWS ═══
 function lgRow(m){var isIn=m.tipo==='ENTRATA',isMod=m.tipo==='MODIFICA',isTr=m.tipo==='TRASFERIMENTO';var dotCls=isIn?'in':(isMod?'mod':(isTr?'tr':'ou'));var ico=isIn?'🟢':(isMod?'✏️':(isTr?'🔄':'🔴'));var label=isIn?'Entrato':(isMod?'Modificato':(isTr?'Trasferito':'Uscito'));var opTag=m.operatore?'<span class="op-tag">👤 '+m.operatore+'</span>':'';var fotoBtn=(m.fotoSalvata&&m.caricoId)?'<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;" title="Vedi foto">📷</button>':'';var det;if(isTr)det=(m.bancali!=null?m.bancali+' bancali':'-')+' — Da: '+(m.locazioneDa||'-')+' → '+(m.locazioneA||'-');else if(isIn)det=(m.bancali!=null?m.bancali+' bancali':'—');else if(isMod)det=(m.bancali||'-')+' bancali';else det='Usciti: '+(m.bancaliUsciti!=null?m.bancaliUsciti:'—')+', Rimasti: '+(m.bancaliRimasti!=null?m.bancaliRimasti:'—');var s='<div class="li"><div class="ldot '+dotCls+'"></div><div class="ltx"><div class="lm">'+ico+' Bilico <strong>#'+m.numero+'</strong> - '+label+opTag+fotoBtn+'</div>';if(!isMod)s+='<div class="ls">'+(isTr?det:'Loc: '+(m.locazione||'—')+' - '+det)+(m.note?' - '+m.note:'')+'</div>';if(isMod&&m.diff&&m.diff.length){s+='<div class="diff-box">';m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">→</span><span class="diff-new">'+d.a+'</span></div>';});s+='</div>';}else if(isMod)s+='<div class="ls">'+det+(m.note?' - '+m.note:'')+'</div>';s+='</div><div class="lti">'+fmtH(m.ts)+'</div></div>';return s;}
-function lgDel(m){var isIn=m.tipo==='ENTRATA',isMod=m.tipo==='MODIFICA',isTr=m.tipo==='TRASFERIMENTO',mid=m.id;var dotCls=isIn?'in':(isMod?'mod':(isTr?'tr':'ou'));var ico=isIn?'🟢':(isMod?'✏️':(isTr?'🔄':'🔴'));var label=isIn?'Entrato':(isMod?'Modificato':(isTr?'Trasferito':'Uscito'));var opTag=m.operatore?'<span class="op-tag">👤 '+m.operatore+'</span>':'';var fotoBtn=(m.fotoSalvata&&m.caricoId)?'<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;" title="Vedi foto">📷</button>':'';var det;if(isTr)det=(m.bancali!=null?m.bancali+' bancali':'-')+' — Da: '+(m.locazioneDa||'-')+' → '+(m.locazioneA||'-');else if(isIn)det=(m.bancali!=null?m.bancali+' bancali':'—');else if(isMod)det=(m.bancali||'-')+' bancali';else det='Usciti: '+(m.bancaliUsciti||'—')+', Rimasti: '+(m.bancaliRimasti||'—');var s='<div class="li" style="align-items:center;"><div class="ldot '+dotCls+'" style="margin-top:0;"></div><div class="ltx"><div class="lm">'+ico+' <strong>#'+m.numero+'</strong> - '+label+opTag+fotoBtn+'</div>';if(!isMod)s+='<div class="ls">'+(isTr?det:'Loc: '+(m.locazione||'—')+' - '+det)+(m.note?'<br>'+m.note:'')+'</div>';if(isMod&&m.diff&&m.diff.length){s+='<div class="diff-box">';m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">→</span><span class="diff-new">'+d.a+'</span></div>';});s+='</div>';}else if(isMod)s+='<div class="ls">'+det+(m.note?'<br>'+m.note:'')+'</div>';if(m.notaStorico)s+='<div class="nota-storico-box" onclick="apriNotaStor(\''+mid+'\',\''+m.notaStorico.replace(/'/g,"\\'")+'\')" title="Modifica nota">📝 '+m.notaStorico+'</div>';s+='<div style="font-size:11px;color:var(--tx2);margin-top:2px;">'+fmtT(m.ts)+'</div></div>';s+='<div style="display:flex;gap:4px;flex-shrink:0;"><button class="ldb" onclick="chiPin(\'del\',\''+mid+'\')">🗑</button><button class="icon-btn-sm" onclick="apriNotaStor(\''+mid+'\',\''+(m.notaStorico||'').replace(/'/g,"\\'")+'\')" title="Nota">📝</button></div></div>';return s;}
+function lgDel(m){var isIn=m.tipo==='ENTRATA',isMod=m.tipo==='MODIFICA',isTr=m.tipo==='TRASFERIMENTO',mid=m.id;var dotCls=isIn?'in':(isMod?'mod':(isTr?'tr':'ou'));var ico=isIn?'🟢':(isMod?'✏️':(isTr?'🔄':'🔴'));var label=isIn?'Entrato':(isMod?'Modificato':(isTr?'Trasferito':'Uscito'));var opTag=m.operatore?'<span class="op-tag">👤 '+m.operatore+'</span>':'';var fotoBtn=(m.fotoSalvata&&m.caricoId)?'<button onclick="vediFoto(\''+m.caricoId+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;" title="Vedi foto">📷</button>':'';var det;if(isTr)det=(m.bancali!=null?m.bancali+' bancali':'-')+' — Da: '+(m.locazioneDa||'-')+' → '+(m.locazioneA||'-');else if(isIn)det=(m.bancali!=null?m.bancali+' bancali':'—');else if(isMod)det=(m.bancali||'-')+' bancali';else det='Usciti: '+(m.bancaliUsciti||'—')+', Rimasti: '+(m.bancaliRimasti||'—');var s='<div class="li" style="align-items:center;"><div class="ldot '+dotCls+'" style="margin-top:0;"></div><div class="ltx"><div class="lm">'+ico+' <strong>#'+m.numero+'</strong> - '+label+opTag+fotoBtn+'</div>';if(!isMod)s+='<div class="ls">'+(isTr?det:'Loc: '+(m.locazione||'—')+' - '+det)+(m.note?'<br>'+m.note:'')+'</div>';if(isMod&&m.diff&&m.diff.length){s+='<div class="diff-box">';m.diff.forEach(function(d){s+='<div class="diff-row"><span class="diff-field">'+d.campo+'</span><span class="diff-old">'+d.da+'</span><span class="diff-arr">→</span><span class="diff-new">'+d.a+'</span></div>';});s+='</div>';}else if(isMod)s+='<div class="ls">'+det+(m.note?'<br>'+m.note:'')+'</div>';if(m.notaStorico)s+='<div class="nota-storico-box" onclick="apriNotaStor(\''+mid+'\',\''+m.notaStorico.replace(/'/g,"\\'")+'\')" title="Modifica nota">📝 '+m.notaStorico+'</div>';s+='<div style="font-size:11px;color:var(--tx2);margin-top:2px;">'+fmtT(m.ts)+'</div></div>';s+='<div style="display:flex;gap:4px;flex-shrink:0;">'+(isAdmin()?'<button class="icon-btn-sm" onclick="apriModificaStorico(\''+mid+'\')" title="Modifica movimento">✏️</button>':'')+'<button class="ldb" onclick="chiPin(\'del\',\''+mid+'\')">🗑</button><button class="icon-btn-sm" onclick="apriNotaStor(\''+mid+'\',\''+(m.notaStorico||'').replace(/'/g,"\\'")+'\')" title="Nota">📝</button></div></div>';return s;}
 
 // ═══ STORICO ═══
 // ═══ DROPDOWN CHECKBOX ═══
@@ -2832,6 +2844,62 @@ function expStorico(){
 var _notaStorId=null;
 function apriNotaStor(id,testo){_notaStorId=id;var el=document.getElementById('ns-info');if(el)el.textContent='Movimento: '+id.slice(0,14)+'...';var ta=document.getElementById('ns-testo');if(ta)ta.value=testo||'';aprM('mo-nota-stor');}
 function salvaNotaStorico(){if(!_notaStorId)return;var testo=(document.getElementById('ns-testo').value||'').trim();if(UC&&fdb)fdb.collection('storico').doc(_notaStorId).update({notaStorico:testo}).then(function(){tst('Nota salvata','ok');chiM('mo-nota-stor');setTimeout(filtraStorico,300);}).catch(function(e){tst('Errore: '+e.message,'er');});else{var m=ST.find(function(x){return x.id===_notaStorId;});if(m){m.notaStorico=testo;svLoc();}tst('Nota salvata','ok');chiM('mo-nota-stor');}_notaStorId=null;}
+
+// ═══ MODIFICA MOVIMENTO STORICO (solo Admin/Plus) ═══
+var _editStorId=null;
+function apriModificaStorico(id){
+  if(!isAdmin())return tst('Solo Admin/Plus','er');
+  var m=ST.find(function(x){return x.id===id;});if(!m)return;
+  _editStorId=id;
+  var info=document.getElementById('es-info');if(info)info.textContent=(m.tipo||'')+' · #'+(m.numero||'')+' · '+fmtT(m.ts);
+  var dval='';try{var d=new Date(m.ts),pad=function(x){return String(x).padStart(2,'0');};dval=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}catch(x){}
+  function esc(v){return v!=null?String(v).replace(/"/g,'&quot;'):'';}
+  function row(lbl,inner){return '<div class="fg"><label class="fl">'+lbl+'</label>'+inner+'</div>';}
+  function inp(iid,val,type){return '<input class="fi" id="'+iid+'" type="'+(type||'text')+'" value="'+esc(val)+'"'+(type==='text'?' style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"':'')+'>';}
+  var h=row('Numero bilico',inp('es-num',m.numero,'text'));
+  if(m.tipo==='TRASFERIMENTO'){
+    h+=row('Locazione partenza',inp('es-locda',m.locazioneDa,'text'));
+    h+=row('Locazione arrivo',inp('es-loca',m.locazioneA,'text'));
+    h+=row('Bancali',inp('es-banc',m.bancali,'number'));
+  }else if(m.tipo==='USCITA'){
+    h+=row('Locazione',inp('es-loc',m.locazione,'text'));
+    h+=row('Bancali usciti',inp('es-bout',m.bancaliUsciti,'number'));
+    h+=row('Bancali rimasti',inp('es-brim',m.bancaliRimasti,'number'));
+  }else if(m.tipo==='ENTRATA'){
+    h+=row('Locazione',inp('es-loc',m.locazione,'text'));
+    h+=row('Bancali',inp('es-banc',m.bancali,'number'));
+  }
+  h+=row('Note',inp('es-note',m.note,'text'));
+  h+=row('Data e ora',inp('es-data',dval,'datetime-local'));
+  document.getElementById('es-body').innerHTML=h;
+  aprM('mo-edit-stor');
+}
+function salvaModificaStorico(){
+  if(!_editStorId)return;if(!isAdmin())return tst('Solo Admin/Plus','er');
+  var m=ST.find(function(x){return x.id===_editStorId;});if(!m)return;
+  function gv(iid){var e=document.getElementById(iid);return e?e.value:undefined;}
+  var upd={};
+  var num=(gv('es-num')||'').trim().toUpperCase();if(num)upd.numero=num;
+  var note=gv('es-note');if(note!==undefined)upd.note=note.trim();
+  var dataV=gv('es-data');if(dataV){var dt=new Date(dataV);if(!isNaN(dt.getTime()))upd.ts=dt.toISOString();}
+  if(m.tipo==='TRASFERIMENTO'){
+    upd.locazioneDa=(gv('es-locda')||'').trim().toUpperCase();
+    upd.locazioneA=(gv('es-loca')||'').trim().toUpperCase();
+    upd.bancali=parseInt(gv('es-banc'))||0;
+  }else if(m.tipo==='USCITA'){
+    upd.locazione=(gv('es-loc')||'').trim().toUpperCase();
+    upd.bancaliUsciti=parseInt(gv('es-bout'))||0;
+    upd.bancaliRimasti=parseInt(gv('es-brim'))||0;
+  }else if(m.tipo==='ENTRATA'){
+    upd.locazione=(gv('es-loc')||'').trim().toUpperCase();
+    upd.bancali=parseInt(gv('es-banc'))||0;
+  }
+  if(UC&&fdb){
+    fdb.collection('storico').doc(_editStorId).update(upd).then(function(){tst('Movimento aggiornato ✅','ok');chiM('mo-edit-stor');_editStorId=null;setTimeout(filtraStorico,300);}).catch(function(e){tst('Errore: '+e.message,'er');});
+  }else{
+    Object.assign(m,upd);svLoc();tst('Movimento aggiornato ✅','ok');chiM('mo-edit-stor');_editStorId=null;filtraStorico();
+  }
+}
 
 // ═══ MISSIONI ═══
 function renderDashMissioni(){

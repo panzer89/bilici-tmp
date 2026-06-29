@@ -809,8 +809,8 @@ input, select, textarea { font-family: inherit; }
   <div class="sg" style="margin-bottom:10px;">
     <div class="sc og"><div class="v" id="s-plt-secco-pieve">0</div><div class="lb">📦 PLT Secco (B&V)</div></div>
     <div class="sc cy"><div class="v" id="s-plt-siziano">0</div><div class="lb">📍 PLT Siziano</div></div>
-    <div class="sc pu"><div class="v" id="s-plt-granarolo">0</div><div class="lb">📦 PLT Granarolo (Pieve 1)</div></div>
-    <div class="sc gn"><div class="v" id="s-trasf-siziano">0</div><div class="lb">🔄 Bilici trasferiti a Siziano</div></div>
+    <div class="sc pu" onclick="exportTrasf('GRANAROLO')" style="cursor:pointer;position:relative;" title="Scarica Excel trasferimenti Granarolo"><div style="position:absolute;top:5px;right:7px;font-size:12px;">📊</div><div class="v" id="s-plt-granarolo">0</div><div class="lb">📦 PLT Granarolo (Pieve 1)</div></div>
+    <div class="sc gn" onclick="exportTrasf('SIZIANO')" style="cursor:pointer;position:relative;" title="Scarica Excel trasferimenti Siziano"><div style="position:absolute;top:5px;right:7px;font-size:12px;">📊</div><div class="v" id="s-trasf-siziano">0</div><div class="lb">🔄 Bilici trasferiti a Siziano</div></div>
   </div>
   <!-- Stats row 2: movimento -->
   <div class="sg" style="margin-bottom:10px;">
@@ -3208,6 +3208,19 @@ function leggiFileImport(evt){var file=evt.target.files[0];if(!file)return;var r
 function mostraErrImp(msg){var el=document.getElementById('imp-err');el.textContent='❌ '+msg;el.style.display='block';document.getElementById('imp-preview').style.display='none';document.getElementById('imp-btn').style.display='none';impDati=[];}
 function eseguiImport(){if(!impDati.length)return;var btn=document.getElementById('imp-btn');btn.textContent='Importazione...';btn.disabled=true;var promesse=[];for(var i=0;i<impDati.length;i++){var r=impDati[i],locOcc=null;if(!isIllimitata(r.locazione)){Object.values(BL).forEach(function(x){if(x.locazione===r.locazione)locOcc=x;});for(var k=0;k<i;k++)if(!isIllimitata(impDati[k].locazione)&&impDati[k].locazione===r.locazione)locOcc=impDati[k];}if(!locOcc||isIllimitata(r.locazione)){promesse.push(dbSB(r.numero,{numero:r.numero,locazione:r.locazione,bancali:r.bancali,note:r.note,ts:r.ts}));promesse.push(dbAS({tipo:'ENTRATA',numero:r.numero,locazione:r.locazione,bancali:r.bancali,note:r.note,ts:r.ts}));}}Promise.all(promesse).then(function(){chiM('mo-imp');tst('Importati '+impDati.length+' bilici!','ok');impDati=[];btn.disabled=false;}).catch(function(e){tst('Errore: '+e.message,'er');btn.disabled=false;btn.textContent='📥 IMPORTA';});}
 function expExcel(){var wb=XLSX.utils.book_new();var r1=[['NUMERO','LOCAZIONE','BANCALI','NOTE','DATA']];Object.values(BL).forEach(function(b){r1.push([b.numero,b.locazione,b.bancali,b.note||'',new Date(b.ts).toLocaleString('it-IT')]);});var ws1=XLSX.utils.aoa_to_sheet(r1);ws1['!cols']=[{wch:12},{wch:14},{wch:10},{wch:25},{wch:20}];XLSX.utils.book_append_sheet(wb,ws1,'Bilici Presenti');var r2=[['TIPO','NUMERO','LOCAZIONE','BANCALI','USCITI','RIMASTI','NOTE','NOTA STORICO','CARICORID','DATA']];ST.forEach(function(m){var isTr=m.tipo==='TRASFERIMENTO';var locCol=isTr?(m.locazioneDa||'-')+' → '+(m.locazioneA||'-'):(m.locazione||'');r2.push([m.tipo,m.numero,locCol,(m.tipo==='ENTRATA'||isTr)?(m.bancali!=null?m.bancali:''):'',m.tipo==='USCITA'?(m.bancaliUsciti!=null?m.bancaliUsciti:''):'',m.tipo==='USCITA'?(m.bancaliRimasti!=null?m.bancaliRimasti:''):'',m.note||'',m.notaStorico||'',m.caricoId||'',new Date(m.ts).toLocaleString('it-IT')]);});var ws2=XLSX.utils.aoa_to_sheet(r2);XLSX.utils.book_append_sheet(wb,ws2,'Storico');var r3=[['N° BILICO','PLT PIANIF','PLT MAG','NOTA','DATA CARICO','OPERATORE','FONTE']];getAllOrdini().forEach(function(p){var b=BL[p.numero],pltMag=b?b.bancali:'',df=p.data?p.data.split('-').reverse().join('/'):'',fonte=p.fonte==='prog'?'Oggi':p.fonte==='prog_domani'?'Domani':'Calendario';r3.push([p.numero,p.bancaliProg||'',pltMag,p.nota||'',df,p.operatore||'',fonte]);if(p.partner){var bB=BL[p.partner.numero];r3.push([p.partner.numero,p.partner.bancaliProg||'',bB?bB.bancali:'',p.partner.nota||'',df,p.partner.operatore||'',fonte]);}});var ws3=XLSX.utils.aoa_to_sheet(r3);XLSX.utils.book_append_sheet(wb,ws3,'Ordini Pianificati');var r4=[['TIPO','LOCAZIONE','DATA','BILICI','CONF.','PLT','STATO','OPERATORE']];MISSIONI.forEach(function(m){var conf=(m.bilici||[]).filter(function(b){return b.confermato;}).length,tot=(m.bilici||[]).length,plt=(m.bilici||[]).reduce(function(s,b){return s+(b.bancaliProg||0);},0);r4.push([m.tipo==='locazione'?'Smezzi':'Picking',m.locazione||'',m.data||'',tot,conf,plt,m.stato||'',m.operatoreChiusura||'']);});var ws4=XLSX.utils.aoa_to_sheet(r4);XLSX.utils.book_append_sheet(wb,ws4,'Missioni');var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');XLSX.writeFile(wb,'Bilici_'+dt+'.xlsx');tst('Excel completo esportato!','ok');}
+// Esporta solo i trasferimenti verso una destinazione (es. SIZIANO, GRANAROLO)
+function exportTrasf(dest){
+  var D=(dest||'').toUpperCase();
+  var rows=ST.filter(function(m){return m.tipo==='TRASFERIMENTO'&&(m.locazioneA||'').toUpperCase()===D;}).sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
+  if(!rows.length)return tst('Nessun trasferimento verso '+dest,'er');
+  var r=[['N° BILICO','DA','A','BANCALI','DATA','OPERATORE','NOTE']];
+  rows.forEach(function(m){r.push([m.numero,m.locazioneDa||'',m.locazioneA||'',(m.bancali!=null?m.bancali:''),new Date(m.ts).toLocaleString('it-IT'),m.operatore||'',m.note||'']);});
+  var ws=XLSX.utils.aoa_to_sheet(r);ws['!cols']=[{wch:12},{wch:16},{wch:16},{wch:10},{wch:20},{wch:14},{wch:25}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,('Trasf '+D).slice(0,31));
+  var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');
+  XLSX.writeFile(wb,'Trasferimenti_'+D+'_'+dt+'.xlsx');
+  tst('Excel trasferimenti '+dest+' scaricato! ('+rows.length+')','ok');
+}
 
 // ═══ UI / STATS ═══
 function ui(){

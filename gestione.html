@@ -455,8 +455,8 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
     <!-- riga 1: stock + disp plt + bilici secco -->
     <div class="stat-card"><div class="num og" id="s-plt-secco-pieve">0</div><div class="lab">PLT Secco (B&V)</div></div>
     <div class="stat-card"><div class="num cy" id="s-plt-siziano">0</div><div class="lab">PLT Siziano</div></div>
-    <div class="stat-card"><div class="num pu" id="s-plt-granarolo">0</div><div class="lab">PLT Granarolo</div></div>
-    <div class="stat-card"><div class="num gn" id="s-trasf-siziano">0</div><div class="lab">Trasf. a Siziano</div></div>
+    <div class="stat-card" onclick="exportTrasf('GRANAROLO')" style="cursor:pointer;position:relative;"><div style="position:absolute;top:3px;right:5px;font-size:10px;">📊</div><div class="num pu" id="s-plt-granarolo">0</div><div class="lab">PLT Granarolo</div></div>
+    <div class="stat-card" onclick="exportTrasf('SIZIANO')" style="cursor:pointer;position:relative;"><div style="position:absolute;top:3px;right:5px;font-size:10px;">📊</div><div class="num gn" id="s-trasf-siziano">0</div><div class="lab">Trasf. a Siziano</div></div>
     <div class="stat-card"><div class="num og" id="s-bilici-secco">—</div><div class="lab">Bilici Secco</div></div>
     <!-- riga 2: movimenti oggi + marchesi + mese -->
     <div class="stat-card"><div class="num gn" id="s-plt-in">0</div><div class="lab">PLT In oggi</div></div>
@@ -2541,6 +2541,19 @@ function stopQRScanner(){if(qrStream){qrStream.getTracks().forEach(function(t){t
 // ═══ IMPORT/EXPORT ═══
 function apriImport(){document.getElementById('imp-file').value='';document.getElementById('imp-preview').style.display='none';document.getElementById('imp-err').style.display='none';document.getElementById('imp-btn').style.display='none';impDati=[];aprO('sh-import');}
 function scaricaTemplate(){var wb=XLSX.utils.book_new();var ws=XLSX.utils.aoa_to_sheet([['NUMERO','LOCAZIONE','BANCALI','NOTE','DATA'],['905','A1','24','Merce cliente Rossi','15/01/2025'],['906','BANCHINA','18','','16/01/2025']]);ws['!cols']=[{wch:12},{wch:14},{wch:10},{wch:30},{wch:18}];XLSX.utils.book_append_sheet(wb,ws,'Bilici');XLSX.writeFile(wb,'template_importazione.xlsx');tst('Template scaricato!','ok');}
+// Esporta solo i trasferimenti verso una destinazione (es. SIZIANO, GRANAROLO)
+function exportTrasf(dest){
+  var D=(dest||'').toUpperCase();
+  var rows=ST.filter(function(m){return m.tipo==='TRASFERIMENTO'&&(m.locazioneA||'').toUpperCase()===D;}).sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
+  if(!rows.length)return tst('Nessun trasferimento verso '+dest,'er');
+  var r=[['N° BILICO','DA','A','BANCALI','DATA','OPERATORE','NOTE']];
+  rows.forEach(function(m){r.push([m.numero,m.locazioneDa||'',m.locazioneA||'',(m.bancali!=null?m.bancali:''),new Date(m.ts).toLocaleString('it-IT'),m.operatore||'',m.note||'']);});
+  var ws=XLSX.utils.aoa_to_sheet(r);ws['!cols']=[{wch:12},{wch:16},{wch:16},{wch:10},{wch:20},{wch:14},{wch:25}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,('Trasf '+D).slice(0,31));
+  var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');
+  XLSX.writeFile(wb,'Trasferimenti_'+D+'_'+dt+'.xlsx');
+  tst('Excel trasferimenti '+dest+' scaricato! ('+rows.length+')','ok');
+}
 function parsaData(val){if(!val)return new Date().toISOString();var s=String(val).trim(),m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);if(m){var d=new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]),m[4]?parseInt(m[4]):8,m[5]?parseInt(m[5]):0,0);if(!isNaN(d.getTime()))return d.toISOString();}if(!isNaN(val)){var n=parseFloat(val);var d2=new Date((n-25569)*86400*1000);if(!isNaN(d2.getTime()))return d2.toISOString();}return new Date().toISOString();}
 function leggiFileImport(evt){var file=evt.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){try{var wb=XLSX.read(e.target.result,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});if(rows.length<2){mostraErrImp('File vuoto');return;}var hdr=rows[0].map(function(h){return String(h).toUpperCase().trim();}),iN=hdr.indexOf('NUMERO'),iL=hdr.indexOf('LOCAZIONE'),iB=hdr.indexOf('BANCALI'),iNt=hdr.indexOf('NOTE'),iD=hdr.indexOf('DATA');if(iN<0||iL<0||iB<0){mostraErrImp('Colonne mancanti: NUMERO, LOCAZIONE, BANCALI');return;}impDati=[];var errori=[];for(var i=1;i<rows.length;i++){var r=rows[i],num=String(r[iN]||'').trim().toUpperCase(),loc=String(r[iL]||'').trim().toUpperCase(),ban=parseInt(r[iB])||0,nt=iNt>=0?String(r[iNt]||'').trim():'',dt=iD>=0?parsaData(r[iD]):new Date().toISOString();if(!num||!loc)continue;if(ban<=0){errori.push('Riga '+(i+1)+': bancali non validi');continue;}if(BL[num]){errori.push('Riga '+(i+1)+': '+num+' già presente');continue;}impDati.push({numero:num,locazione:loc,bancali:ban,note:nt,ts:dt});}if(!impDati.length){mostraErrImp('Nessun record valido');return;}document.getElementById('imp-err').style.display='none';var prev=document.getElementById('imp-preview-content');var html='<strong style="color:var(--gb)">'+impDati.length+' bilici pronti</strong>'+(errori.length?'<br><span style="color:var(--ob)">⚠️ '+errori.length+' righe ignorate</span>':'')+'<br><br>';for(var j=0;j<Math.min(impDati.length,8);j++){var r2=impDati[j];html+='<div style="padding:3px 0;border-bottom:1px solid var(--bd);font-size:12px;"><strong>#'+r2.numero+'</strong> → '+r2.locazione+' — '+r2.bancali+' bancali</div>';}if(impDati.length>8)html+='<div style="font-size:12px;color:var(--tx2);">... e altri '+(impDati.length-8)+'</div>';prev.innerHTML=html;document.getElementById('imp-preview').style.display='block';document.getElementById('imp-btn').style.display='flex';}catch(ex){mostraErrImp('Errore: '+ex.message);}};reader.readAsArrayBuffer(file);}
 function mostraErrImp(msg){var el=document.getElementById('imp-err');el.textContent='❌ '+msg;el.style.display='block';document.getElementById('imp-preview').style.display='none';document.getElementById('imp-btn').style.display='none';impDati=[];}

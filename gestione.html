@@ -865,6 +865,8 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;color:var(--cy);margin-bottom:10px;text-align:center;">&#x1F69B; Trasferisci</div>
   <div style="font-size:13px;color:var(--tx2);margin-bottom:14px;text-align:center;">Bilico <strong id="trasf-num-lbl" style="color:var(--cy);font-size:16px;"></strong> · Loc. attuale: <strong id="trasf-da-lbl"></strong></div>
   <div class="fg"><label class="lbl">Nuova Locazione</label><div class="loc-row"><input id="trasf-loc" type="text" class="inp" autocomplete="off" style="text-transform:uppercase;" placeholder="es. A1, BANCHINA..." oninput="this.value=this.value.toUpperCase()"><button class="qr-btn" onclick="apriQR('trasf-loc')">&#x1F4F7;</button></div></div>
+  <div class="fg"><label class="lbl">Quanti PLT trasferire (max <span id="trasf-plt-tot">—</span>)</label><input id="trasf-plt" type="number" class="inp" min="1" inputmode="numeric" placeholder="PLT"></div>
+  <div style="font-size:11px;color:var(--tx3);text-align:center;margin-bottom:10px;">Se trasferisci meno del totale, la rimanenza va in SMEZZI rinominata con uno 0 davanti.</div>
   <div class="btn-row"><button class="btn bcy" onclick="confermaTrasferisci()">&#x1F4CD; TRASFERISCI</button><button class="btn bgh" onclick="chiO('sh-trasf')">&#x2716; Annulla</button></div>
 </div>
 </div>
@@ -1774,14 +1776,29 @@ function apriSheetEntrata(){var el=document.getElementById('in-l');if(el&&!el.va
 function apriSheetUscita(){aprO('sh-uscita');}
 
 // ═══ TRASFERIMENTO ═══
-function apriTrasferisci(num){var b=BL[num];if(!b)return tst('Bilico non trovato','er');trasfKey=num;document.getElementById('trasf-num-lbl').textContent='#'+num;document.getElementById('trasf-da-lbl').textContent=b.locazione;document.getElementById('trasf-loc').value='';aprO('sh-trasf');setTimeout(function(){document.getElementById('trasf-loc').focus();},200);}
+function apriTrasferisci(num){var b=BL[num];if(!b)return tst('Bilico non trovato','er');trasfKey=num;document.getElementById('trasf-num-lbl').textContent='#'+num;document.getElementById('trasf-da-lbl').textContent=b.locazione;document.getElementById('trasf-loc').value='';var tp=document.getElementById('trasf-plt');if(tp)tp.value=b.bancali||0;var tt=document.getElementById('trasf-plt-tot');if(tt)tt.textContent=b.bancali||0;aprO('sh-trasf');setTimeout(function(){document.getElementById('trasf-loc').focus();},200);}
+// Trova un numero libero per la rimanenza aggiungendo 0 davanti
+function _numRimanenza(num){var n='0'+num;while(BL[n]){n='0'+n;}return n;}
 function confermaTrasferisci(){
   if(!trasfKey)return;var b=BL[trasfKey];if(!b)return tst('Bilico non trovato','er');
   var nuovaLoc=document.getElementById('trasf-loc').value.trim().toUpperCase();
   if(!nuovaLoc)return tst('Inserisci la nuova locazione','er');if(nuovaLoc===b.locazione.toUpperCase())return tst('La locazione è già '+nuovaLoc,'er');
+  var tot=b.bancali||0;var qta=parseInt(document.getElementById('trasf-plt').value);
+  if(!qta||qta<=0)return tst('Inserisci i PLT da trasferire','er');
+  if(qta>tot)return tst('Non puoi trasferire più di '+tot+' PLT','er');
   if(!isIllimitata(nuovaLoc)){var occ=null;Object.values(BL).forEach(function(x){if(x.locazione.toUpperCase()===nuovaLoc&&x.numero!==trasfKey)occ=x;});if(occ)return tst('Locazione '+nuovaLoc+' occupata da #'+occ.numero,'er');}
-  var locDa=b.locazione;dbUB(trasfKey,{locazione:nuovaLoc});dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:b.bancali,ts:new Date().toISOString()});
-  chiO('sh-trasf');trasfKey=null;tst('Bilico #'+b.numero+' → '+nuovaLoc,'ok');
+  var locDa=b.locazione,ts=new Date().toISOString();
+  if(qta>=tot){
+    dbUB(trasfKey,{locazione:nuovaLoc});
+    dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:tot,ts:ts});
+    chiO('sh-trasf');trasfKey=null;tst('Bilico #'+b.numero+' → '+nuovaLoc,'ok');
+  }else{
+    var rim=tot-qta;var numRim=_numRimanenza(trasfKey);
+    dbUB(trasfKey,{locazione:nuovaLoc,bancali:qta});
+    dbSB(numRim,{numero:numRim,locazione:'SMEZZI',bancali:rim,note:b.note||'',ts:b.ts||ts});
+    dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:qta,ts:ts,note:'Rimanenza '+rim+' PLT → #'+numRim+' in SMEZZI'});
+    chiO('sh-trasf');trasfKey=null;tst('#'+b.numero+' → '+nuovaLoc+' ('+qta+' PLT). Rim. '+rim+' → #'+numRim+' in SMEZZI','ok');
+  }
 }
 
 // ═══ MODIFICA / ELIMINA BILICO ═══

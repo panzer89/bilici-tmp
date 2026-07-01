@@ -2890,6 +2890,7 @@ function apriModificaStorico(id){
     h+=row('Locazione partenza',inp('es-locda',m.locazioneDa,'text'));
     h+=row('Locazione arrivo',inp('es-loca',m.locazioneA,'text'));
     h+=row('Bancali',inp('es-banc',m.bancali,'number'));
+    h+=row('Vettore (opzionale)','<input class="fi" id="es-vettore" type="text" value="'+esc(m.vettore)+'">');
   }else if(m.tipo==='USCITA'){
     h+=row('Locazione',inp('es-loc',m.locazione,'text'));
     h+=row('Bancali usciti',inp('es-bout',m.bancaliUsciti,'number'));
@@ -2915,6 +2916,7 @@ function salvaModificaStorico(){
     upd.locazioneDa=(gv('es-locda')||'').trim().toUpperCase();
     upd.locazioneA=(gv('es-loca')||'').trim().toUpperCase();
     upd.bancali=parseInt(gv('es-banc'))||0;
+    upd.vettore=(gv('es-vettore')||'').trim();
   }else if(m.tipo==='USCITA'){
     upd.locazione=(gv('es-loc')||'').trim().toUpperCase();
     upd.bancaliUsciti=parseInt(gv('es-bout'))||0;

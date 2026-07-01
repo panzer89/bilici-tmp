@@ -1356,6 +1356,7 @@ input, select, textarea { font-family: inherit; }
     <div style="font-size:13px;color:var(--tx2);margin-bottom:14px;text-align:center;">Bilico <strong id="mo-trasf-num" style="color:var(--cy);font-size:15px;"></strong><br>Loc. attuale: <strong id="mo-trasf-loc-da"></strong></div>
     <div class="fg"><label class="fl">Nuova Locazione</label><div class="loc-row"><input class="fi" id="trasf-loc" type="text" style="text-transform:uppercase;" placeholder="es. A1, BANCHINA..." oninput="this.value=this.value.toUpperCase()"><button class="qr-btn" onclick="apriQR('trasf-loc')">&#x1F4F7;</button></div></div>
     <div class="fg"><label class="fl">Quanti PLT trasferire (max <span id="trasf-plt-tot">—</span>)</label><input class="fi" id="trasf-plt" type="number" min="1" inputmode="numeric" placeholder="PLT"></div>
+    <div class="fg"><label class="fl">Vettore (opzionale)</label><input class="fi" id="trasf-vettore" type="text" placeholder="Nome trasportatore..." autocomplete="off"></div>
     <div style="font-size:11px;color:var(--tx3);text-align:center;margin-bottom:10px;">Se trasferisci meno del totale, la rimanenza va in SMEZZI rinominata con uno 0 davanti.</div>
     <div class="btn-row"><button class="btn bcy" onclick="confermaTrasferisci()">&#x1F4CD; TRASFERISCI</button><button class="btn bgh" onclick="chiM('mo-trasf')">&#x2716; Annulla</button></div>
   </div>
@@ -2132,7 +2133,7 @@ function confUscitaCoppia(){
 
 // ═══ TRASFERIMENTO ═══
 var trasfKey=null;
-function apriTrasferisci(num){var b=BL[num];if(!b)return tst('Bilico non trovato','er');trasfKey=num;document.getElementById('mo-trasf-num').textContent='#'+num;document.getElementById('mo-trasf-loc-da').textContent=b.locazione;document.getElementById('trasf-loc').value='';var tp=document.getElementById('trasf-plt');if(tp)tp.value=b.bancali||0;var tt=document.getElementById('trasf-plt-tot');if(tt)tt.textContent=b.bancali||0;aprM('mo-trasf');setTimeout(function(){document.getElementById('trasf-loc').focus();},150);}
+function apriTrasferisci(num){var b=BL[num];if(!b)return tst('Bilico non trovato','er');trasfKey=num;document.getElementById('mo-trasf-num').textContent='#'+num;document.getElementById('mo-trasf-loc-da').textContent=b.locazione;document.getElementById('trasf-loc').value='';var tp=document.getElementById('trasf-plt');if(tp)tp.value=b.bancali||0;var tt=document.getElementById('trasf-plt-tot');if(tt)tt.textContent=b.bancali||0;var tv=document.getElementById('trasf-vettore');if(tv)tv.value='';aprM('mo-trasf');setTimeout(function(){document.getElementById('trasf-loc').focus();},150);}
 // Trova un numero libero per la rimanenza aggiungendo 0 davanti
 function _numRimanenza(num){var n='0'+num;while(BL[n]){n='0'+n;}return n;}
 function confermaTrasferisci(){
@@ -2144,18 +2145,19 @@ function confermaTrasferisci(){
   if(!qta||qta<=0)return tst('Inserisci i PLT da trasferire','er');
   if(qta>tot)return tst('Non puoi trasferire più di '+tot+' PLT','er');
   if(!isIllimitata(nuovaLoc)){var occ=null;Object.values(BL).forEach(function(x){if(x.locazione.toUpperCase()===nuovaLoc&&x.numero!==trasfKey)occ=x;});if(occ)return tst('Locazione '+nuovaLoc+' occupata da #'+occ.numero,'er');}
+  var vett=(document.getElementById('trasf-vettore').value||'').trim();
   var locDa=b.locazione,ts=new Date().toISOString();
   if(qta>=tot){
     // trasferimento totale
     dbUB(trasfKey,{locazione:nuovaLoc});
-    dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:tot,ts:ts});
+    dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:tot,ts:ts,vettore:vett});
     chiM('mo-trasf');trasfKey=null;tst('Bilico #'+b.numero+' spostato → '+nuovaLoc,'ok');
   }else{
     // trasferimento parziale: #num tiene il nome e va a destinazione con qta ; rimanenza → SMEZZI rinominata
     var rim=tot-qta;var numRim=_numRimanenza(trasfKey);
     dbUB(trasfKey,{locazione:nuovaLoc,bancali:qta});
     dbSB(numRim,{numero:numRim,locazione:'SMEZZI',bancali:rim,note:b.note||'',ts:b.ts||ts});
-    dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:qta,ts:ts,note:'Rimanenza '+rim+' PLT → #'+numRim+' in SMEZZI'});
+    dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:qta,ts:ts,vettore:vett,note:'Rimanenza '+rim+' PLT → #'+numRim+' in SMEZZI'});
     chiM('mo-trasf');trasfKey=null;tst('#'+b.numero+' → '+nuovaLoc+' ('+qta+' PLT). Rimanenza '+rim+' → #'+numRim+' in SMEZZI','ok');
   }
 }
@@ -3240,9 +3242,9 @@ function exportTrasf(dest){
   var D=(dest||'').toUpperCase();
   var rows=ST.filter(function(m){return m.tipo==='TRASFERIMENTO'&&(m.locazioneA||'').toUpperCase()===D;}).sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
   if(!rows.length)return tst('Nessun trasferimento verso '+dest,'er');
-  var r=[['N° BILICO','DA','A','BANCALI','DATA','OPERATORE','NOTE']];
-  rows.forEach(function(m){r.push([m.numero,m.locazioneDa||'',m.locazioneA||'',(m.bancali!=null?m.bancali:''),new Date(m.ts).toLocaleString('it-IT'),m.operatore||'',m.note||'']);});
-  var ws=XLSX.utils.aoa_to_sheet(r);ws['!cols']=[{wch:12},{wch:16},{wch:16},{wch:10},{wch:20},{wch:14},{wch:25}];
+  var r=[['N° BILICO','DA','A','BANCALI','VETTORE','DATA','OPERATORE','NOTE']];
+  rows.forEach(function(m){r.push([m.numero,m.locazioneDa||'',m.locazioneA||'',(m.bancali!=null?m.bancali:''),m.vettore||'',new Date(m.ts).toLocaleString('it-IT'),m.operatore||'',m.note||'']);});
+  var ws=XLSX.utils.aoa_to_sheet(r);ws['!cols']=[{wch:12},{wch:16},{wch:16},{wch:10},{wch:18},{wch:20},{wch:14},{wch:25}];
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,('Trasf '+D).slice(0,31));
   var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');
   XLSX.writeFile(wb,'Trasferimenti_'+D+'_'+dt+'.xlsx');

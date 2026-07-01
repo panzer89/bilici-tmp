@@ -519,6 +519,10 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);overfl
       <div class="fl">Quanti PLT trasferire (max <span id="tr-plt-tot">—</span>)</div>
       <input class="fi" id="tr-plt" type="number" min="1" inputmode="numeric" placeholder="PLT" style="font-size:17px;font-weight:700;">
     </div>
+    <div class="fg">
+      <div class="fl">Vettore (opzionale)</div>
+      <input class="fi" id="tr-vettore" type="text" placeholder="Nome trasportatore..." autocomplete="off">
+    </div>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Se trasferisci meno del totale, la rimanenza va in SMEZZI rinominata con uno 0 davanti.</div>
     <button class="btn bcy" onclick="confTransfer()">&#x1F504; CONFERMA TRASFERIMENTO</button>
   </div>
@@ -1462,22 +1466,24 @@ function confTransfer(){
   if(!qta||qta<=0)return tst('Inserisci i PLT da trasferire','er');
   if(qta>tot)return tst('Non puoi trasferire più di '+tot+' PLT','er');
   if(!isIllimitata(dest)){var occ=null;Object.values(BL).forEach(function(x){if(x.locazione.toUpperCase()===dest&&x.numero!==n)occ=x;});if(occ)return tst('Postazione '+dest+' occupata da #'+occ.numero,'er');}
+  var vett=(document.getElementById('tr-vettore').value||'').trim();
   var locDa=b.locazione,ts=new Date().toISOString();
   if(qta>=tot){
     dbUB(n,{locazione:dest});
-    dbAS({tipo:'TRASFERIMENTO',numero:n,locazioneDa:locDa,locazioneA:dest,bancali:tot,ts:ts});
+    dbAS({tipo:'TRASFERIMENTO',numero:n,locazioneDa:locDa,locazioneA:dest,bancali:tot,ts:ts,vettore:vett});
     suonoOk();tst('Bilico #'+n+' → '+dest+' ✅','ok');
   }else{
     var rim=tot-qta;var numRim=_numRimanenza(n);
     dbUB(n,{locazione:dest,bancali:qta});
     dbSB(numRim,{numero:numRim,locazione:'SMEZZI',bancali:rim,note:b.note||'',ts:b.ts||ts});
-    dbAS({tipo:'TRASFERIMENTO',numero:n,locazioneDa:locDa,locazioneA:dest,bancali:qta,ts:ts,note:'Rimanenza '+rim+' PLT → #'+numRim+' in SMEZZI'});
+    dbAS({tipo:'TRASFERIMENTO',numero:n,locazioneDa:locDa,locazioneA:dest,bancali:qta,ts:ts,vettore:vett,note:'Rimanenza '+rim+' PLT → #'+numRim+' in SMEZZI'});
     suonoOk();tst('#'+n+' → '+dest+' ('+qta+' PLT). Rim. '+rim+' → #'+numRim+' in SMEZZI','ok');
   }
   document.getElementById('tr-pfx').value='';
   document.getElementById('tr-bilico').value='';
   document.getElementById('tr-trovato').style.display='none';
   document.getElementById('tr-dest').value='';
+  var tvv=document.getElementById('tr-vettore');if(tvv)tvv.value='';
   document.getElementById('tr-dest-box').style.display='none';
   setTimeout(aggiornaLog,400);
 }

@@ -867,6 +867,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
   <div class="fg"><label class="lbl">Nuova Locazione</label><div class="loc-row"><input id="trasf-loc" type="text" class="inp" autocomplete="off" style="text-transform:uppercase;" placeholder="es. A1, BANCHINA..." oninput="this.value=this.value.toUpperCase()"><button class="qr-btn" onclick="apriQR('trasf-loc')">&#x1F4F7;</button></div></div>
   <div class="fg"><label class="lbl">Quanti PLT trasferire (max <span id="trasf-plt-tot">—</span>)</label><input id="trasf-plt" type="number" class="inp" min="1" inputmode="numeric" placeholder="PLT"></div>
   <div class="fg"><label class="lbl">Vettore (opzionale)</label><input id="trasf-vettore" type="text" class="inp" placeholder="Nome trasportatore..." autocomplete="off"></div>
+  <div class="fg"><label class="lbl">Data e ora</label><input id="trasf-data" type="datetime-local" class="inp"></div>
   <div style="font-size:11px;color:var(--tx3);text-align:center;margin-bottom:10px;">Se trasferisci meno del totale, la rimanenza va in SMEZZI rinominata con uno 0 davanti.</div>
   <div class="btn-row"><button class="btn bcy" onclick="confermaTrasferisci()">&#x1F4CD; TRASFERISCI</button><button class="btn bgh" onclick="chiO('sh-trasf')">&#x2716; Annulla</button></div>
 </div>
@@ -1777,9 +1778,11 @@ function apriSheetEntrata(){var el=document.getElementById('in-l');if(el&&!el.va
 function apriSheetUscita(){aprO('sh-uscita');}
 
 // ═══ TRASFERIMENTO ═══
-function apriTrasferisci(num){var b=BL[num];if(!b)return tst('Bilico non trovato','er');trasfKey=num;document.getElementById('trasf-num-lbl').textContent='#'+num;document.getElementById('trasf-da-lbl').textContent=b.locazione;document.getElementById('trasf-loc').value='';var tp=document.getElementById('trasf-plt');if(tp)tp.value=b.bancali||0;var tt=document.getElementById('trasf-plt-tot');if(tt)tt.textContent=b.bancali||0;var tv=document.getElementById('trasf-vettore');if(tv)tv.value='';aprO('sh-trasf');setTimeout(function(){document.getElementById('trasf-loc').focus();},200);}
+function apriTrasferisci(num){var b=BL[num];if(!b)return tst('Bilico non trovato','er');trasfKey=num;document.getElementById('trasf-num-lbl').textContent='#'+num;document.getElementById('trasf-da-lbl').textContent=b.locazione;document.getElementById('trasf-loc').value='';var tp=document.getElementById('trasf-plt');if(tp)tp.value=b.bancali||0;var tt=document.getElementById('trasf-plt-tot');if(tt)tt.textContent=b.bancali||0;var tv=document.getElementById('trasf-vettore');if(tv)tv.value='';var td=document.getElementById('trasf-data');if(td)td.value=_nowLocal();aprO('sh-trasf');setTimeout(function(){document.getElementById('trasf-loc').focus();},200);}
 // Trova un numero libero per la rimanenza aggiungendo 0 davanti
 function _numRimanenza(num){var n='0'+num;while(BL[n]){n='0'+n;}return n;}
+// Data/ora attuale in formato datetime-local
+function _nowLocal(){var d=new Date(),p=function(x){return String(x).padStart(2,'0');};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 function confermaTrasferisci(){
   if(!trasfKey)return;var b=BL[trasfKey];if(!b)return tst('Bilico non trovato','er');
   var nuovaLoc=document.getElementById('trasf-loc').value.trim().toUpperCase();
@@ -1789,7 +1792,8 @@ function confermaTrasferisci(){
   if(qta>tot)return tst('Non puoi trasferire più di '+tot+' PLT','er');
   if(!isIllimitata(nuovaLoc)){var occ=null;Object.values(BL).forEach(function(x){if(x.locazione.toUpperCase()===nuovaLoc&&x.numero!==trasfKey)occ=x;});if(occ)return tst('Locazione '+nuovaLoc+' occupata da #'+occ.numero,'er');}
   var vett=(document.getElementById('trasf-vettore').value||'').trim();
-  var locDa=b.locazione,ts=new Date().toISOString();
+  var _dV=(document.getElementById('trasf-data').value||'');var ts=_dV?new Date(_dV).toISOString():new Date().toISOString();
+  var locDa=b.locazione;
   if(qta>=tot){
     dbUB(trasfKey,{locazione:nuovaLoc});
     dbAS({tipo:'TRASFERIMENTO',numero:trasfKey,locazioneDa:locDa,locazioneA:nuovaLoc,bancali:tot,ts:ts,vettore:vett});

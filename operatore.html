@@ -523,6 +523,10 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);overfl
       <div class="fl">Vettore (opzionale)</div>
       <input class="fi" id="tr-vettore" type="text" placeholder="Nome trasportatore..." autocomplete="off">
     </div>
+    <div class="fg">
+      <div class="fl">Data e ora</div>
+      <input class="fi" id="tr-data" type="datetime-local">
+    </div>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Se trasferisci meno del totale, la rimanenza va in SMEZZI rinominata con uno 0 davanti.</div>
     <button class="btn bcy" onclick="confTransfer()">&#x1F504; CONFERMA TRASFERIMENTO</button>
   </div>
@@ -1448,11 +1452,13 @@ function trovaBilicoTransfer(){
   var b=BL[n];
   var trovato=document.getElementById('tr-trovato');
   var destBox=document.getElementById('tr-dest-box');
-  if(b){trovato.style.display='block';document.getElementById('tr-pos-attuale').textContent=b.locazione;destBox.style.display='block';var tp=document.getElementById('tr-plt');if(tp)tp.value=b.bancali||0;var tt=document.getElementById('tr-plt-tot');if(tt)tt.textContent=b.bancali||0;}
+  if(b){trovato.style.display='block';document.getElementById('tr-pos-attuale').textContent=b.locazione;destBox.style.display='block';var tp=document.getElementById('tr-plt');if(tp)tp.value=b.bancali||0;var tt=document.getElementById('tr-plt-tot');if(tt)tt.textContent=b.bancali||0;var td=document.getElementById('tr-data');if(td)td.value=_nowLocal();}
   else{trovato.style.display='none';destBox.style.display='none';}
 }
 // Trova un numero libero per la rimanenza aggiungendo 0 davanti
 function _numRimanenza(num){var n='0'+num;while(BL[n]){n='0'+n;}return n;}
+// Data/ora attuale in formato datetime-local
+function _nowLocal(){var d=new Date(),p=function(x){return String(x).padStart(2,'0');};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 function confTransfer(){
   var pfx=String(document.getElementById('tr-pfx').value||'').trim().toUpperCase();
   var num=String(document.getElementById('tr-bilico').value||'').trim();
@@ -1467,7 +1473,8 @@ function confTransfer(){
   if(qta>tot)return tst('Non puoi trasferire più di '+tot+' PLT','er');
   if(!isIllimitata(dest)){var occ=null;Object.values(BL).forEach(function(x){if(x.locazione.toUpperCase()===dest&&x.numero!==n)occ=x;});if(occ)return tst('Postazione '+dest+' occupata da #'+occ.numero,'er');}
   var vett=(document.getElementById('tr-vettore').value||'').trim();
-  var locDa=b.locazione,ts=new Date().toISOString();
+  var _dV=(document.getElementById('tr-data').value||'');var ts=_dV?new Date(_dV).toISOString():new Date().toISOString();
+  var locDa=b.locazione;
   if(qta>=tot){
     dbUB(n,{locazione:dest});
     dbAS({tipo:'TRASFERIMENTO',numero:n,locazioneDa:locDa,locazioneA:dest,bancali:tot,ts:ts,vettore:vett});

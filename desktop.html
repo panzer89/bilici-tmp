@@ -807,8 +807,8 @@ input, select, textarea { font-family: inherit; }
 
   <!-- Stats row 1: stock -->
   <div class="sg" style="margin-bottom:10px;">
-    <div class="sc og"><div class="v" id="s-plt-secco-pieve">0</div><div class="lb">📦 PLT Secco (B&V)</div></div>
-    <div class="sc cy"><div class="v" id="s-plt-siziano">0</div><div class="lb">📍 PLT Siziano</div></div>
+    <div class="sc og" onclick="exportStock('seccobv')" style="cursor:pointer;position:relative;" title="Scarica Excel bilici Secco B&V"><div style="position:absolute;top:5px;right:7px;font-size:12px;">📊</div><div class="v" id="s-plt-secco-pieve">0</div><div class="lb">📦 PLT Secco (B&V)</div></div>
+    <div class="sc cy" onclick="exportStock('siziano')" style="cursor:pointer;position:relative;" title="Scarica Excel bilici a Siziano"><div style="position:absolute;top:5px;right:7px;font-size:12px;">📊</div><div class="v" id="s-plt-siziano">0</div><div class="lb">📍 PLT Siziano</div></div>
     <div class="sc pu" onclick="exportTrasf('GRANAROLO')" style="cursor:pointer;position:relative;" title="Scarica Excel trasferimenti Granarolo"><div style="position:absolute;top:5px;right:7px;font-size:12px;">📊</div><div class="v" id="s-plt-granarolo">0</div><div class="lb">📦 PLT Granarolo (Pieve 1)</div></div>
     <div class="sc gn" onclick="exportTrasf('SIZIANO')" style="cursor:pointer;position:relative;" title="Scarica Excel trasferimenti Siziano"><div style="position:absolute;top:5px;right:7px;font-size:12px;">📊</div><div class="v" id="s-trasf-siziano">0</div><div class="lb">🔄 Bilici trasferiti a Siziano</div></div>
   </div>
@@ -3255,6 +3255,22 @@ function exportTrasf(dest){
   var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');
   XLSX.writeFile(wb,'Trasferimenti_'+D+'_'+dt+'.xlsx');
   tst('Excel trasferimenti '+dest+' scaricato! ('+rows.length+')','ok');
+}
+// Esporta l'elenco dei bilici presenti per un gruppo (siziano / seccobv)
+function exportStock(tipo){
+  var lst=Object.values(BL),rows,nome;
+  if(tipo==='siziano'){nome='Siziano';rows=lst.filter(function(b){var l=(b.locazione||'').toUpperCase();return l==='SIZIANO'||l==='SMEZZI SIZIANO';});}
+  else if(tipo==='seccobv'){nome='Secco B&V';rows=lst.filter(function(b){var l=(b.locazione||'').toUpperCase();if(l==='FRESCO'||l==='SIZIANO'||l==='SMEZZI SIZIANO'||l==='GRANAROLO')return false;if(/[a-zA-Z]/.test(String(b.numero||'')))return false;return true;});}
+  else return;
+  if(!rows.length)return tst('Nessun bilico per '+nome,'er');
+  rows.sort(function(a,b){return String(a.numero).localeCompare(String(b.numero),undefined,{numeric:true});});
+  var r=[['N° BILICO','LOCAZIONE','PLT','NOTE','DATA INGRESSO']];
+  rows.forEach(function(b){r.push([b.numero,b.locazione||'',(b.bancali!=null?b.bancali:''),b.note||'',b.ts?new Date(b.ts).toLocaleString('it-IT'):'']);});
+  var ws=XLSX.utils.aoa_to_sheet(r);ws['!cols']=[{wch:12},{wch:18},{wch:8},{wch:25},{wch:20}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,nome.slice(0,31));
+  var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');
+  XLSX.writeFile(wb,'PLT_'+nome.replace(/[^A-Za-z0-9]/g,'')+'_'+dt+'.xlsx');
+  tst('Excel '+nome+' scaricato! ('+rows.length+' bilici)','ok');
 }
 
 // ═══ UI / STATS ═══

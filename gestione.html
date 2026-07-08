@@ -1267,7 +1267,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
 <script>
 // ═══ CONFIG ═══
 var FBC={apiKey:"AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",authDomain:"firestore-database-93749.firebaseapp.com",projectId:"firestore-database-93749",storageBucket:"firestore-database-93749.firebasestorage.app",messagingSenderId:"13697167946",appId:"1:13697167946:web:e955abfe6d0ed11a3cecb3"};
-var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','GRANAROLO','SMEZZI SIZIANO','SMEZZI CORTEOLONA'];
+var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','GRANAROLO','POZZUOLO','SMEZZI SIZIANO','SMEZZI CORTEOLONA','SMEZZI POZZUOLO'];
 var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
 var PIN='4114';
 
@@ -1320,7 +1320,7 @@ window.onload=function(){
 };
 function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();if(l.indexOf('M-')===0)return true;for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
 // Destinazione della rimanenza PLT dopo un'uscita parziale (smezzi per sede)
-function destRimanenza(loc){var L=(loc||'').toUpperCase().trim();if(L==='SIZIANO'||L==='SMEZZI SIZIANO')return 'SMEZZI SIZIANO';if(L==='CORTEOLONA'||L==='SMEZZI CORTEOLONA')return 'SMEZZI CORTEOLONA';if(L==='SMEZZI'||L==='FRESCO')return L;return 'SMEZZI';}
+function destRimanenza(loc){var L=(loc||'').toUpperCase().trim();if(L==='SIZIANO'||L==='SMEZZI SIZIANO')return 'SMEZZI SIZIANO';if(L==='CORTEOLONA'||L==='SMEZZI CORTEOLONA')return 'SMEZZI CORTEOLONA';if(L==='POZZUOLO'||L==='SMEZZI POZZUOLO')return 'SMEZZI POZZUOLO';if(L==='SMEZZI'||L==='FRESCO')return L;return 'SMEZZI';}
 
 // ═══ CARICAMENTO STORICO DIFFERITO (dashboard più veloce) ═══
 var _storicoAttached=false,_lightReady={};

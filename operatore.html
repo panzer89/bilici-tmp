@@ -764,7 +764,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx);overfl
 // ═══ CONFIG ═══
 var FBC={apiKey:"AIzaSyCYMp_V0o_i5qPy8i6ofdPqi0xsQdTnuf0",authDomain:"firestore-database-93749.firebaseapp.com",projectId:"firestore-database-93749",storageBucket:"firestore-database-93749.firebasestorage.app",messagingSenderId:"13697167946",appId:"1:13697167946:web:e955abfe6d0ed11a3cecb3"};
 var ADMIN_DEFAULT={username:'Leo',password:'ing',livello:0};
-var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','SMEZZI SIZIANO','SMEZZI CORTEOLONA'];
+var LOC_ILLIMITATE=['BANCHINA','SMEZZI','FRESCO','ARRIVI','PARTENZE','SIZIANO','CORTEOLONA','GRANAROLO','POZZUOLO','SMEZZI SIZIANO','SMEZZI CORTEOLONA','SMEZZI POZZUOLO'];
 
 // ═══ STATO ═══
 var BL={},ST=[],PROG=[],PROG_DOMANI=[],CAL_DATA={};
@@ -996,7 +996,7 @@ function fmtH(ts){if(!ts)return '-';var d=new Date(ts);return d.toLocaleDateStri
 function tst(msg,tp){var t=document.getElementById('tst');t.textContent=msg;t.className='tst '+(tp||'');void t.offsetWidth;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3200);if(tp==='er')suonoErr();}
 function isIllimitata(loc){var l=(loc||'').toUpperCase().trim();if(l.indexOf('M-')===0)return true;for(var i=0;i<LOC_ILLIMITATE.length;i++)if(l===LOC_ILLIMITATE[i])return true;return false;}
 // Destinazione della rimanenza PLT dopo un'uscita parziale (smezzi per sede)
-function destRimanenza(loc){var L=(loc||'').toUpperCase().trim();if(L==='SIZIANO'||L==='SMEZZI SIZIANO')return 'SMEZZI SIZIANO';if(L==='CORTEOLONA'||L==='SMEZZI CORTEOLONA')return 'SMEZZI CORTEOLONA';if(L==='SMEZZI'||L==='FRESCO')return L;return 'SMEZZI';}
+function destRimanenza(loc){var L=(loc||'').toUpperCase().trim();if(L==='SIZIANO'||L==='SMEZZI SIZIANO')return 'SMEZZI SIZIANO';if(L==='CORTEOLONA'||L==='SMEZZI CORTEOLONA')return 'SMEZZI CORTEOLONA';if(L==='POZZUOLO'||L==='SMEZZI POZZUOLO')return 'SMEZZI POZZUOLO';if(L==='SMEZZI'||L==='FRESCO')return L;return 'SMEZZI';}
 function toggleLog(bodyId,chevId){var b=document.getElementById(bodyId),c=document.getElementById(chevId);if(!b)return;var o=b.classList.contains('open');if(o){b.classList.remove('open');if(c)c.classList.remove('open');}else{b.classList.add('open');if(c)c.classList.add('open');}}
 function toggleProg(bodyId,chevId){toggleLog(bodyId,chevId);}
 

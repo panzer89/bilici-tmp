@@ -461,7 +461,7 @@ body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(
     <!-- riga 2: movimenti oggi + marchesi + mese -->
     <div class="stat-card"><div class="num gn" id="s-plt-in">0</div><div class="lab">PLT In oggi</div></div>
     <div class="stat-card"><div class="num rd" id="s-plt-out">0</div><div class="lab">PLT Out oggi</div></div>
-    <div class="stat-card"><div class="num pu" id="s-marchesi">0</div><div class="lab">PLT Marchesi</div></div>
+    <div class="stat-card" onclick="exportMarchesi()" style="cursor:pointer;position:relative;"><div style="position:absolute;top:3px;right:5px;font-size:10px;">📊</div><div class="num pu" id="s-marchesi">0</div><div class="lab">PLT Marchesi</div></div>
     <div class="stat-card" style="cursor:default;">
       <div class="num gn" id="s-plt-mese-in">0</div>
       <div class="lab">PLT In Mese</div>
@@ -2588,19 +2588,44 @@ function exportTrasf(dest){
 }
 // Esporta l'elenco dei bilici presenti per un gruppo (siziano / seccobv)
 function exportStock(tipo){
-  var lst=Object.values(BL),rows,nome;
-  if(tipo==='siziano'){nome='Siziano';rows=lst.filter(function(b){var l=(b.locazione||'').toUpperCase();return l==='SIZIANO'||l==='SMEZZI SIZIANO';});}
+  var lst=Object.values(BL),rows,nome,locSet=null;
+  if(tipo==='siziano'){nome='Siziano';locSet=['SIZIANO','SMEZZI SIZIANO'];rows=lst.filter(function(b){return locSet.indexOf((b.locazione||'').toUpperCase())!==-1;});}
   else if(tipo==='seccobv'){nome='Secco B&V';rows=lst.filter(function(b){var l=(b.locazione||'').toUpperCase();if(l==='FRESCO'||l==='SIZIANO'||l==='SMEZZI SIZIANO'||l==='GRANAROLO')return false;if(/[a-zA-Z]/.test(String(b.numero||'')))return false;return true;});}
   else return;
-  if(!rows.length)return tst('Nessun bilico per '+nome,'er');
+  var usc=locSet?ST.filter(function(m){return m.tipo==='USCITA'&&locSet.indexOf((m.locazione||'').toUpperCase())!==-1;}).sort(function(a,b){return new Date(b.ts)-new Date(a.ts);}):[];
+  if(!rows.length&&!usc.length)return tst('Nessun dato per '+nome,'er');
   rows.sort(function(a,b){return String(a.numero).localeCompare(String(b.numero),undefined,{numeric:true});});
+  var wb=XLSX.utils.book_new();
   var r=[['N° BILICO','LOCAZIONE','PLT','NOTE','DATA INGRESSO']];
   rows.forEach(function(b){r.push([b.numero,b.locazione||'',(b.bancali!=null?b.bancali:''),b.note||'',b.ts?new Date(b.ts).toLocaleString('it-IT'):'']);});
   var ws=XLSX.utils.aoa_to_sheet(r);ws['!cols']=[{wch:12},{wch:18},{wch:8},{wch:25},{wch:20}];
-  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,nome.slice(0,31));
+  XLSX.utils.book_append_sheet(wb,ws,('Stock '+nome).slice(0,31));
+  if(locSet){
+    var ru=[['N° BILICO','LOCAZIONE','USCITI','RIMASTI','VETTORE','DATA','OPERATORE','NOTE']];
+    usc.forEach(function(m){ru.push([m.numero,m.locazione||'',(m.bancaliUsciti!=null?m.bancaliUsciti:''),(m.bancaliRimasti!=null?m.bancaliRimasti:''),m.vettore||'',new Date(m.ts).toLocaleString('it-IT'),m.operatore||'',m.note||'']);});
+    var wsu=XLSX.utils.aoa_to_sheet(ru);wsu['!cols']=[{wch:12},{wch:16},{wch:9},{wch:9},{wch:16},{wch:20},{wch:14},{wch:25}];
+    XLSX.utils.book_append_sheet(wb,wsu,('Uscite '+nome).slice(0,31));
+  }
   var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');
   XLSX.writeFile(wb,'PLT_'+nome.replace(/[^A-Za-z0-9]/g,'')+'_'+dt+'.xlsx');
-  tst('Excel '+nome+' scaricato! ('+rows.length+' bilici)','ok');
+  tst('Excel '+nome+' scaricato! ('+rows.length+' bilici'+(locSet?', '+usc.length+' uscite':'')+')','ok');
+}
+// Excel Marchesi: stock + movimenti (entrate/uscite)
+function exportMarchesi(){
+  var isM=function(num){return /[a-zA-Z]/.test(String(num||''));};
+  var stock=Object.values(BL).filter(function(b){return isM(b.numero);}).sort(function(a,b){return String(a.numero).localeCompare(String(b.numero),undefined,{numeric:true});});
+  var mov=ST.filter(function(m){return (m.tipo==='ENTRATA'||m.tipo==='USCITA')&&isM(m.numero);}).sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
+  if(!stock.length&&!mov.length)return tst('Nessun dato Marchesi','er');
+  var wb=XLSX.utils.book_new();
+  var r1=[['N° BILICO','LOCAZIONE','PLT','NOTE','DATA INGRESSO']];
+  stock.forEach(function(b){r1.push([b.numero,b.locazione||'',(b.bancali!=null?b.bancali:''),b.note||'',b.ts?new Date(b.ts).toLocaleString('it-IT'):'']);});
+  var ws1=XLSX.utils.aoa_to_sheet(r1);ws1['!cols']=[{wch:12},{wch:18},{wch:8},{wch:25},{wch:20}];XLSX.utils.book_append_sheet(wb,ws1,'Stock Marchesi');
+  var r2=[['TIPO','N° BILICO','LOCAZIONE','ENTRATI','USCITI','RIMASTI','DATA','OPERATORE','NOTE']];
+  mov.forEach(function(m){r2.push([m.tipo,m.numero,m.locazione||'',(m.tipo==='ENTRATA'?(m.bancali!=null?m.bancali:''):''),(m.tipo==='USCITA'?(m.bancaliUsciti!=null?m.bancaliUsciti:''):''),(m.tipo==='USCITA'?(m.bancaliRimasti!=null?m.bancaliRimasti:''):''),new Date(m.ts).toLocaleString('it-IT'),m.operatore||'',m.note||'']);});
+  var ws2=XLSX.utils.aoa_to_sheet(r2);ws2['!cols']=[{wch:10},{wch:12},{wch:16},{wch:9},{wch:9},{wch:9},{wch:20},{wch:14},{wch:25}];XLSX.utils.book_append_sheet(wb,ws2,'Movimenti Marchesi');
+  var dt=new Date().toLocaleDateString('it-IT').split('/').join('-');
+  XLSX.writeFile(wb,'Marchesi_'+dt+'.xlsx');
+  tst('Excel Marchesi scaricato! ('+stock.length+' stock, '+mov.length+' mov.)','ok');
 }
 function parsaData(val){if(!val)return new Date().toISOString();var s=String(val).trim(),m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);if(m){var d=new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]),m[4]?parseInt(m[4]):8,m[5]?parseInt(m[5]):0,0);if(!isNaN(d.getTime()))return d.toISOString();}if(!isNaN(val)){var n=parseFloat(val);var d2=new Date((n-25569)*86400*1000);if(!isNaN(d2.getTime()))return d2.toISOString();}return new Date().toISOString();}
 function leggiFileImport(evt){var file=evt.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){try{var wb=XLSX.read(e.target.result,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});if(rows.length<2){mostraErrImp('File vuoto');return;}var hdr=rows[0].map(function(h){return String(h).toUpperCase().trim();}),iN=hdr.indexOf('NUMERO'),iL=hdr.indexOf('LOCAZIONE'),iB=hdr.indexOf('BANCALI'),iNt=hdr.indexOf('NOTE'),iD=hdr.indexOf('DATA');if(iN<0||iL<0||iB<0){mostraErrImp('Colonne mancanti: NUMERO, LOCAZIONE, BANCALI');return;}impDati=[];var errori=[];for(var i=1;i<rows.length;i++){var r=rows[i],num=String(r[iN]||'').trim().toUpperCase(),loc=String(r[iL]||'').trim().toUpperCase(),ban=parseInt(r[iB])||0,nt=iNt>=0?String(r[iNt]||'').trim():'',dt=iD>=0?parsaData(r[iD]):new Date().toISOString();if(!num||!loc)continue;if(ban<=0){errori.push('Riga '+(i+1)+': bancali non validi');continue;}if(BL[num]){errori.push('Riga '+(i+1)+': '+num+' già presente');continue;}impDati.push({numero:num,locazione:loc,bancali:ban,note:nt,ts:dt});}if(!impDati.length){mostraErrImp('Nessun record valido');return;}document.getElementById('imp-err').style.display='none';var prev=document.getElementById('imp-preview-content');var html='<strong style="color:var(--gb)">'+impDati.length+' bilici pronti</strong>'+(errori.length?'<br><span style="color:var(--ob)">⚠️ '+errori.length+' righe ignorate</span>':'')+'<br><br>';for(var j=0;j<Math.min(impDati.length,8);j++){var r2=impDati[j];html+='<div style="padding:3px 0;border-bottom:1px solid var(--bd);font-size:12px;"><strong>#'+r2.numero+'</strong> → '+r2.locazione+' — '+r2.bancali+' bancali</div>';}if(impDati.length>8)html+='<div style="font-size:12px;color:var(--tx2);">... e altri '+(impDati.length-8)+'</div>';prev.innerHTML=html;document.getElementById('imp-preview').style.display='block';document.getElementById('imp-btn').style.display='flex';}catch(ex){mostraErrImp('Errore: '+ex.message);}};reader.readAsArrayBuffer(file);}

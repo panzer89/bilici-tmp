@@ -1269,6 +1269,76 @@ input, select, textarea { font-family: inherit; }
   </div>
 </div>
 
+<!-- ══════════ STRUTTURA MAGAZZINO (pagina) ══════════ -->
+<div class="page" id="page-struttura">
+  <div class="card" style="padding:16px;">
+    <div class="mtt cy">&#x1F3ED; Struttura Magazzino</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+      <div class="fg"><label class="fl">Posti PLT Secco</label><input class="str-inp" id="str-posti-plt" type="number" inputmode="numeric" placeholder="es. 3200"></div>
+      <div class="fg"><label class="fl">Posti PLT Fresco</label><input class="str-inp" id="str-posti-fresco" type="number" inputmode="numeric" placeholder="es. 800"></div>
+      <div class="fg"><label class="fl">PLT / Bilico Secco</label><input class="str-inp" id="str-plt-bilico" type="number" inputmode="numeric" placeholder="es. 32"></div>
+      <div class="fg"><label class="fl">❄️ PLT / Bilico Fresco</label><input class="str-inp" id="str-plt-bilico-fresco" type="number" inputmode="numeric" placeholder="es. 28"></div>
+    </div>
+    <div style="font-size:11px;color:var(--tx2);margin:0 0 12px;">Valori sincronizzati su tutti i dispositivi.</div>
+    <div class="btn-row"><button class="btn bgn" onclick="salvaStruttura()">&#x2705; SALVA</button><button class="btn bgh" onclick="goP('home')">&#x2190; Indietro</button></div>
+  </div>
+</div>
+
+<!-- ══════════ LOCAZIONI (pagina) ══════════ -->
+<div class="page" id="page-locazioni">
+  <div class="card" style="padding:16px;">
+    <div class="mtt" style="color:var(--cy);">&#x1F4CD; Locazioni</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:var(--bb);margin:6px 0 6px;">🏬 Postazioni illimitate</div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Accettano più bilici insieme. (BANCHINA, SMEZZI, FRESCO, ARRIVI, PARTENZE e i codici che iniziano con M- sono sempre illimitati.)</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input class="str-inp" id="cfg-ill-nuovo" type="text" placeholder="es. SIZIANO" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')aggiungiIllimitata()">
+          <button class="btn bbl" style="padding:0 14px;white-space:nowrap;" onclick="aggiungiIllimitata()">&#x2795; Aggiungi</button>
+        </div>
+        <div id="cfg-ill-lista" style="max-height:340px;overflow-y:auto;"></div>
+      </div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:var(--ob);margin:6px 0 6px;">🔄 Logiche rimanenza</div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Quando un bilico esce parzialmente DA una locazione, la rimanenza va nella locazione indicata. (Tutto il resto → SMEZZI.)</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+          <input class="str-inp" id="cfg-reg-da" type="text" placeholder="DA (es. SIZIANO)" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+          <span style="color:var(--tx2);font-size:16px;">→</span>
+          <input class="str-inp" id="cfg-reg-a" type="text" placeholder="A (es. SMEZZI SIZIANO)" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')aggiungiRegola()">
+          <button class="btn bbl" style="padding:0 12px;white-space:nowrap;" onclick="aggiungiRegola()">&#x2795;</button>
+        </div>
+        <div id="cfg-reg-lista" style="max-height:340px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:16px;"><button class="btn bgh btn-w" onclick="goP('home')">&#x2190; Indietro</button></div>
+  </div>
+</div>
+
+<!-- ══════════ GESTIONE UTENTI (pagina) ══════════ -->
+<div class="page" id="page-utenti">
+  <div class="card" style="padding:16px;">
+    <div class="mtt pb">&#x1F465; Gestione Utenti</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+      <div>
+        <div class="stl">Crea Nuovo Utente</div>
+        <div class="fg"><label class="fl">Username</label><input class="fi" id="nu-user" type="text" placeholder="es. Marco" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Password</label><div class="pass-wrap"><input class="fi" id="nu-pass" type="password" placeholder="Password"><button class="eye" onclick="toggleNuPass()" id="nu-pass-eye">&#x1F441;</button></div></div>
+        <div class="fg"><label class="fl">Livello</label>
+          <div class="lvl-toggle" style="grid-template-columns:1fr 1fr 1fr;">
+            <button class="lvl-btn active" id="lvl-btn-0" onclick="selLvl(0)">&#x1F511; Admin</button>
+            <button class="lvl-btn" id="lvl-btn-p" onclick="selLvl(2)">&#x2B50; Plus</button>
+            <button class="lvl-btn" id="lvl-btn-1" onclick="selLvl(1)">&#x1F464; Operatore</button>
+          </div>
+        </div>
+        <div id="pin-plus-box" style="display:none;" class="fg"><label class="fl">PIN Plus (4 cifre)</label><div class="pass-wrap"><input class="fi" id="nu-pin-plus" type="password" placeholder="4 cifre" maxlength="4" inputmode="numeric"><button class="eye" onclick="toggleNuPinPass()" id="nu-pin-eye">&#x1F441;</button></div></div>
+        <button class="btn bpu btn-w" onclick="creaUtente()">&#x2795; CREA UTENTE</button>
+        <button class="btn bgh btn-w" style="margin-top:8px;" onclick="goP('home')">&#x2190; Indietro</button>
+      </div>
+      <div><div class="stl">Utenti Registrati</div><div id="usr-lista"></div></div>
+    </div>
+  </div>
+</div>
+
     </div>
   </div><!-- /main -->
 
@@ -1284,33 +1354,6 @@ input, select, textarea { font-family: inherit; }
   <button class="impost-btn" onclick="chiudiImpostazioni();apriLocazioniCfg()">&#x1F4CD; Locazioni (illimitate + logiche)</button>
   <button class="impost-btn" onclick="chiudiImpostazioni();apriUtenti()">&#x1F465; Gestione Utenti</button>
   <button class="impost-btn danger" onclick="chiudiImpostazioni();chiPin('azzeraDB',null)">&#x26A0;&#xFE0F; Azzera Database</button>
-</div>
-
-<!-- PANNELLO UTENTI -->
-<div class="mo" id="mo-utenti">
-  <div class="mdl wide" style="max-height:88vh;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div class="mtt pb" style="margin-bottom:0;">&#x1F465; Gestione Utenti</div>
-      <button class="mo-close" style="position:static;" onclick="chiM('mo-utenti')">&#x2715;</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
-      <div>
-        <div class="stl">Crea Nuovo Utente</div>
-        <div class="fg"><label class="fl">Username</label><input class="fi" id="nu-user" type="text" placeholder="es. Marco" autocomplete="off"></div>
-        <div class="fg"><label class="fl">Password</label><div class="pass-wrap"><input class="fi" id="nu-pass" type="password" placeholder="Password"><button class="eye" onclick="toggleNuPass()" id="nu-pass-eye">&#x1F441;</button></div></div>
-        <div class="fg"><label class="fl">Livello</label>
-          <div class="lvl-toggle" style="grid-template-columns:1fr 1fr 1fr;">
-            <button class="lvl-btn active" id="lvl-btn-0" onclick="selLvl(0)">&#x1F511; Admin</button>
-            <button class="lvl-btn" id="lvl-btn-p" onclick="selLvl(2)">&#x2B50; Plus</button>
-            <button class="lvl-btn" id="lvl-btn-1" onclick="selLvl(1)">&#x1F464; Operatore</button>
-          </div>
-        </div>
-        <div id="pin-plus-box" style="display:none;" class="fg"><label class="fl">PIN Plus (4 cifre)</label><div class="pass-wrap"><input class="fi" id="nu-pin-plus" type="password" placeholder="4 cifre" maxlength="4" inputmode="numeric"><button class="eye" onclick="toggleNuPinPass()" id="nu-pin-eye">&#x1F441;</button></div></div>
-        <button class="btn bpu btn-w" onclick="creaUtente()">&#x2795; CREA UTENTE</button>
-      </div>
-      <div><div class="stl">Utenti Registrati</div><div id="usr-lista"></div></div>
-    </div>
-  </div>
 </div>
 
 <!-- PIN -->
@@ -1501,48 +1544,6 @@ input, select, textarea { font-family: inherit; }
 </div>
 
 <!-- STRUTTURA MAGAZZINO -->
-<div class="mo" id="mo-struttura">
-  <div class="mdl" style="max-width:420px;">
-    <div class="mha"></div>
-    <div class="mtt cy">&#x1F3ED; Struttura Magazzino</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
-      <div class="fg"><label class="fl">Posti PLT Secco</label><input class="str-inp" id="str-posti-plt" type="number" inputmode="numeric" placeholder="es. 3200"></div>
-      <div class="fg"><label class="fl">Posti PLT Fresco</label><input class="str-inp" id="str-posti-fresco" type="number" inputmode="numeric" placeholder="es. 800"></div>
-      <div class="fg"><label class="fl">PLT / Bilico Secco</label><input class="str-inp" id="str-plt-bilico" type="number" inputmode="numeric" placeholder="es. 32"></div>
-      <div class="fg"><label class="fl">❄️ PLT / Bilico Fresco</label><input class="str-inp" id="str-plt-bilico-fresco" type="number" inputmode="numeric" placeholder="es. 28"></div>
-    </div>
-    <div style="font-size:11px;color:var(--tx2);text-align:center;margin-bottom:12px;">Valori sincronizzati su tutti i dispositivi.</div>
-    <div class="btn-row"><button class="btn bgn" onclick="salvaStruttura()">&#x2705; SALVA</button><button class="btn bgh" onclick="chiM('mo-struttura')">&#x2716; CHIUDI</button></div>
-  </div>
-</div>
-
-<!-- ══════════ CONFIG LOCAZIONI (illimitate + logiche rimanenza) ══════════ -->
-<div class="mo" id="mo-locazioni">
-  <div class="mdl" style="max-width:520px;">
-    <div class="mha"></div>
-    <div class="mtt" style="color:var(--cy);">&#x1F4CD; Locazioni</div>
-
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:var(--bb);margin:6px 0 6px;">🏬 Postazioni illimitate</div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Accettano più bilici insieme. (BANCHINA, SMEZZI, FRESCO, ARRIVI, PARTENZE e i codici che iniziano con M- sono sempre illimitati.)</div>
-    <div style="display:flex;gap:8px;margin-bottom:8px;">
-      <input class="str-inp" id="cfg-ill-nuovo" type="text" placeholder="es. SIZIANO" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')aggiungiIllimitata()">
-      <button class="btn bbl" style="padding:0 14px;white-space:nowrap;" onclick="aggiungiIllimitata()">&#x2795; Aggiungi</button>
-    </div>
-    <div id="cfg-ill-lista" style="margin-bottom:16px;max-height:150px;overflow-y:auto;"></div>
-
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:var(--ob);margin:6px 0 6px;">🔄 Logiche rimanenza</div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Quando un bilico esce parzialmente DA una locazione, la rimanenza va nella locazione indicata. (Tutto il resto → SMEZZI.)</div>
-    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
-      <input class="str-inp" id="cfg-reg-da" type="text" placeholder="DA (es. SIZIANO)" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
-      <span style="color:var(--tx2);font-size:16px;">→</span>
-      <input class="str-inp" id="cfg-reg-a" type="text" placeholder="A (es. SMEZZI SIZIANO)" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')aggiungiRegola()">
-      <button class="btn bbl" style="padding:0 12px;white-space:nowrap;" onclick="aggiungiRegola()">&#x2795;</button>
-    </div>
-    <div id="cfg-reg-lista" style="margin-bottom:14px;max-height:170px;overflow-y:auto;"></div>
-
-    <div class="btn-row"><button class="btn bgh btn-w" onclick="chiM('mo-locazioni')">&#x2716; CHIUDI</button></div>
-  </div>
-</div>
 
 <!-- MODIFICA ORDINE -->
 <div class="mo" id="mo-ordine">
@@ -1826,9 +1827,9 @@ function caricaConfigLocazioni(doc){
   if(!doc||!doc.exists)return;var d=doc.data();
   if(Array.isArray(d.illimitate))LOC_ILLIMITATE=d.illimitate.map(function(x){return String(x).toUpperCase().trim();}).filter(function(x){return x;});
   if(Array.isArray(d.rimanenze))RIMANENZE_RULES=d.rimanenze.map(function(r){return {da:String(r.da||'').toUpperCase().trim(),a:String(r.a||'').toUpperCase().trim()};}).filter(function(r){return r.da&&r.a;});
-  if(typeof renderLocazioniCfg==='function'){var mo=document.getElementById('mo-locazioni');if(mo&&mo.classList.contains('open'))renderLocazioniCfg();}
+  if(typeof renderLocazioniCfg==='function'){var mo=document.getElementById('page-locazioni');if(mo&&mo.classList.contains('active'))renderLocazioniCfg();}
 }
-function apriLocazioniCfg(){renderLocazioniCfg();aprM('mo-locazioni');}
+function apriLocazioniCfg(){renderLocazioniCfg();goP('locazioni');}
 function renderLocazioniCfg(){
   var elI=document.getElementById('cfg-ill-lista');
   if(elI){elI.innerHTML=LOC_ILLIMITATE.length?LOC_ILLIMITATE.map(function(n){return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 12px;margin-bottom:6px;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:var(--cb);">🏬 '+n+'</span><button onclick="rimuoviIllimitata(\''+n.replace(/'/g,"\\'")+'\')" style="background:none;border:1px solid var(--rd);color:var(--rb);border-radius:7px;padding:3px 9px;font-size:11px;cursor:pointer;">🗑</button></div>';}).join(''):'<div style="font-size:12px;color:var(--tx3);padding:6px;">Nessuna postazione custom.</div>';}
@@ -1937,7 +1938,7 @@ function goP(n){
   var page=document.getElementById('page-'+n);if(page)page.classList.add('active');
   var mapSb={home:'sb-home',entrata:'sb-entrata',uscita:'sb-uscita',magazzino:'sb-magazzino',programmazione:'sb-programmazione',storico:'sb-storico',missioni:'sb-missioni',carrellista:'sb-carrellista'};
   if(mapSb[n]){var sb=document.getElementById(mapSb[n]);if(sb)sb.classList.add('active');}
-  var titles={home:'Dashboard',entrata:'Entrata Bilico',uscita:'Uscita / Carico',magazzino:'Magazzino',programmazione:'Programmazione Uscite',storico:'Storico Movimenti',missioni:'Missioni',carrellista:'Carrellista'};
+  var titles={home:'Dashboard',entrata:'Entrata Bilico',uscita:'Uscita / Carico',magazzino:'Magazzino',programmazione:'Programmazione Uscite',storico:'Storico Movimenti',missioni:'Missioni',carrellista:'Carrellista',struttura:'Struttura Magazzino',locazioni:'Locazioni',utenti:'Gestione Utenti'};
   var tt=document.getElementById('topbar-title');if(tt)tt.textContent=titles[n]||n;
   // topbar info button (solo home)
   var ib=document.getElementById('topbar-info-btn');if(ib)ib.style.display=(n==='home')?'flex':'none';
@@ -1955,7 +1956,7 @@ function goP(n){
 function aggiornaTopbarAzioni(n){
   var el=document.getElementById('topbar-actions');if(!el)return;
   var btns=[];
-  if(n==='magazzino'&&isAdmin()){btns.push('<button class="tbtn tcy" onclick="aprM(\'mo-struttura\')">🏭 Struttura</button>');}
+  if(n==='magazzino'&&isAdmin()){btns.push('<button class="tbtn tcy" onclick="apriStruttura()">🏭 Struttura</button>');}
   if(n==='storico'&&isAdmin()){btns.push('<button class="tbtn trd" onclick="chiPin(\'svuota\',null)">🗑 Svuota</button>');}
   if(isAdmin()){btns.push('<button class="tbtn tog" onclick="expExcel()">📊 Excel</button>');}
   el.innerHTML=btns.join('');
@@ -1968,7 +1969,7 @@ function aprM(id){document.getElementById(id).classList.add('open');}
 function chiM(id){document.getElementById(id).classList.remove('open');}
 function apriImpostazioni(){var p=document.getElementById('impost-panel');if(p)p.classList.add('open');}
 function chiudiImpostazioni(){var p=document.getElementById('impost-panel');if(p)p.classList.remove('open');}
-function apriUtenti(){if(!CURR_USER||(CURR_USER.livello!==0&&CURR_USER.livello!==2))return;caricaListaUtenti();aprM('mo-utenti');}
+function apriUtenti(){if(!CURR_USER||(CURR_USER.livello!==0&&CURR_USER.livello!==2))return;caricaListaUtenti();goP('utenti');}
 
 // ═══ UTILITIES ═══
 function stp(id,d){var el=document.getElementById(id);el.value=Math.max(0,(parseInt(el.value)||0)+d);}
@@ -2058,8 +2059,8 @@ function scaricaTutteFoto(segnaVisto){if(!UC||!fdb){tst('Connessione cloud neces
 function cancellaTutteFoto(){if(!UC||!fdb){tst('Connessione cloud necessaria','er');return;}fdb.collection('foto_uscite').get().then(function(snap){if(snap.empty){tst('Nessuna foto da cancellare','er');return;}tst('Cancellazione in corso...','ok');Promise.all(snap.docs.map(function(doc){return fdb.collection('foto_uscite').doc(doc.id).delete();})).then(function(){ST.forEach(function(m){if(m.fotoSalvata&&m.id)fdb.collection('storico').doc(m.id).update({fotoSalvata:false}).catch(function(){});});tst('Eliminate '+snap.size+' foto dal cloud','ok');});}).catch(function(e){tst('Errore: '+e.message,'er');});}
 
 // ═══ STRUTTURA ═══
-function apriStruttura(){document.getElementById('str-posti-plt').value=localStorage.getItem('MAG_POSTI_PLT')||'';document.getElementById('str-posti-fresco').value=localStorage.getItem('MAG_POSTI_FRESCO')||'';document.getElementById('str-plt-bilico').value=localStorage.getItem('MAG_PLT_BILICO')||'';document.getElementById('str-plt-bilico-fresco').value=localStorage.getItem('MAG_PLT_BILICO_FRESCO')||'';aprM('mo-struttura');}
-function salvaStruttura(){var pp=parseInt(document.getElementById('str-posti-plt').value)||0,pf=parseInt(document.getElementById('str-posti-fresco').value)||0,pb=parseInt(document.getElementById('str-plt-bilico').value)||0,pbf=parseInt(document.getElementById('str-plt-bilico-fresco').value)||0;try{localStorage.setItem('MAG_POSTI_PLT',pp);localStorage.setItem('MAG_POSTI_FRESCO',pf);localStorage.setItem('MAG_PLT_BILICO',pb);localStorage.setItem('MAG_PLT_BILICO_FRESCO',pbf);}catch(x){}if(UC&&fdb)fdb.collection('settings').doc('struttura').set({postiPlt:pp,postiFresc:pf,pltBilico:pb,pltBilicoFresc:pbf},{merge:true}).catch(function(){});chiM('mo-struttura');tst('Struttura salvata','ok');ui();}
+function apriStruttura(){document.getElementById('str-posti-plt').value=localStorage.getItem('MAG_POSTI_PLT')||'';document.getElementById('str-posti-fresco').value=localStorage.getItem('MAG_POSTI_FRESCO')||'';document.getElementById('str-plt-bilico').value=localStorage.getItem('MAG_PLT_BILICO')||'';document.getElementById('str-plt-bilico-fresco').value=localStorage.getItem('MAG_PLT_BILICO_FRESCO')||'';goP('struttura');}
+function salvaStruttura(){var pp=parseInt(document.getElementById('str-posti-plt').value)||0,pf=parseInt(document.getElementById('str-posti-fresco').value)||0,pb=parseInt(document.getElementById('str-plt-bilico').value)||0,pbf=parseInt(document.getElementById('str-plt-bilico-fresco').value)||0;try{localStorage.setItem('MAG_POSTI_PLT',pp);localStorage.setItem('MAG_POSTI_FRESCO',pf);localStorage.setItem('MAG_PLT_BILICO',pb);localStorage.setItem('MAG_PLT_BILICO_FRESCO',pbf);}catch(x){}if(UC&&fdb)fdb.collection('settings').doc('struttura').set({postiPlt:pp,postiFresc:pf,pltBilico:pb,pltBilicoFresc:pbf},{merge:true}).catch(function(){});tst('Struttura salvata','ok');ui();}
 
 // ═══ ENTRATE ATTESE ═══
 function apriSetAttesi(tipo){_attesiTarget=tipo;var labels={secco:'📦 Bilici Secco attesi oggi',fresco:'❄️ Bilici Fresco attesi oggi',marchesi:'🏭 PLT Marchesi attesi oggi'};var curr={secco:ENTRATE_ATTESE.secco,fresco:ENTRATE_ATTESE.fresco,marchesi:ENTRATE_ATTESE.marchesi};var title=document.getElementById('sh-att-title'),lbl=document.getElementById('sh-att-label'),inp=document.getElementById('sh-att-val');if(title)title.textContent=labels[tipo]||'Attesi oggi';if(lbl)lbl.textContent=tipo==='marchesi'?'PLT attesi':'Bilici attesi';if(inp){inp.value=curr[tipo]||'';inp.placeholder=tipo==='marchesi'?'es. 250':'es. 12';}aprM('mo-set-attesi');setTimeout(function(){if(inp)inp.focus();},150);}

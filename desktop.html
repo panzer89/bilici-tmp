@@ -676,6 +676,7 @@ input, select, textarea { font-family: inherit; }
 .impost-btn { width: 100%; padding: 10px 12px; margin-bottom: 8px; background: var(--sf2); border: 1px solid var(--bd); border-radius: var(--r); color: var(--tx); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px; }
 .impost-btn:hover { background: var(--bd); }
 .impost-btn.danger { border-color: var(--rd); color: var(--rb); }
+.impost-btn.active { border-color: var(--bb); background: rgba(31,111,235,.14); color: var(--bb); }
 /* aggancio ext */
 .prog-agg-ext { display: none; border-top: 1px solid rgba(163,113,247,.3); padding-top: 7px; margin-top: 5px; }
 .prog-agg-ext-label { font-size: 11px; color: var(--pb); font-weight: 700; margin-bottom: 5px; }
@@ -1280,7 +1281,7 @@ input, select, textarea { font-family: inherit; }
       <div class="fg"><label class="fl">❄️ PLT / Bilico Fresco</label><input class="str-inp" id="str-plt-bilico-fresco" type="number" inputmode="numeric" placeholder="es. 28"></div>
     </div>
     <div style="font-size:11px;color:var(--tx2);margin:0 0 12px;">Valori sincronizzati su tutti i dispositivi.</div>
-    <div class="btn-row"><button class="btn bgn" onclick="salvaStruttura()">&#x2705; SALVA</button><button class="btn bgh" onclick="goP('home')">&#x2190; Indietro</button></div>
+    <div class="btn-row"><button class="btn bgn" onclick="salvaStruttura()">&#x2705; SALVA</button><button class="btn bgh" onclick="chiudiImpostazioni();goP('home')">&#x2190; Indietro</button></div>
   </div>
 </div>
 
@@ -1310,7 +1311,7 @@ input, select, textarea { font-family: inherit; }
         <div id="cfg-reg-lista" style="max-height:340px;overflow-y:auto;"></div>
       </div>
     </div>
-    <div class="btn-row" style="margin-top:16px;"><button class="btn bgh btn-w" onclick="goP('home')">&#x2190; Indietro</button></div>
+    <div class="btn-row" style="margin-top:16px;"><button class="btn bgh btn-w" onclick="chiudiImpostazioni();goP('home')">&#x2190; Indietro</button></div>
   </div>
 </div>
 
@@ -1332,7 +1333,7 @@ input, select, textarea { font-family: inherit; }
         </div>
         <div id="pin-plus-box" style="display:none;" class="fg"><label class="fl">PIN Plus (4 cifre)</label><div class="pass-wrap"><input class="fi" id="nu-pin-plus" type="password" placeholder="4 cifre" maxlength="4" inputmode="numeric"><button class="eye" onclick="toggleNuPinPass()" id="nu-pin-eye">&#x1F441;</button></div></div>
         <button class="btn bpu btn-w" onclick="creaUtente()">&#x2795; CREA UTENTE</button>
-        <button class="btn bgh btn-w" style="margin-top:8px;" onclick="goP('home')">&#x2190; Indietro</button>
+        <button class="btn bgh btn-w" style="margin-top:8px;" onclick="chiudiImpostazioni();goP('home')">&#x2190; Indietro</button>
       </div>
       <div><div class="stl">Utenti Registrati</div><div id="usr-lista"></div></div>
     </div>
@@ -1350,9 +1351,9 @@ input, select, textarea { font-family: inherit; }
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;">&#x2699;&#xFE0F; Impostazioni</div>
     <button onclick="chiudiImpostazioni()" style="background:none;border:1px solid var(--bd);color:var(--tx2);width:26px;height:26px;border-radius:50%;font-size:13px;cursor:pointer;">&#x2715;</button>
   </div>
-  <button class="impost-btn" onclick="chiudiImpostazioni();apriStruttura()">&#x1F3ED; Struttura Magazzino</button>
-  <button class="impost-btn" onclick="chiudiImpostazioni();apriLocazioniCfg()">&#x1F4CD; Locazioni (illimitate + logiche)</button>
-  <button class="impost-btn" onclick="chiudiImpostazioni();apriUtenti()">&#x1F465; Gestione Utenti</button>
+  <button class="impost-btn" id="imp-btn-struttura" onclick="apriStruttura()">&#x1F3ED; Struttura Magazzino</button>
+  <button class="impost-btn" id="imp-btn-locazioni" onclick="apriLocazioniCfg()">&#x1F4CD; Locazioni (illimitate + logiche)</button>
+  <button class="impost-btn" id="imp-btn-utenti" onclick="apriUtenti()">&#x1F465; Gestione Utenti</button>
   <button class="impost-btn danger" onclick="chiudiImpostazioni();chiPin('azzeraDB',null)">&#x26A0;&#xFE0F; Azzera Database</button>
 </div>
 
@@ -1829,7 +1830,7 @@ function caricaConfigLocazioni(doc){
   if(Array.isArray(d.rimanenze))RIMANENZE_RULES=d.rimanenze.map(function(r){return {da:String(r.da||'').toUpperCase().trim(),a:String(r.a||'').toUpperCase().trim()};}).filter(function(r){return r.da&&r.a;});
   if(typeof renderLocazioniCfg==='function'){var mo=document.getElementById('page-locazioni');if(mo&&mo.classList.contains('active'))renderLocazioniCfg();}
 }
-function apriLocazioniCfg(){renderLocazioniCfg();goP('locazioni');}
+function apriLocazioniCfg(){renderLocazioniCfg();_setImpostActive('imp-btn-locazioni');goP('locazioni');}
 function renderLocazioniCfg(){
   var elI=document.getElementById('cfg-ill-lista');
   if(elI){elI.innerHTML=LOC_ILLIMITATE.length?LOC_ILLIMITATE.map(function(n){return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 12px;margin-bottom:6px;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:var(--cb);">🏬 '+n+'</span><button onclick="rimuoviIllimitata(\''+n.replace(/'/g,"\\'")+'\')" style="background:none;border:1px solid var(--rd);color:var(--rb);border-radius:7px;padding:3px 9px;font-size:11px;cursor:pointer;">🗑</button></div>';}).join(''):'<div style="font-size:12px;color:var(--tx3);padding:6px;">Nessuna postazione custom.</div>';}
@@ -1968,8 +1969,9 @@ function toggleTuttiOrdini(){var body=document.getElementById('tutti-ordini-body
 function aprM(id){document.getElementById(id).classList.add('open');}
 function chiM(id){document.getElementById(id).classList.remove('open');}
 function apriImpostazioni(){var p=document.getElementById('impost-panel');if(p)p.classList.add('open');}
-function chiudiImpostazioni(){var p=document.getElementById('impost-panel');if(p)p.classList.remove('open');}
-function apriUtenti(){if(!CURR_USER||(CURR_USER.livello!==0&&CURR_USER.livello!==2))return;caricaListaUtenti();goP('utenti');}
+function chiudiImpostazioni(){var p=document.getElementById('impost-panel');if(p)p.classList.remove('open');_setImpostActive('');}
+function _setImpostActive(id){['imp-btn-struttura','imp-btn-locazioni','imp-btn-utenti'].forEach(function(b){var e=document.getElementById(b);if(e)e.classList.toggle('active',b===id);});}
+function apriUtenti(){if(!CURR_USER||(CURR_USER.livello!==0&&CURR_USER.livello!==2))return;caricaListaUtenti();_setImpostActive('imp-btn-utenti');goP('utenti');}
 
 // ═══ UTILITIES ═══
 function stp(id,d){var el=document.getElementById(id);el.value=Math.max(0,(parseInt(el.value)||0)+d);}
@@ -2059,7 +2061,7 @@ function scaricaTutteFoto(segnaVisto){if(!UC||!fdb){tst('Connessione cloud neces
 function cancellaTutteFoto(){if(!UC||!fdb){tst('Connessione cloud necessaria','er');return;}fdb.collection('foto_uscite').get().then(function(snap){if(snap.empty){tst('Nessuna foto da cancellare','er');return;}tst('Cancellazione in corso...','ok');Promise.all(snap.docs.map(function(doc){return fdb.collection('foto_uscite').doc(doc.id).delete();})).then(function(){ST.forEach(function(m){if(m.fotoSalvata&&m.id)fdb.collection('storico').doc(m.id).update({fotoSalvata:false}).catch(function(){});});tst('Eliminate '+snap.size+' foto dal cloud','ok');});}).catch(function(e){tst('Errore: '+e.message,'er');});}
 
 // ═══ STRUTTURA ═══
-function apriStruttura(){document.getElementById('str-posti-plt').value=localStorage.getItem('MAG_POSTI_PLT')||'';document.getElementById('str-posti-fresco').value=localStorage.getItem('MAG_POSTI_FRESCO')||'';document.getElementById('str-plt-bilico').value=localStorage.getItem('MAG_PLT_BILICO')||'';document.getElementById('str-plt-bilico-fresco').value=localStorage.getItem('MAG_PLT_BILICO_FRESCO')||'';goP('struttura');}
+function apriStruttura(){document.getElementById('str-posti-plt').value=localStorage.getItem('MAG_POSTI_PLT')||'';document.getElementById('str-posti-fresco').value=localStorage.getItem('MAG_POSTI_FRESCO')||'';document.getElementById('str-plt-bilico').value=localStorage.getItem('MAG_PLT_BILICO')||'';document.getElementById('str-plt-bilico-fresco').value=localStorage.getItem('MAG_PLT_BILICO_FRESCO')||'';_setImpostActive('imp-btn-struttura');goP('struttura');}
 function salvaStruttura(){var pp=parseInt(document.getElementById('str-posti-plt').value)||0,pf=parseInt(document.getElementById('str-posti-fresco').value)||0,pb=parseInt(document.getElementById('str-plt-bilico').value)||0,pbf=parseInt(document.getElementById('str-plt-bilico-fresco').value)||0;try{localStorage.setItem('MAG_POSTI_PLT',pp);localStorage.setItem('MAG_POSTI_FRESCO',pf);localStorage.setItem('MAG_PLT_BILICO',pb);localStorage.setItem('MAG_PLT_BILICO_FRESCO',pbf);}catch(x){}if(UC&&fdb)fdb.collection('settings').doc('struttura').set({postiPlt:pp,postiFresc:pf,pltBilico:pb,pltBilicoFresc:pbf},{merge:true}).catch(function(){});tst('Struttura salvata','ok');ui();}
 
 // ═══ ENTRATE ATTESE ═══

@@ -1393,6 +1393,25 @@ input, select, textarea { font-family: inherit; }
   </div>
 </div>
 
+<!-- MODIFICA UTENTE -->
+<div class="mo" id="mo-edit-utente">
+  <div class="mdl" style="max-width:380px;">
+    <div class="mha"></div>
+    <div class="mtt bb">&#x270F;&#xFE0F; Modifica Utente</div>
+    <div class="fg"><label class="fl">Username</label><input class="fi" id="edit-usr-name" type="text" placeholder="Username" autocomplete="off"></div>
+    <div class="fg"><label class="fl">Password (vuoto = non cambiare)</label><div class="pass-wrap"><input class="fi" id="edit-usr-pass" type="password" placeholder="Nuova password"><button class="eye" onclick="toggleEditPass()" id="edit-pass-eye">&#x1F441;</button></div></div>
+    <div class="fg"><label class="fl">Livello</label>
+      <div class="lvl-toggle" style="grid-template-columns:1fr 1fr 1fr;">
+        <button class="lvl-btn" id="edit-lvl-btn-0" onclick="selEditLvl(0)">&#x1F511; Admin</button>
+        <button class="lvl-btn" id="edit-lvl-btn-p" onclick="selEditLvl(2)">&#x2B50; Plus</button>
+        <button class="lvl-btn active" id="edit-lvl-btn-1" onclick="selEditLvl(1)">&#x1F464; Operatore</button>
+      </div>
+    </div>
+    <div id="edit-pin-plus-box" style="display:none;" class="fg"><label class="fl">PIN Plus (4 cifre)</label><div class="pass-wrap"><input class="fi" id="edit-pin-plus" type="password" placeholder="4 cifre" maxlength="4" inputmode="numeric" autocomplete="off"><button class="eye" onclick="toggleEditPinPass()" id="edit-pin-eye">&#x1F441;</button></div></div>
+    <div class="btn-row"><button class="btn bgn" onclick="salvaModificaUtente()">&#x2713; SALVA</button><button class="btn bgh" onclick="chiM('mo-edit-utente')">&#x2716; Annulla</button></div>
+  </div>
+</div>
+
 <!-- TRASFERISCI -->
 <div class="mo" id="mo-trasf">
   <div class="mdl" style="max-width:360px;">
@@ -3307,9 +3326,12 @@ function toggleLogUtenteEl(card){toggleLogUtente(card,card.getAttribute('data-un
 function apriModificaUtenteEl(btn){apriModificaUtente(btn.getAttribute('data-uid'),btn.getAttribute('data-uname'),parseInt(btn.getAttribute('data-ulvl'))||1);}
 function eliminaUtenteEl(btn){eliminaUtente(btn.getAttribute('data-uid'),btn.getAttribute('data-uname'));}
 var editUtenteId=null,editUtenteLvl=1;
-function apriModificaUtente(id,username,livello){editUtenteId=id;editUtenteLvl=livello;/* usa modal mo-utenti per ora — TODO: aggiungi modal edit utente desktop se necessario */tst('Modifica utente: funzione in gestione.html completa','ok');}
+function apriModificaUtente(id,username,livello){editUtenteId=id;editUtenteLvl=livello;var ne=document.getElementById('edit-usr-name'),pe=document.getElementById('edit-usr-pass'),eye=document.getElementById('edit-pass-eye'),pine=document.getElementById('edit-pin-plus'),piney=document.getElementById('edit-pin-eye');if(ne)ne.value=username||'';if(pe){pe.value='';pe.type='password';}if(eye)eye.innerHTML='👁';if(pine){pine.value='';pine.type='password';}if(piney)piney.innerHTML='👁';if(livello===2&&id&&UC&&fdb){fdb.collection('utenti').doc(id).get().then(function(doc){if(doc.exists&&pine)pine.value=doc.data().pin||'';});}selEditLvl(livello);aprM('mo-edit-utente');}
 function salvaModificaUtente(){tst('Usa gestione.html per modifica completa utente','ok');}
-function selEditLvl(n){editUtenteLvl=n;}
+function selEditLvl(n){editUtenteLvl=n;['edit-lvl-btn-0','edit-lvl-btn-p','edit-lvl-btn-1'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('active');});var map={0:'edit-lvl-btn-0',2:'edit-lvl-btn-p',1:'edit-lvl-btn-1'};var b=document.getElementById(map[n]);if(b)b.classList.add('active');var x=document.getElementById('edit-pin-plus-box');if(x)x.style.display=n===2?'block':'none';}
+function salvaModificaUtente(){if(!editUtenteId)return;var nu=(document.getElementById('edit-usr-name').value||'').trim(),np=(document.getElementById('edit-usr-pass').value||'').trim();if(!nu)return tst('Inserisci uno username','er');var pin='';if(editUtenteLvl===2){var pe=document.getElementById('edit-pin-plus');pin=pe?pe.value.trim():'';if(!pin||pin.length!==4)return tst('Inserisci PIN di 4 cifre per Plus','er');}var upd={username:nu,username_lc:nu.toLowerCase(),livello:editUtenteLvl};if(np)upd.password=np;if(editUtenteLvl===2&&pin)upd.pin=pin;if(UC&&fdb)fdb.collection('utenti').doc(editUtenteId).update(upd).then(function(){tst('Utente aggiornato','ok');chiM('mo-edit-utente');caricaListaUtenti();}).catch(function(e){tst('Errore: '+e.message,'er');});else{try{var l=JSON.parse(localStorage.getItem('UTENTI_v1')||'[]');var i=l.findIndex(function(x){return x.id===editUtenteId;});if(i!==-1){Object.assign(l[i],upd);localStorage.setItem('UTENTI_v1',JSON.stringify(l));}}catch(x){}tst('Utente aggiornato','ok');chiM('mo-edit-utente');caricaListaUtenti();}}
+function toggleEditPass(){var e=document.getElementById('edit-usr-pass'),b=document.getElementById('edit-pass-eye'),s=e.type==='password';e.type=s?'text':'password';if(b)b.innerHTML=s?'🙈':'👁';}
+function toggleEditPinPass(){var e=document.getElementById('edit-pin-plus'),b=document.getElementById('edit-pin-eye'),s=e.type==='password';e.type=s?'text':'password';if(b)b.innerHTML=s?'🙈':'👁';}
 function toggleNuPass(){var e=document.getElementById('nu-pass'),b=document.getElementById('nu-pass-eye'),s=e.type==='password';e.type=s?'text':'password';if(b)b.innerHTML=s?'🙈':'👁';}
 function toggleNuPinPass(){var e=document.getElementById('nu-pin-plus'),b=document.getElementById('nu-pin-eye'),s=e.type==='password';e.type=s?'text':'password';if(b)b.innerHTML=s?'🙈':'👁';}
 
